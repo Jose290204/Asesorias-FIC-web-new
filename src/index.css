@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+/* 1. Importamos Inder (Regular) y Roboto (Regular 400, SemiBold 600, Bold 700) */
+@import url('https://fonts.googleapis.com/css2?family=Inder&family=Roboto:wght@400;600;700&display=swap');
+
+/* 2. Agregamos las variables al tema de Tailwind v4 */
+@theme {
+  --font-inter: 'Inter', sans-serif;
+  --font-inder: 'Inder', sans-serif;
+}
+
+/* 3. Establecemos Roboto como la fuente base para toda la aplicación */
+@layer base {
+  body {
+    font-family: var(--font-inter);
+    margin: 0;
+    padding: 0;
+  }
+}
