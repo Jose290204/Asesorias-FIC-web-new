@@ -1,32 +1,52 @@
 import { useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import logoFic from '../assets/fic_logo.png';
 import logoUas from '../assets/logo_uas.png';
 
-export default function Sidebar({ currentTab, setCurrentTab, onLogout }) {
+export default function Sidebar({ onLogout }) {
   const [collapsed, setCollapsed] = useState(false);
 
-  // Menú de navegación
+  // Definimos la propiedad 'path' explícita para cada vista
   const navItems = [
     {
-      id: 'exposiciones',
-      label: 'Exposiciones',
+      path: '/admin/asesorias',
+      label: 'Asesorías',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
         </svg>
       )
     },
     {
-      id: 'obras',
-      label: 'Obras de Arte',
+      path: '/admin/solicitudes',
+      label: 'Solicitudes',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
       )
     },
     {
-      id: 'artistas',
-      label: 'Artistas',
+      path: '/admin/reportes',
+      label: 'Reportes',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      )
+    },
+    {
+      path: '/admin/asesores-disciplinares',
+      label: 'Asesores Disciplinares',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      )
+    },
+    {
+      path: '/admin/asesores-par',
+      label: 'Asesores Par',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -34,12 +54,21 @@ export default function Sidebar({ currentTab, setCurrentTab, onLogout }) {
       )
     },
     {
-      id: 'configuracion',
-      label: 'Configuración',
+      path: '/admin/estudiantes',
+      label: 'Estudiantes',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+        </svg>
+      )
+    },
+    {
+      path: '/admin/catalogos',
+      label: 'Catálogos',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
         </svg>
       )
     }
@@ -47,7 +76,7 @@ export default function Sidebar({ currentTab, setCurrentTab, onLogout }) {
 
   return (
     <aside 
-      className={`bg-[#122a88] text-white flex flex-col justify-between min-h-screen transition-all duration-300 border-r-4 border-[#ffe600] relative shadow-xl ${
+      className={`bg-[#244B91] text-white flex flex-col justify-between min-h-screen transition-all duration-300 border-r-4 border-[#ffe600] relative shadow-xl ${
         collapsed ? 'w-20' : 'w-64'
       }`}
     >
@@ -64,43 +93,41 @@ export default function Sidebar({ currentTab, setCurrentTab, onLogout }) {
 
       {/* Parte Superior: Encabezado e Identidad */}
       <div>
-        <div className="p-4 flex items-center gap-3 border-b border-blue-900/60">
-          <img 
-            src={logoUas} 
-            alt="Logo UAS" 
-            className="w-10 h-10 object-contain shrink-0" 
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = 'https://placehold.co/40x40/122a88/FFFFFF?text=UAS';
-            }}
-          />
-          {!collapsed && (
-            <div className="overflow-hidden whitespace-nowrap">
-              <h2 className="font-bold text-sm leading-tight tracking-wide">Gestor EDAV</h2>
-              <p className="text-[10px] text-blue-200">Artes Visuales</p>
-            </div>
-          )}
+        <div className="py-6 flex justify-center items-center">
+          <div className={`rounded-full bg-white p-1 border-2 border-[#D4A017] flex items-center justify-center overflow-hidden transition-all ${
+            collapsed ? 'w-12 h-12' : 'w-28 h-28'
+          }`}>
+            <img 
+              src={logoFic} 
+              alt="Logo Tutorías" 
+              className="w-full h-full object-contain rounded-full" 
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = logoUas;
+              }}
+            />
+          </div>
         </div>
 
-        {/* Navegación Principal */}
-        <nav className="mt-6 px-3 space-y-1.5">
-          {navItems.map((item) => {
-            const isActive = currentTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setCurrentTab(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${
+        {/* Navegación Principal con NavLink */}
+        <nav className="mt-2 px-3 space-y-1.5">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              replace
+              className={({ isActive }) =>
+                `w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${
                   isActive
                     ? 'bg-[#ffe600] text-[#122a88] shadow-md font-semibold'
                     : 'text-blue-100 hover:bg-blue-900/50 hover:text-white'
-                }`}
-              >
-                <span className="shrink-0">{item.icon}</span>
-                {!collapsed && <span className="truncate">{item.label}</span>}
-              </button>
-            );
-          })}
+                }`
+              }
+            >
+              <span className="shrink-0">{item.icon}</span>
+              {!collapsed && <span className="truncate">{item.label}</span>}
+            </NavLink>
+          ))}
         </nav>
       </div>
 

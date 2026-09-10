@@ -1,24 +1,28 @@
 import { Lock, User } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import LogoTutorias from '../assets/Logo_tutorias.png';
-//import { useNavigate } from 'react-router-dom';
 
 
 export default function FormularioLogin({setIsAuthenticated}) {
  const [user, setUser] = useState('');
   const [nip, setNip] = useState('');
 
- // const navigate = useNavigate();
+ const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if(user && nip){
+    setIsAuthenticated(true);
+    console.log("me hiciste click");
+    navigate('/admin/asesorias')
+    
+    } else {
+        alert('Porfavor rellene los campos')
+    }
   }
 
-  if(user && nip){
-    setIsAuthenticated(true);
-  } else {
-    alert('Porfavor rellene los campos')
-  }
+  
 
   return (
     <div className="bg-white rounded-[15px] shadow-[0_0_7px_4px_rgba(158,158,158,0.3)] w-[300px] sm:w-[380px] h-[450px] sm:h-[530px] p-[25px] sm:p-[40px] flex flex-col items-center">
