@@ -3,16 +3,16 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AdminLayout from './layouts/AdminLayout';
 
 // vistas 
-import Login from './pages/Login';
+import Login from './modules/auth/view/Login';
 
 // Vistas del Dashboard admin
-import AsesoresDisci from './pages/admin/AsesoresDisci';
-import AsesoresPar from './pages/admin/AsesoresPar';
-import Asesorias from './pages/admin/Asesorias';
-import Catalogos from './pages/admin/Catalogos';
-import Estudiantes from './pages/admin/Estudiantes';
-import Reportes from './pages/admin/Reportes';
-import Solicitudes from './pages/admin/Solicitudes';
+import AsesoresDisci from './modules/tutorias/rolAdministrador/views/AsesoresDisci';
+import AsesoresPar from './modules/tutorias/rolAdministrador/views/AsesoresPar';
+import Asesorias from './modules/tutorias/rolAdministrador/views/Asesorias';
+import Catalogos from './modules/tutorias/rolAdministrador/views/Catalogos';
+import Estudiantes from './modules/tutorias/rolAdministrador/views/Estudiantes';
+import Reportes from './modules/tutorias/rolAdministrador/views/Reportes';
+import Solicitudes from './modules/tutorias/rolAdministrador/views/Solicitudes';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);

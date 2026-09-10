@@ -1,11 +1,11 @@
 import { ExternalLink, Menu } from 'lucide-react';
 // import { useState } from 'react';
-import FormularioLogin from '../components/formularioLogin';
-import LogoBienestar from './../assets/dependencias/bienestar.png';
-import LidatFic from './../assets/dependencias/lidatfic.png';
-import LogoFicFooter from './../assets/dependencias/logofic.png';
-import fondoInicio from './../assets/fondo_inicio.jpeg';
-import LogoUas from './../assets/logo_uas.png';
+import FormularioLogin from '../../../components/formularioLogin';
+import LogoBienestar from '../../../assets/dependencias/bienestar.png';
+import LidatFic from '../../../assets/dependencias/lidatfic.png';
+import LogoFicFooter from '../../../assets/dependencias/logofic.png';
+import fondoInicio from '../../../assets/fondo_inicio.jpeg';
+import LogoUas from '../../../assets/logo_uas.png';
 
 export default function Login({setIsAuthenticated}) {
 

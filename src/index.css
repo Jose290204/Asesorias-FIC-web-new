@@ -1,7 +1,8 @@
-@import "tailwindcss";
-
 /* 1. Importamos Inder (Regular) y Roboto (Regular 400, SemiBold 600, Bold 700) */
 @import url('https://fonts.googleapis.com/css2?family=Inder&family=Roboto:wght@400;600;700&display=swap');
+
+@import "tailwindcss";
+
 
 /* 2. Agregamos las variables al tema de Tailwind v4 */
 @theme {
