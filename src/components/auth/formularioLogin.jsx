@@ -1,7 +1,7 @@
 import { Lock, User } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LogoTutorias from '../assets/Logo_tutorias.png';
+import LogoTutorias from '../../assets/Logo_tutorias.png';
 
 
 export default function FormularioLogin({setIsAuthenticated}) {

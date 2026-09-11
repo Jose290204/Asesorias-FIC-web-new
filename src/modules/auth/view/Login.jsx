@@ -1,6 +1,6 @@
 import { ExternalLink, Menu } from 'lucide-react';
 // import { useState } from 'react';
-import FormularioLogin from '../../../components/formularioLogin';
+import FormularioLogin from '../../../components/auth/formularioLogin';
 import LogoBienestar from '../../../assets/dependencias/bienestar.png';
 import LidatFic from '../../../assets/dependencias/lidatfic.png';
 import LogoFicFooter from '../../../assets/dependencias/logofic.png';

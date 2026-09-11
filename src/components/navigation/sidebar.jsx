@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import logoFic from '../assets/fic_logo.png';
-import logoUas from '../assets/logo_uas.png';
+import logoFic from '../../assets/fic_logo.png';
+import logoUas from '../../assets/logo_uas.png';
 
 export default function Sidebar({ onLogout }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -76,14 +76,14 @@ export default function Sidebar({ onLogout }) {
 
   return (
     <aside 
-      className={`bg-[#244B91] text-white flex flex-col justify-between min-h-screen transition-all duration-300 border-r-4 border-[#ffe600] relative shadow-xl ${
-        collapsed ? 'w-20' : 'w-64'
+      className={`bg-[#244B91] text-white flex flex-col justify-between min-h-screen transition-all duration-300 border-r-4 border-white relative shadow-xl ${
+        collapsed ? 'w-20' : 'w-70'
       }`}
     >
       {/* Botón para colapsar/expandir la barra */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-8 bg-[#ffe600] text-[#122a88] p-1 rounded-full shadow-md hover:scale-110 transition-transform"
+        className="absolute -right-3 top-8 bg-white text-[#122a88] p-1 rounded-full shadow-md hover:scale-110 transition-transform"
         title={collapsed ? "Expandir menú" : "Colapsar menú"}
       >
         <svg className={`w-4 h-4 transform transition-transform ${collapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,8 +94,8 @@ export default function Sidebar({ onLogout }) {
       {/* Parte Superior: Encabezado e Identidad */}
       <div>
         <div className="py-6 flex justify-center items-center">
-          <div className={`rounded-full bg-white p-1 border-2 border-[#D4A017] flex items-center justify-center overflow-hidden transition-all ${
-            collapsed ? 'w-12 h-12' : 'w-28 h-28'
+          <div className={`rounded-full bg-white p-1 border-0 border-white flex items-center justify-center overflow-hidden transition-all ${
+            collapsed ? 'w-12 h-12' : 'w-30 h-30'
           }`}>
             <img 
               src={logoFic} 
@@ -119,7 +119,7 @@ export default function Sidebar({ onLogout }) {
               className={({ isActive }) =>
                 `w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${
                   isActive
-                    ? 'bg-[#ffe600] text-[#122a88] shadow-md font-semibold'
+                    ? 'bg-white text-[#122a88] shadow-md font-semibold'
                     : 'text-blue-100 hover:bg-blue-900/50 hover:text-white'
                 }`
               }

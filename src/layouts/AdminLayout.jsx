@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from 'react-router-dom';
-import Sidebar from '../components/sidebar';
+import Sidebar from '../components/navigation/sidebar';
 
 
 export default function AdminLayout({ setIsAuthenticated }) {
