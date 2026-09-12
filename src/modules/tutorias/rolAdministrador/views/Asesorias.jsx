@@ -1,16 +1,10 @@
+import { useState, useEffect } from "react";
 import BotonFiltro from "../../../../components/ui/BotonFlitro";
 import TablaAsesorias from "../components/TablaAsesorias";
 import InputBuscar from "../../../../components/ui/InputBuscar";
 import BotonAccion from "../../../../components/ui/BotonAccion";
-import { useState } from "react";
 import ModalFiltros from "../../../../components/ui/ModalFiltros";
-
-const initialRows = [
-    { id: 1, materia: "Taller integrador", estudiante: "Leslie Mayram Barrera Rodriguez", asesor: "Jenifer Guadalupe Tizoc Lopez", inicio: "25/08/2026", horario: "9:00 - 10:00 AM" },
-    { id: 2, materia: "Matematicas discretas", estudiante: "Crisoforo Ahuelican", asesor: "Jose Angel Astorga Mejia", inicio: "25/08/2026", horario: "9:00 - 10:00 AM" },
-    { id: 3, materia: "Lenguajes de programacion", estudiante: "Luis Fernando Velazquez", asesor: "Jenifer Guadalupe Tizoc Lopez", inicio: "25/08/2026", horario: "9:00 - 10:00 AM" },
-    { id: 4, materia: "Sistemas distribuidos", estudiante: "Alexander Israel Barrera Herrera", asesor: "Jenifer Guadalupe Tizoc Lopez", inicio: "25/08/2026", horario: "9:00 - 10:00 AM" },
-];
+import { getAsesorias } from "../services/asesoriasService";
 
 const initialFiltros = {
     licenciatura: "",
@@ -21,9 +15,25 @@ const initialFiltros = {
 };
 
 export default function Asesorias() {
+    const [asesorias, setAsesorias] = useState([]);
+    const [cargando, setCargando] = useState(true);
     const [openModalFiltros, setopenModalFiltros] = useState(false);
     const [busqueda, setBusqueda] = useState("");
     const [filtros, setFiltros] = useState(initialFiltros);
+
+    // Cargar los datos desde el servicio\
+    useEffect(() => {
+        getAsesorias()
+            .then((data) => {
+                setAsesorias(data);
+            })
+            .catch((error) => {
+                console.error("Error al obtener las asesorías:", error);
+            })
+            .finally(() => {
+                setCargando(false);
+            });
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -42,13 +52,19 @@ export default function Asesorias() {
         setFiltros(initialFiltros);
     };
 
-    // Filtrado reactivo en tiempo real por búsqueda simple
-    const filasFiltradas = initialRows.filter((row) => {
-        const texto = busqueda.toLowerCase();
+    // Filtrado en tiempo rreal
+    const filasFiltradas = asesorias.filter((row) => {
+        const texto = busqueda.toLowerCase().trim();
+        if (!texto) return true;
+
+        const materia = (row.materia || "").toLowerCase();
+        const estudiante = (row.estudiante || "").toLowerCase();
+        const asesor = (row.asesor || "").toLowerCase();
+
         return (
-            row.materia.toLowerCase().includes(texto) ||
-            row.estudiante.toLowerCase().includes(texto) ||
-            row.asesor.toLowerCase().includes(texto)
+            materia.includes(texto) ||
+            estudiante.includes(texto) ||
+            asesor.includes(texto)
         );
     });
 
@@ -67,7 +83,11 @@ export default function Asesorias() {
                 <BotonAccion label="Cargar Asesoria" />
             </div>
 
-            <TablaAsesorias rows={filasFiltradas} />
+            {cargando ? (
+                <p className="text-gray-500 font-medium">Cargando asesorías...</p>
+            ) : (
+                <TablaAsesorias rows={filasFiltradas} />
+            )}
 
             <ModalFiltros
                 open={openModalFiltros}

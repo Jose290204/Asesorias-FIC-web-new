@@ -3,8 +3,8 @@ import DialogContent from '@mui/material/DialogContent';
 
 export default function ModalFiltros({ open, onClose, onApply, onClear, children }) {
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={onClose}
       PaperProps={{
         style: {
@@ -27,7 +27,7 @@ export default function ModalFiltros({ open, onClose, onApply, onClear, children
           >
             Aplicar Filtros
           </button>
-          
+
           <button
             type="button"
             onClick={onClear}
