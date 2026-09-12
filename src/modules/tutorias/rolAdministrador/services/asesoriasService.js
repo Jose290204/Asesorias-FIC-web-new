@@ -103,6 +103,77 @@ const mockResponseAPI = {
             id_horario: 12,
             horario_texto: "11:00 - 12:00 PM",
             material_adicional: []
+        },
+        {
+            id_asesoria: 2,
+            id_estudiante: 1,
+            estudiante_nombre: "Crisoforo Ahuelican",
+            id_asesor: 2,
+            asesor_nombre: "Jose Angel Astorga Mejia",
+            id_materia: 5,
+            materia_nombre: "Matematicas discretas",
+            id_modalidad: 1,
+            fecha_inicio: "2026-09-15T00:00:00.000Z",
+            fecha_fin: null,
+            id_razon: 3,
+            id_licenciatura: 2,
+            sesiones_tomadas: 0,
+            observaciones: "El estudiante solicita apoyo con los temas de integrales triples.",
+            id_estatus_asesoria: 3,
+            id_horario: 10,
+            horario_texto: "9:00 - 10:00 AM",
+            material_adicional: [
+                {
+                    id_material: 1,
+                    id_asesoria: 1,
+                    nombre_archivo: "Guia_NAM.pdf",
+                    drive_file_id: "1a2b3c4d5e6f7g8h9i0j",
+                    url_archivo: "https://docs.google.com/document/d/1HXPWIudO2KGPB5cAUV4bnPvYoI3gJ9LlMJYCrNYU7J8/edit?usp=drive_link",
+                    mime_type: "application/pdf",
+                    tamano_archivo: 204800,
+                    fecha_subida: "2026-09-10T13:23:38.000Z"
+                }
+            ]
+        },
+        {
+            id_asesoria: 3,
+            id_estudiante: 1,
+            estudiante_nombre: "Luis Fernando Velazquez",
+            id_asesor: 2,
+            asesor_nombre: "Jenifer Guadalupe Tizoc Lopez",
+            id_materia: 5,
+            materia_nombre: "Lenguajes de programacion",
+            id_modalidad: 1,
+            fecha_inicio: "2026-09-15T00:00:00.000Z",
+            fecha_fin: null,
+            id_razon: 3,
+            id_licenciatura: 2,
+            sesiones_tomadas: 0,
+            observaciones: "El estudiante solicita apoyo.",
+            id_estatus_asesoria: 3,
+            id_horario: 10,
+            horario_texto: "9:00 - 10:00 AM",
+            material_adicional: []
+        },
+        {
+            id_asesoria: 4,
+            id_estudiante: 1,
+            estudiante_nombre: "Alexander Israel Barrera Herrera",
+            id_asesor: 2,
+            asesor_nombre: "Jenifer Guadalupe Tizoc Lopez",
+            id_materia: 5,
+            materia_nombre: "Sistemas distribuidos",
+            id_modalidad: 1,
+            fecha_inicio: "2026-09-15T00:00:00.000Z",
+            fecha_fin: null,
+            id_razon: 3,
+            id_licenciatura: 2,
+            sesiones_tomadas: 0,
+            observaciones: "El estudiante solicita apoyo.",
+            id_estatus_asesoria: 3,
+            id_horario: 12,
+            horario_texto: "11:00 - 12:00 PM",
+            material_adicional: []
         }
     ]
 };

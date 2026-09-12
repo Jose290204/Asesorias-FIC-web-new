@@ -8,11 +8,13 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';
+import TablePagination from '@mui/material/TablePagination';
 import InfoIcon from '@mui/icons-material/Info';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Tooltip from '@mui/material/Tooltip';
+
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import {
     ModalInfoAsesoria,
@@ -22,35 +24,43 @@ import {
 } from './ModalesAsesorias';
 
 export default function TablaAsesorias({ rows = [] }) {
-    // Estados para controlar los modales
+    // Estados para Modales
     const [selectedRow, setSelectedRow] = useState(null);
     const [modalInfoOpen, setModalInfoOpen] = useState(false);
     const [modalConfirmOpen, setModalConfirmOpen] = useState(false);
     const [modalEliminarOpen, setModalEliminarOpen] = useState(false);
     const [modalMaterialOpen, setModalMaterialOpen] = useState(false);
 
-    // Estado global para controlar el ToastNotification
+    // Estado para el Toast Global
     const [toast, setToast] = useState({
         open: false,
         message: '',
-        type: 'info' // 'info' (azul), 'success' (verde), 'error' (rojo)
+        type: 'info'
     });
 
-    // Función para mostrar la notificación Toast
-    const showToast = (message, type = 'info') => {
-        setToast({
-            open: true,
-            message,
-            type
-        });
+    // Estados para la Paginación
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    // Handlers para Paginación
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
     };
 
-    // Función para cerrar la notificación Toast
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    const showToast = (message, type = 'info') => {
+        setToast({ open: true, message, type });
+    };
+
     const handleCloseToast = () => {
         setToast((prev) => ({ ...prev, open: false }));
     };
 
-    // Handlers para abrir los modales
+    // Handlers para Abrir Modales
     const handleOpenInfo = (row) => {
         setSelectedRow(row);
         setModalInfoOpen(true);
@@ -71,7 +81,6 @@ export default function TablaAsesorias({ rows = [] }) {
         setModalEliminarOpen(true);
     };
 
-    // Confirmación de acciones
     const handleConfirmAprobar = () => {
         console.log('Asesoría aprobada:', selectedRow?.id);
         setModalConfirmOpen(false);
@@ -86,20 +95,34 @@ export default function TablaAsesorias({ rows = [] }) {
         console.log('Datos actualizados:', updatedData);
     };
 
+    // Corte de filas visibles según la página actual
+    const visibleRows = rows.slice(
+        page * rowsPerPage,
+        page * rowsPerPage + rowsPerPage
+    );
+
     return (
-        <>
-            <TableContainer
-                component={Paper}
-                variant='outlined'
-                sx={{
-                    p: 2.5,
-                    borderRadius: '12px',
-                    borderColor: '#e0e0e0',
-                    width: '100%',
-                    boxSizing: 'border-box'
+        <Paper 
+            variant="outlined" 
+            sx={{ 
+                width: '100%', 
+                borderRadius: '12px', 
+                borderColor: '#e0e0e0',
+                overflow: 'hidden' 
+            }}
+        >
+            {/* Contenedor con altura máxima y scroll interno exclusivo */}
+            <TableContainer 
+                sx={{ 
+                    px: 2.5, 
+                    pt: 2.5, 
+                    pb: 0,
+                    maxHeight: '500px', 
+                    overflowY: 'auto' 
                 }}
             >
                 <Table
+                    stickyHeader
                     sx={{
                         minWidth: 500,
                         borderCollapse: 'separate',
@@ -107,7 +130,18 @@ export default function TablaAsesorias({ rows = [] }) {
                     }}
                 >
                     <TableHead>
-                        <TableRow sx={{ '& th': { border: 0, fontWeight: 'bold', color: '#1a1a1a', pb: 1 } }}>
+                        <TableRow 
+                            sx={{ 
+                                '& th': { 
+                                    border: 0, 
+                                    fontWeight: 'bold', 
+                                    color: '#1a1a1a', 
+                                    pb: 1,
+                                    backgroundColor: '#ffffff',
+                                    py: 1.5
+                                } 
+                            }}
+                        >
                             <TableCell sx={{ width: '60px' }} align='center'>ID</TableCell>
                             <TableCell align='left'>Materia</TableCell>
                             <TableCell align='left'>Estudiante</TableCell>
@@ -119,14 +153,14 @@ export default function TablaAsesorias({ rows = [] }) {
                     </TableHead>
 
                     <TableBody>
-                        {rows.length === 0 ? (
+                        {visibleRows.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={7} align="center" sx={{ py: 3, color: '#666' }}>
                                     No se encontraron registros
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            rows.map((row, index) => {
+                            visibleRows.map((row, index) => {
                                 const tieneMateriales = row.raw?.material_adicional && row.raw.material_adicional.length > 0;
 
                                 return (
@@ -186,7 +220,27 @@ export default function TablaAsesorias({ rows = [] }) {
                 </Table>
             </TableContainer>
 
-            {/* Renderizado de Modales con la propiedad showToast */}
+            {/* Paginación con total de páginas calculado */}
+            <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={rows.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                labelRowsPerPage="Filas por página:"
+                labelDisplayedRows={({ page, count }) => {
+                    const totalPages = Math.ceil(count / rowsPerPage) || 1;
+                    return `Página ${page + 1} de ${totalPages}`;
+                }}
+                sx={{
+                    borderTop: '1px solid #e0e0e0',
+                    px: 2
+                }}
+            />
+
+            {/* Modales */}
             <ModalInfoAsesoria
                 open={modalInfoOpen}
                 onClose={() => setModalInfoOpen(false)}
@@ -215,13 +269,13 @@ export default function TablaAsesorias({ rows = [] }) {
                 data={selectedRow}
             />
 
-            {/* Toast Global Flotante */}
+            {/* Toast Global */}
             <ToastNotification
                 open={toast.open}
                 onClose={handleCloseToast}
                 message={toast.message}
                 type={toast.type}
             />
-        </>
+        </Paper>
     );
 }
