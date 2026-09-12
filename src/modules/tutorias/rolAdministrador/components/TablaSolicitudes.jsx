@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -7,118 +8,218 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import InfoIcon from '@mui/icons-material/Info';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
+import TablePagination from '@mui/material/TablePagination';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
+import Tooltip from '@mui/material/Tooltip';
 
-// Datos adaptados a la nueva estructura de la imagen
-const rows = [
-    { id: 1, materia: "Programacion orientada en objetos", estudiante: "Crisoforo Ahuelican Ahuejote", asesor: "Jenifer Guadalupe Tizoc Lopez", fecha: "25/08/2026", horario: "9:00 - 10:00 AM" },
-    { id: 2, materia: "Programacion orientada en objetos", estudiante: "Crisoforo Ahuelican Ahuejote", asesor: "Jenifer Guadalupe Tizoc Lopez", fecha: "25/08/2026", horario: "9:00 - 10:00 AM" },
-    { id: 3, materia: "Programacion orientada en objetos", estudiante: "Crisoforo Ahuelican Ahuejote", asesor: "Jenifer Guadalupe Tizoc Lopez", fecha: "25/08/2026", horario: "9:00 - 10:00 AM" },
-    { id: 4, materia: "Programacion orientada en objetos", estudiante: "Crisoforo Ahuelican Ahuejote", asesor: "Jenifer Guadalupe Tizoc Lopez", fecha: "25/08/2026", horario: "9:00 - 10:00 AM" },
-];
+import ToastNotification from '../../../../components/ui/ToastNotification';
+import {
+    ModalConfirmarAsesoria,
+    ModalEliminarAsesoria
+} from './ModalesAsesorias';
 
-export default function TablaSolicitudes() {
-    const handleInfo = (id) => console.log('Info id:', id);
-    const handleEditar = (id) => console.log('Editar id:', id);
-    const handleEliminar = (id) => console.log('Eliminar id:', id);
+export default function TablaSolicitudes({ rows = [] }) {
+    // Estados para Modales
+    const [selectedRow, setSelectedRow] = useState(null);
+    const [modalConfirmOpen, setModalConfirmOpen] = useState(false);
+    const [modalEliminarOpen, setModalEliminarOpen] = useState(false);
+
+    // Estado para el Toast Global
+    const [toast, setToast] = useState({
+        open: false,
+        message: '',
+        type: 'info'
+    });
+
+    // Estados para la Paginación
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    // Handlers para Paginación
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    const showToast = (message, type = 'info') => {
+        setToast({ open: true, message, type });
+    };
+
+    const handleCloseToast = () => {
+        setToast((prev) => ({ ...prev, open: false }));
+    };
+
+    // Handlers para Abrir Modales
+    const handleOpenAprobar = (row) => {
+        setSelectedRow(row);
+        setModalConfirmOpen(true);
+    };
+
+    const handleOpenEliminar = (row) => {
+        setSelectedRow(row);
+        setModalEliminarOpen(true);
+    };
+
+    const handleConfirmAprobar = () => {
+        console.log('Solicitud aprobada:', selectedRow?.id);
+        setModalConfirmOpen(false);
+    };
+
+    const handleConfirmEliminar = () => {
+        console.log('Solicitud eliminada:', selectedRow?.id);
+        setModalEliminarOpen(false);
+    };
+
+    // Corte de filas visibles según la página actual
+    const visibleRows = rows.slice(
+        page * rowsPerPage,
+        page * rowsPerPage + rowsPerPage
+    );
 
     return (
-        <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{
-                p: 2.5,
-                borderRadius: '12px',
+        <Paper 
+            variant="outlined" 
+            sx={{ 
+                width: '100%', 
+                borderRadius: '12px', 
                 borderColor: '#e0e0e0',
-                width: '100%',
-                margin: 'auto'
+                overflow: 'hidden' 
             }}
         >
-            <Table
-                sx={{
-
-                    borderCollapse: 'separate',
-                    borderSpacing: '0 10px'
+            {/* Contenedor con altura máxima y scroll interno exclusivo */}
+            <TableContainer 
+                sx={{ 
+                    px: 2.5, 
+                    pt: 2.5, 
+                    pb: 0,
+                    maxHeight: '500px', 
+                    overflowY: 'auto' 
                 }}
-                aria-label="tabla de usuarios"
             >
-                <TableHead>
-                    <TableRow sx={{ '& th': { border: 0, fontWeight: 'bold', color: '#1a1a1a', pb: 1 } }}>
-                        <TableCell align="center" sx={{ width: '60px' }}>Id</TableCell>
-                        <TableCell align="left">Materia</TableCell>
-                        <TableCell align="left">Estudiante</TableCell>
-                        <TableCell align="left">Asesor</TableCell>
-                        <TableCell align="left">Fecha</TableCell>
-                        <TableCell align="left">Horario</TableCell>
-                        <TableCell align="left">Modalidad</TableCell>
-                        <TableCell sx={{ width: '220px' }} align='center'>Acciones</TableCell>
-                    </TableRow>
-                </TableHead>
+                <Table
+                    stickyHeader
+                    sx={{
+                        minWidth: 500,
+                        borderCollapse: 'separate',
+                        borderSpacing: '0 10px'
+                    }}
+                >
+                    <TableHead>
+                        <TableRow 
+                            sx={{ 
+                                '& th': { 
+                                    border: 0, 
+                                    fontWeight: 'bold', 
+                                    color: '#1a1a1a', 
+                                    pb: 1,
+                                    backgroundColor: '#ffffff',
+                                    py: 1.5
+                                } 
+                            }}
+                        >
+                            <TableCell sx={{ width: '60px' }} align='center'>ID</TableCell>
+                            <TableCell align='left'>Materia</TableCell>
+                            <TableCell align='left'>Estudiante</TableCell>
+                            <TableCell align='center'>Fecha</TableCell>
+                            <TableCell align='center'>Horario</TableCell>
+                            <TableCell align='center'>Modalidad</TableCell>
+                            <TableCell sx={{ width: '130px' }} align='center'>Acciones</TableCell>
+                        </TableRow>
+                    </TableHead>
 
-                <TableBody>
-                    {rows.map((row, index) => {
-                        const isEven = index % 2 === 0;
-                        const backgroundColor = isEven ? '#f4f5f7' : '#dbe2ea';
-
-                        return (
-                            <TableRow
-                                key={row.id}
-                                sx={{
-                                    backgroundColor: backgroundColor,
-                                    '& td': { border: 0, py: 1.5 },
-                                    '& td:first-of-type': {
-                                        borderTopLeftRadius: '8px',
-                                        borderBottomLeftRadius: '8px'
-                                    },
-                                    '& td:last-child': {
-                                        borderTopRightRadius: '8px',
-                                        borderBottomRightRadius: '8px'
-                                    },
-                                }}
-                            >
-                                <TableCell align="center">{row.id}</TableCell>
-                                <TableCell align="left">{row.estudiante}</TableCell>
-                                <TableCell align="left">{row.asesor}</TableCell>
-                                <TableCell align="left">{row.fecha}</TableCell>
-                                <TableCell align="left">{row.horario}</TableCell>
-                                <TableCell align="left">{row.modalidad}</TableCell>
-                                <TableCell align="left">{row.fecha}</TableCell>
-                                <TableCell align='center'>
-                                    <Stack direction="row" spacing={1} justifyContent="center">
-                                        <Tooltip title="Información">
-                                            <IconButton color="primary" onClick={() => handleInfo(row.id)}>
-                                                <InfoIcon />
-                                            </IconButton>
-                                        </Tooltip>
-
-                                        <Tooltip title="Material adicional">
-                                            <IconButton sx={{ color: '#cbcf0a' }} onClick={() => handleInfo(row.id)}>
-                                                <MenuBookIcon />
-                                            </IconButton>
-                                        </Tooltip>
-
-                                        <Tooltip title="Aprobar asesoría">
-                                            <IconButton color="success" onClick={() => handleAprobar(row.id)}>
-                                                <CheckCircleIcon />
-                                            </IconButton>
-                                        </Tooltip>
-
-                                        <Tooltip title="Eliminar">
-                                            <IconButton color="error" onClick={() => handleEliminar(row.id)}>
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </Stack>
+                    <TableBody>
+                        {visibleRows.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={7} align="center" sx={{ py: 3, color: '#666' }}>
+                                    No se encontraron solicitudes
                                 </TableCell>
                             </TableRow>
-                        );
-                    })}
-                </TableBody>
-            </Table>
-        </TableContainer>
+                        ) : (
+                            visibleRows.map((row, index) => (
+                                <TableRow
+                                    key={row.id}
+                                    sx={{
+                                        backgroundColor: index % 2 === 0 ? '#f4f5f7' : '#dbe2ea',
+                                        '& td': { border: 0, py: 1.5 },
+                                        '& td:first-of-type': { borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px' },
+                                        '& td:last-child': { borderTopRightRadius: '8px', borderBottomRightRadius: '8px' },
+                                    }}
+                                >
+                                    <TableCell align='center'>{row.id}</TableCell>
+                                    <TableCell align='left'>{row.materia}</TableCell>
+                                    <TableCell align='left'>{row.estudiante}</TableCell>
+                                    <TableCell align='center'>{row.fecha}</TableCell>
+                                    <TableCell align='center'>{row.horario}</TableCell>
+                                    <TableCell align='center'>{row.modalidad}</TableCell>
+                                    <TableCell align='center'>
+                                        <Stack direction="row" spacing={1} justifyContent="center">
+                                            <Tooltip title="Aprobar solicitud">
+                                                <IconButton color="success" onClick={() => handleOpenAprobar(row)}>
+                                                    <CheckCircleIcon />
+                                                </IconButton>
+                                            </Tooltip>
+
+                                            <Tooltip title="Eliminar">
+                                                <IconButton color="error" onClick={() => handleOpenEliminar(row)}>
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Stack>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+
+            {/* Paginación */}
+            <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={rows.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                labelRowsPerPage="Filas por página:"
+                labelDisplayedRows={({ page, count }) => {
+                    const totalPages = Math.ceil(count / rowsPerPage) || 1;
+                    return `Página ${page + 1} de ${totalPages}`;
+                }}
+                sx={{
+                    borderTop: '1px solid #e0e0e0',
+                    px: 2
+                }}
+            />
+
+            {/* Modales */}
+            <ModalConfirmarAsesoria
+                open={modalConfirmOpen}
+                onClose={() => setModalConfirmOpen(false)}
+                onConfirm={handleConfirmAprobar}
+                showToast={showToast}
+            />
+
+            <ModalEliminarAsesoria
+                open={modalEliminarOpen}
+                onClose={() => setModalEliminarOpen(false)}
+                onConfirm={handleConfirmEliminar}
+                showToast={showToast}
+            />
+
+            {/* Toast Global */}
+            <ToastNotification
+                open={toast.open}
+                onClose={handleCloseToast}
+                message={toast.message}
+                type={toast.type}
+            />
+        </Paper>
     );
 }

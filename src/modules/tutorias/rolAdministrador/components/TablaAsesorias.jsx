@@ -148,7 +148,7 @@ export default function TablaAsesorias({ rows = [] }) {
                             <TableCell align='left'>Asesor</TableCell>
                             <TableCell align='center'>Inicio</TableCell>
                             <TableCell align='center'>Horario</TableCell>
-                            <TableCell sx={{ width: '220px' }} align='center'>Acciones</TableCell>
+                            <TableCell sx={{ width: '200px' }} align='center'>Acciones</TableCell>
                         </TableRow>
                     </TableHead>
 
@@ -180,7 +180,7 @@ export default function TablaAsesorias({ rows = [] }) {
                                         <TableCell align='center'>{row.inicio}</TableCell>
                                         <TableCell align='center'>{row.horario}</TableCell>
                                         <TableCell align='center'>
-                                            <Stack direction="row" spacing={1} justifyContent="center">
+                                            <Stack direction="row" spacing={0.2} justifyContent="center">
                                                 <Tooltip title="Información">
                                                     <IconButton color="primary" onClick={() => handleOpenInfo(row)}>
                                                         <InfoIcon />
