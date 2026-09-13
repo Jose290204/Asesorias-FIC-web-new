@@ -59,6 +59,17 @@ export default function Estudiantes() {
         }
     };
 
+    // Helper para desenfocar elementos activos antes de abrir el modal
+    const clearFocus = (event) => {
+        if (event?.currentTarget) event.currentTarget.blur();
+        document.activeElement?.blur();
+    };
+
+    const handleOpenModalExcel = (event) => {
+        clearFocus(event);
+        setModalExcelOpen(true);
+    };
+
     const filteredEstudiantes = estudiantes.filter((item) => {
         const term = searchTerm.toLowerCase().trim();
         if (!term) return true;
@@ -90,7 +101,7 @@ export default function Estudiantes() {
                 />
 
                 <button
-                    onClick={() => setModalExcelOpen(true)}
+                    onClick={handleOpenModalExcel}
                     className="bg-[#2e7d32] hover:bg-[#1b5e20] text-sm text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2"
                 >
                     <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">

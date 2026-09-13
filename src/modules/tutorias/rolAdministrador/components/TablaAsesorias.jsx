@@ -60,23 +60,33 @@ export default function TablaAsesorias({ rows = [] }) {
         setToast((prev) => ({ ...prev, open: false }));
     };
 
-    // Handlers para Abrir Modales
-    const handleOpenInfo = (row) => {
+    // Helper para desenfocar elementos antes de abrir un modal
+    const clearFocus = (event) => {
+        if (event?.currentTarget) event.currentTarget.blur();
+        document.activeElement?.blur();
+    };
+
+    // Handlers para Abrir Modales con remoción de foco
+    const handleOpenInfo = (row, event) => {
+        clearFocus(event);
         setSelectedRow(row);
         setModalInfoOpen(true);
     };
 
-    const handleOpenMaterial = (row) => {
+    const handleOpenMaterial = (row, event) => {
+        clearFocus(event);
         setSelectedRow(row);
         setModalMaterialOpen(true);
     };
 
-    const handleOpenAprobar = (row) => {
+    const handleOpenAprobar = (row, event) => {
+        clearFocus(event);
         setSelectedRow(row);
         setModalConfirmOpen(true);
     };
 
-    const handleOpenEliminar = (row) => {
+    const handleOpenEliminar = (row, event) => {
+        clearFocus(event);
         setSelectedRow(row);
         setModalEliminarOpen(true);
     };
@@ -95,7 +105,6 @@ export default function TablaAsesorias({ rows = [] }) {
         console.log('Datos actualizados:', updatedData);
     };
 
-    // Corte de filas visibles según la página actual
     const visibleRows = rows.slice(
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage
@@ -111,11 +120,10 @@ export default function TablaAsesorias({ rows = [] }) {
                 overflow: 'hidden' 
             }}
         >
-            {/* Contenedor con altura máxima y scroll interno exclusivo */}
             <TableContainer 
                 sx={{ 
-                    px: 2.5, 
-                    pt: 2.5, 
+                    px: 0, 
+                    pt: 0, 
                     pb: 0,
                     maxHeight: '500px', 
                     overflowY: 'auto' 
@@ -126,7 +134,8 @@ export default function TablaAsesorias({ rows = [] }) {
                     sx={{
                         minWidth: 500,
                         borderCollapse: 'separate',
-                        borderSpacing: '0 10px'
+                        borderSpacing: '0 10px',
+                        px: 2.5
                     }}
                 >
                     <TableHead>
@@ -136,10 +145,16 @@ export default function TablaAsesorias({ rows = [] }) {
                                     border: 0, 
                                     fontWeight: 'bold', 
                                     color: '#1a1a1a', 
-                                    pb: 1,
                                     backgroundColor: '#ffffff',
-                                    py: 1.5
-                                } 
+                                    py: 2,
+                                    zIndex: 2
+                                },
+                                '& th:first-of-type': {
+                                    pl: 2.5
+                                },
+                                '& th:last-child': {
+                                    pr: 2.5
+                                }
                             }}
                         >
                             <TableCell sx={{ width: '60px' }} align='center'>ID</TableCell>
@@ -165,12 +180,20 @@ export default function TablaAsesorias({ rows = [] }) {
 
                                 return (
                                     <TableRow
-                                        key={row.id}
+                                        key={row.id ? `${row.id}-${index}` : index}
                                         sx={{
                                             backgroundColor: index % 2 === 0 ? '#f4f5f7' : '#dbe2ea',
                                             '& td': { border: 0, py: 1.5 },
-                                            '& td:first-of-type': { borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px' },
-                                            '& td:last-child': { borderTopRightRadius: '8px', borderBottomRightRadius: '8px' },
+                                            '& td:first-of-type': { 
+                                                borderTopLeftRadius: '8px', 
+                                                borderBottomLeftRadius: '8px',
+                                                pl: 2.5
+                                            },
+                                            '& td:last-child': { 
+                                                borderTopRightRadius: '8px', 
+                                                borderBottomRightRadius: '8px',
+                                                pr: 2.5
+                                            },
                                         }}
                                     >
                                         <TableCell align='center'>{row.id}</TableCell>
@@ -180,9 +203,9 @@ export default function TablaAsesorias({ rows = [] }) {
                                         <TableCell align='center'>{row.inicio}</TableCell>
                                         <TableCell align='center'>{row.horario}</TableCell>
                                         <TableCell align='center'>
-                                            <Stack direction="row" spacing={0.2} justifyContent="center">
+                                            <Stack direction="row" spacing={0.2} sx={{ justifyContent: 'center' }}>
                                                 <Tooltip title="Información">
-                                                    <IconButton color="primary" onClick={() => handleOpenInfo(row)}>
+                                                    <IconButton color="primary" onClick={(e) => handleOpenInfo(row, e)}>
                                                         <InfoOutlinedIcon />
                                                     </IconButton>
                                                 </Tooltip>
@@ -192,7 +215,7 @@ export default function TablaAsesorias({ rows = [] }) {
                                                         <IconButton
                                                             disabled={!tieneMateriales}
                                                             sx={{ color: tieneMateriales ? '#cbcf0a' : 'inherit' }}
-                                                            onClick={() => handleOpenMaterial(row)}
+                                                            onClick={(e) => handleOpenMaterial(row, e)}
                                                         >
                                                             <MenuBookIcon />
                                                         </IconButton>
@@ -200,13 +223,13 @@ export default function TablaAsesorias({ rows = [] }) {
                                                 </Tooltip>
 
                                                 <Tooltip title="Aprobar asesoría">
-                                                    <IconButton color="success" onClick={() => handleOpenAprobar(row)}>
+                                                    <IconButton color="success" onClick={(e) => handleOpenAprobar(row, e)}>
                                                         <CheckCircleIcon />
                                                     </IconButton>
                                                 </Tooltip>
 
                                                 <Tooltip title="Eliminar">
-                                                    <IconButton color="error" onClick={() => handleOpenEliminar(row)}>
+                                                    <IconButton color="error" onClick={(e) => handleOpenEliminar(row, e)}>
                                                         <DeleteIcon />
                                                     </IconButton>
                                                 </Tooltip>
@@ -220,7 +243,6 @@ export default function TablaAsesorias({ rows = [] }) {
                 </Table>
             </TableContainer>
 
-            {/* Paginación con total de páginas calculado */}
             <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"

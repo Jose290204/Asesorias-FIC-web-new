@@ -45,12 +45,20 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
 
     const handleCloseToast = () => setToast((prev) => ({ ...prev, open: false }));
 
-    const handleOpenInfo = (row) => {
+    // Helper para desenfocar elementos activos antes de abrir el modal
+    const clearFocus = (event) => {
+        if (event?.currentTarget) event.currentTarget.blur();
+        document.activeElement?.blur();
+    };
+
+    const handleOpenInfo = (row, event) => {
+        clearFocus(event);
         setSelectedRow(row);
         setModalInfoOpen(true);
     };
 
-    const handleOpenEliminar = (row) => {
+    const handleOpenEliminar = (row, event) => {
+        clearFocus(event);
         setSelectedRow(row);
         setModalEliminarOpen(true);
     };
@@ -86,8 +94,8 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
                         >
                             <TableCell sx={{ width: '60px' }} align='center'>Id</TableCell>
                             <TableCell align='left'>Nombre</TableCell>
-                            <TableCell align='left'>correo</TableCell>
-                            <TableCell align='center'>Numero de cuenta</TableCell>
+                            <TableCell align='left'>Correo</TableCell>
+                            <TableCell align='center'>Número de cuenta</TableCell>
                             <TableCell align='center'>Grupo</TableCell>
                             <TableCell align='center'>Estado</TableCell>
                             <TableCell sx={{ width: '130px' }} align='center'>Acciones</TableCell>
@@ -119,12 +127,12 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
                                     <TableCell align='center'>{row.grupo}</TableCell>
                                     <TableCell align='center'>{row.estado}</TableCell>
                                     <TableCell align='center'>
-                                        <Stack direction="row" spacing={1} justifyContent="center">
+                                        <Stack direction="row" spacing={1} sx={{ justifyContent: 'center' }}>
                                             <Tooltip title="Información">
                                                 <IconButton 
                                                     size="small" 
                                                     sx={{ color: '#0d47a1' }} 
-                                                    onClick={() => handleOpenInfo(row)}
+                                                    onClick={(e) => handleOpenInfo(row, e)}
                                                 >
                                                     <InfoOutlinedIcon fontSize="medium" />
                                                 </IconButton>
@@ -134,7 +142,7 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
                                                 <IconButton 
                                                     size="small" 
                                                     sx={{ color: '#c62828' }} 
-                                                    onClick={() => handleOpenEliminar(row)}
+                                                    onClick={(e) => handleOpenEliminar(row, e)}
                                                 >
                                                     <DeleteIcon fontSize="medium" />
                                                 </IconButton>

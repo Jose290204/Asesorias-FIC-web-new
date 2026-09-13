@@ -54,13 +54,21 @@ export default function TablaAsesoresDisciplinares({ rows = [] }) {
         setToast((prev) => ({ ...prev, open: false }));
     };
 
+    // Helper para desenfocar elementos activos antes de abrir el modal
+    const clearFocus = (event) => {
+        if (event?.currentTarget) event.currentTarget.blur();
+        document.activeElement?.blur();
+    };
+
     // Handlers para Abrir Modales
-    const handleOpenInfo = (row) => {
+    const handleOpenInfo = (row, event) => {
+        clearFocus(event);
         setSelectedRow(row);
         setModalInfoOpen(true);
     };
 
-    const handleOpenEliminar = (row) => {
+    const handleOpenEliminar = (row, event) => {
+        clearFocus(event);
         setSelectedRow(row);
         setModalEliminarOpen(true);
     };
@@ -156,15 +164,19 @@ export default function TablaAsesoresDisciplinares({ rows = [] }) {
                                     <TableCell align='center'>{row.numeroCuenta}</TableCell>
                                     <TableCell align='center'>{row.estado}</TableCell>
                                     <TableCell align='center'>
-                                        <Stack direction="row" spacing={0.2} justifyContent="center">
+                                        <Stack
+                                            direction="row"
+                                            spacing={0.5}
+                                            sx={{ justifyContent: 'center' }}
+                                        >
                                             <Tooltip title="Información">
-                                                <IconButton color="primary" onClick={() => handleOpenInfo(row)}>
+                                                <IconButton color="primary" onClick={(e) => handleOpenInfo(row, e)}>
                                                     <InfoOutlinedIcon />
                                                 </IconButton>
                                             </Tooltip>
 
                                             <Tooltip title="Eliminar">
-                                                <IconButton color="error" onClick={() => handleOpenEliminar(row)}>
+                                                <IconButton color="error" onClick={(e) => handleOpenEliminar(row, e)}>
                                                     <DeleteIcon />
                                                 </IconButton>
                                             </Tooltip>

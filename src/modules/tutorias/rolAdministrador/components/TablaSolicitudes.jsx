@@ -54,13 +54,21 @@ export default function TablaSolicitudes({ rows = [] }) {
         setToast((prev) => ({ ...prev, open: false }));
     };
 
+    // Helper para desenfocar elementos activos antes de abrir el modal
+    const clearFocus = (event) => {
+        if (event?.currentTarget) event.currentTarget.blur();
+        document.activeElement?.blur();
+    };
+
     // Handlers para Abrir Modales
-    const handleOpenAprobar = (row) => {
+    const handleOpenAprobar = (row, event) => {
+        clearFocus(event);
         setSelectedRow(row);
         setModalConfirmOpen(true);
     };
 
-    const handleOpenEliminar = (row) => {
+    const handleOpenEliminar = (row, event) => {
+        clearFocus(event);
         setSelectedRow(row);
         setModalEliminarOpen(true);
     };
@@ -157,15 +165,15 @@ export default function TablaSolicitudes({ rows = [] }) {
                                     <TableCell align='center'>{row.horario}</TableCell>
                                     <TableCell align='center'>{row.modalidad}</TableCell>
                                     <TableCell align='center'>
-                                        <Stack direction="row" spacing={1} justifyContent="center">
+                                        <Stack direction="row" spacing={1} sx={{ justifyContent: 'center' }}>
                                             <Tooltip title="Aprobar solicitud">
-                                                <IconButton color="success" onClick={() => handleOpenAprobar(row)}>
+                                                <IconButton color="success" onClick={(e) => handleOpenAprobar(row, e)}>
                                                     <CheckCircleIcon />
                                                 </IconButton>
                                             </Tooltip>
 
                                             <Tooltip title="Eliminar">
-                                                <IconButton color="error" onClick={() => handleOpenEliminar(row)}>
+                                                <IconButton color="error" onClick={(e) => handleOpenEliminar(row, e)}>
                                                     <DeleteIcon />
                                                 </IconButton>
                                             </Tooltip>

@@ -17,7 +17,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 
 // Componentes y Servicios propios
-import InputBuscar from '../../../../components/ui/InputBuscar';// Importación agregada
+import InputBuscar from '../../../../components/ui/InputBuscar';
 import { getEstudiantes } from '../services/estudianteService';
 
 // --- 1. MODAL INFORMACIÓN ASESOR PAR ---
@@ -32,7 +32,7 @@ export function ModalInfoAsesorPar({ open, onClose, data, onSave, showToast }) {
     });
 
     useEffect(() => {
-        if (data) {
+        if (data && open) {
             const rawFecha = data.raw?.fecha_inicio || data.inicio;
             
             const fechaValida = rawFecha && dayjs(rawFecha).isValid()
@@ -48,7 +48,7 @@ export function ModalInfoAsesorPar({ open, onClose, data, onSave, showToast }) {
                 observaciones: data.raw?.observaciones || ''
             });
         }
-    }, [data]);
+    }, [data, open]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -56,8 +56,18 @@ export function ModalInfoAsesorPar({ open, onClose, data, onSave, showToast }) {
     };
 
     const handleApply = () => {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
         if (onSave) onSave({ ...data, ...formData });
         if (showToast) showToast('Cambios aplicados correctamente', 'info');
+        onClose();
+    };
+
+    const handleCloseModal = () => {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
         onClose();
     };
 
@@ -69,7 +79,8 @@ export function ModalInfoAsesorPar({ open, onClose, data, onSave, showToast }) {
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Dialog
                 open={open}
-                onClose={onClose}
+                onClose={handleCloseModal}
+                disableRestoreFocus
                 sx={{
                     '& .MuiPaper-root': {
                         width: '600px',
@@ -87,7 +98,7 @@ export function ModalInfoAsesorPar({ open, onClose, data, onSave, showToast }) {
                     Información Asesor Par
                     <IconButton
                         aria-label="close"
-                        onClick={onClose}
+                        onClick={handleCloseModal}
                         sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
                     >
                         <CloseIcon />
@@ -187,15 +198,26 @@ export function ModalInfoAsesorPar({ open, onClose, data, onSave, showToast }) {
 // --- 2. MODAL ELIMINAR ASESOR PAR ---
 export function ModalEliminarAsesorPar({ open, onClose, onConfirm, showToast }) {
     const handleConfirm = () => {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
         if (onConfirm) onConfirm();
         if (showToast) showToast('Asesor Par eliminado correctamente', 'error');
+        onClose();
+    };
+
+    const handleCloseModal = () => {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
         onClose();
     };
 
     return (
         <Dialog
             open={open}
-            onClose={onClose}
+            onClose={handleCloseModal}
+            disableRestoreFocus
             sx={{
                 '& .MuiPaper-root': {
                     width: '450px',
@@ -216,7 +238,7 @@ export function ModalEliminarAsesorPar({ open, onClose, onConfirm, showToast }) 
                 </Typography>
             </DialogContent>
             <DialogActions sx={{ p: 2, justifyContent: 'flex-end', gap: 1 }}>
-                <Button variant="outlined" color="inherit" onClick={onClose}>
+                <Button variant="outlined" color="inherit" onClick={handleCloseModal}>
                     Cancelar
                 </Button>
                 <Button variant="contained" color="error" onClick={handleConfirm}>
@@ -265,6 +287,9 @@ export function ModalAgregarAsesorPar({ open, onClose, onAsesorAgregado }) {
     });
 
     const handleConfirmar = () => {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
         if (!estudianteSeleccionado) return;
 
         if (onAsesorAgregado) {
@@ -274,8 +299,15 @@ export function ModalAgregarAsesorPar({ open, onClose, onAsesorAgregado }) {
         onClose();
     };
 
+    const handleCloseModal = () => {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
+        onClose();
+    };
+
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        <Dialog open={open} onClose={handleCloseModal} disableRestoreFocus maxWidth="sm" fullWidth>
             <DialogTitle className="font-bold text-xl">Agregar Asesor Par</DialogTitle>
             
             <DialogContent className="flex flex-col gap-4 py-4">
@@ -322,7 +354,7 @@ export function ModalAgregarAsesorPar({ open, onClose, onAsesorAgregado }) {
 
             <DialogActions className="p-4 gap-2">
                 <button
-                    onClick={onClose}
+                    onClick={handleCloseModal}
                     className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                 >
                     Cancelar

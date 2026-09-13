@@ -36,6 +36,17 @@ export default function AsesoresDisciplinares() {
         console.log("Eliminar asesor:", row);
     };
 
+    // Helper para desenfocar elementos activos antes de abrir el modal
+    const clearFocus = (event) => {
+        if (event?.currentTarget) event.currentTarget.blur();
+        document.activeElement?.blur();
+    };
+
+    const handleOpenModalExcel = (event) => {
+        clearFocus(event);
+        setModalExcelOpen(true);
+    };
+
     // Filtro por búsqueda en tiempo real (Nombre, Correo o Número de Cuenta)
     const filasFiltradas = asesores.filter((row) => {
         const texto = busqueda.toLowerCase().trim();
@@ -65,7 +76,7 @@ export default function AsesoresDisciplinares() {
                 />
                 
                 <button 
-                    onClick={() => setModalExcelOpen(true)}
+                    onClick={handleOpenModalExcel}
                     className="bg-[#2e7d32] hover:bg-[#1b5e20] text-sm text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2"
                 >
                     <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">

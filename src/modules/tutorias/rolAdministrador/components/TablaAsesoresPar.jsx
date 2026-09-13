@@ -75,22 +75,22 @@ export default function TablaAsesoresPar({ rows = [] }) {
     );
 
     return (
-        <Paper 
-            variant="outlined" 
-            sx={{ 
-                width: '100%', 
-                borderRadius: '12px', 
+        <Paper
+            variant="outlined"
+            sx={{
+                width: '100%',
+                borderRadius: '12px',
                 borderColor: '#e0e0e0',
-                overflow: 'hidden' 
+                overflow: 'hidden'
             }}
         >
-            <TableContainer 
-                sx={{ 
-                    px: 2.5, 
-                    pt: 2.5, 
+            <TableContainer
+                sx={{
+                    px: 2.5,
+                    pt: 2.5,
                     pb: 0,
-                    maxHeight: '500px', 
-                    overflowY: 'auto' 
+                    maxHeight: '500px',
+                    overflowY: 'auto'
                 }}
             >
                 <Table
@@ -102,16 +102,16 @@ export default function TablaAsesoresPar({ rows = [] }) {
                     }}
                 >
                     <TableHead>
-                        <TableRow 
-                            sx={{ 
-                                '& th': { 
-                                    border: 0, 
-                                    fontWeight: 'bold', 
-                                    color: '#1a1a1a', 
+                        <TableRow
+                            sx={{
+                                '& th': {
+                                    border: 0,
+                                    fontWeight: 'bold',
+                                    color: '#1a1a1a',
                                     pb: 1,
                                     backgroundColor: '#ffffff',
                                     py: 1.5
-                                } 
+                                }
                             }}
                         >
                             <TableCell sx={{ width: '60px' }} align='center'>ID</TableCell>
@@ -148,8 +148,12 @@ export default function TablaAsesoresPar({ rows = [] }) {
                                     <TableCell align='left'>{row.telefono}</TableCell>
                                     <TableCell align='center'>{row.numeroCuenta}</TableCell>
                                     <TableCell align='center'>{row.estado}</TableCell>
-                                    <TableCell align='center'>
-                                        <Stack direction="row" spacing={0.5} justifyContent="center">
+                                    <TableCell align="center">
+                                        <Stack
+                                            direction="row"
+                                            spacing={0.5}
+                                            sx={{ justifyContent: 'center' }}
+                                        >
                                             <Tooltip title="Información">
                                                 <IconButton color="primary" onClick={() => handleOpenInfo(row)}>
                                                     <InfoOutlinedIcon />
