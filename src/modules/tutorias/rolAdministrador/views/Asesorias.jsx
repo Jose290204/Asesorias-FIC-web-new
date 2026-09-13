@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import BotonFiltro from "../../../../components/ui/BotonFlitro";
 import TablaAsesorias from "../components/TablaAsesorias";
 import InputBuscar from "../../../../components/ui/InputBuscar";
-import BotonCarga from "../components/BotonAccion";
 import ModalFiltros from "../../../../components/ui/ModalFiltros";
-import ModalCargaExcel from "../components/ModalCargaExel";
 import { getAsesorias } from "../services/asesoriasService";
+import ModalCargaExcel from "../components/ModalCargaExel";
 
 const initialFiltros = {
     licenciatura: "",
@@ -19,15 +18,14 @@ export default function Asesorias() {
     const [asesorias, setAsesorias] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [openModalFiltros, setopenModalFiltros] = useState(false);
+    
+    // 1. Estado agregado para controlar la visibilidad del modal de Excel
+    const [modalExcelOpen, setModalExcelOpen] = useState(false);
+    
     const [busqueda, setBusqueda] = useState("");
     const [filtros, setFiltros] = useState(initialFiltros);
 
-    const [modalExcelOpen, setModalExcelOpen] = useState(false);
-    const handleExcelData = (data) => {
-        console.log("Asesorías recibidas del Excel:", data);
-        // Aquí puedes realizar la llamada a tu API/Servicio para enviar las asesorías cargadas
-    };
-    // Cargar los datos desde el servicio\
+    // Cargar los datos desde el servicio
     useEffect(() => {
         getAsesorias()
             .then((data) => {
@@ -40,6 +38,13 @@ export default function Asesorias() {
                 setCargando(false);
             });
     }, []);
+
+    // 2. Función agregada para manejar los datos cargados desde el Excel
+    const handleExcelData = (datosCargados) => {
+        console.log("Datos cargados desde Excel:", datosCargados);
+        // Aquí puedes hacer un push/merge a tu lista de asesorías o llamar a tu API
+        // setAsesorias((prev) => [...prev, ...datosCargados]);
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -58,7 +63,7 @@ export default function Asesorias() {
         setFiltros(initialFiltros);
     };
 
-    // Filtrado en tiempo rreal
+    // Filtrado en tiempo real
     const filasFiltradas = asesorias.filter((row) => {
         const texto = busqueda.toLowerCase().trim();
         if (!texto) return true;
@@ -91,17 +96,11 @@ export default function Asesorias() {
                     className="bg-[#2e7d32] hover:bg-[#1b5e20] text-sm text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2"
                 >
                     <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1.8 14.8l-1.4 1.4L12 15.8l-2.4 2.4-1.4-1.4 2.4-2.4-2.4-2.4 1.4-1.4 2.4 2.4 2.4-2.4 1.4 1.4-2.4 2.4 2.4 2.4zM13 9V3.5L18.5 9H13z" />
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1.8 14.8l-1.4 1.4L12 15.8l-2.4 2.4-1.4-1.4 2.4-2.4-2.4-2.4 1.4-1.4 2.4 2.4 2.4-2.4 1.4 1.4-2.4 2.4 2.4 2.4zM13 9V3.5L18.5 9H13z"/>
                     </svg>
-                    Cargar Asesorias
+                    Cargar Asesores
                 </button>
             </div>
-
-            <ModalCargaExcel
-                open={modalExcelOpen}
-                onClose={() => setModalExcelOpen(false)}
-                onDataLoaded={handleExcelData}
-            />
 
             {cargando ? (
                 <p className="text-gray-500 font-medium">Cargando asesorías...</p>
@@ -109,6 +108,7 @@ export default function Asesorias() {
                 <TablaAsesorias rows={filasFiltradas} />
             )}
 
+            {/* Modal de Filtros */}
             <ModalFiltros
                 open={openModalFiltros}
                 onClose={() => setopenModalFiltros(false)}
@@ -200,6 +200,13 @@ export default function Asesorias() {
                     </div>
                 </div>
             </ModalFiltros>
+
+            {/* 3. Renderizado del Modal para Cargas de Excel */}
+            <ModalCargaExcel
+                open={modalExcelOpen}
+                onClose={() => setModalExcelOpen(false)}
+                onDataLoaded={handleExcelData}
+            />
         </div>
     );
 }
