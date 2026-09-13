@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import BotonFiltro from "../../../../components/ui/BotonFlitro";
 import TablaAsesorias from "../components/TablaAsesorias";
 import InputBuscar from "../../../../components/ui/InputBuscar";
-import BotonAccion from "../../../../components/ui/BotonAccion";
+import BotonCarga from "../components/BotonAccion";
 import ModalFiltros from "../../../../components/ui/ModalFiltros";
+import ModalCargaExcel from "../components/ModalCargaExel";
 import { getAsesorias } from "../services/asesoriasService";
 
 const initialFiltros = {
@@ -21,6 +22,11 @@ export default function Asesorias() {
     const [busqueda, setBusqueda] = useState("");
     const [filtros, setFiltros] = useState(initialFiltros);
 
+    const [modalExcelOpen, setModalExcelOpen] = useState(false);
+    const handleExcelData = (data) => {
+        console.log("Asesorías recibidas del Excel:", data);
+        // Aquí puedes realizar la llamada a tu API/Servicio para enviar las asesorías cargadas
+    };
     // Cargar los datos desde el servicio\
     useEffect(() => {
         getAsesorias()
@@ -80,8 +86,22 @@ export default function Asesorias() {
                     value={busqueda}
                     onChange={(e) => setBusqueda(e.target.value)}
                 />
-                <BotonAccion label="Cargar Asesoria" />
+                <button 
+                    onClick={() => setModalExcelOpen(true)}
+                    className="bg-[#2e7d32] hover:bg-[#1b5e20] text-sm text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2"
+                >
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1.8 14.8l-1.4 1.4L12 15.8l-2.4 2.4-1.4-1.4 2.4-2.4-2.4-2.4 1.4-1.4 2.4 2.4 2.4-2.4 1.4 1.4-2.4 2.4 2.4 2.4zM13 9V3.5L18.5 9H13z" />
+                    </svg>
+                    Cargar Asesorias
+                </button>
             </div>
+
+            <ModalCargaExcel
+                open={modalExcelOpen}
+                onClose={() => setModalExcelOpen(false)}
+                onDataLoaded={handleExcelData}
+            />
 
             {cargando ? (
                 <p className="text-gray-500 font-medium">Cargando asesorías...</p>

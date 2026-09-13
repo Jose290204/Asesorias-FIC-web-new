@@ -9,7 +9,7 @@ import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import IconButton from '@mui/material/IconButton';
 import TablePagination from '@mui/material/TablePagination';
-import InfoIcon from '@mui/icons-material/Info';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -183,7 +183,7 @@ export default function TablaAsesorias({ rows = [] }) {
                                             <Stack direction="row" spacing={0.2} justifyContent="center">
                                                 <Tooltip title="Información">
                                                     <IconButton color="primary" onClick={() => handleOpenInfo(row)}>
-                                                        <InfoIcon />
+                                                        <InfoOutlinedIcon />
                                                     </IconButton>
                                                 </Tooltip>
 

@@ -6,7 +6,7 @@ import AdminLayout from './layouts/AdminLayout';
 import Login from './modules/auth/view/Login';
 
 // Vistas del Dashboard admin
-import AsesoresDisci from './modules/tutorias/rolAdministrador/views/AsesoresDisci';
+import AsesoresDisciplinares from './modules/tutorias/rolAdministrador/views/AsesoresDisciplinares';
 import AsesoresPar from './modules/tutorias/rolAdministrador/views/AsesoresPar';
 import Asesorias from './modules/tutorias/rolAdministrador/views/Asesorias';
 import Catalogos from './modules/tutorias/rolAdministrador/views/Catalogos';
@@ -36,7 +36,7 @@ export default function App() {
           <Route path="solicitudes" element={<Solicitudes />} />
           <Route path="reportes" element={<Reportes />} />
           <Route path="estudiantes" element={<Estudiantes />} />
-          <Route path="asesores-disciplinares" element={<AsesoresDisci />} />
+          <Route path="asesores-disciplinares" element={<AsesoresDisciplinares />} />
           <Route path="asesores-par" element={<AsesoresPar />} />
           <Route path="catalogos" element={<Catalogos />} />
         </Route>

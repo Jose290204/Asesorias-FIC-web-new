@@ -1,4 +1,4 @@
-export default function BotonAccion({ label, onClick, color = "bg-[#2e7d32] hover:bg-[#1b5e20]" }) {
+export default function BotonCarga({ label, onClick, color = "bg-[#2e7d32] hover:bg-[#1b5e20]" }) {
   return (
     <button
       onClick={onClick}

@@ -251,7 +251,7 @@ export function ModalEliminarAsesoria({ open, onClose, onConfirm, showToast }) {
                 '& .MuiPaper-root': {
                     width: '450px',
                     maxWidth: '450px',
-                    height: '240px',
+                    height: '250px',
                     borderRadius: '12px',
                     display: 'flex',
                     flexDirection: 'column',
