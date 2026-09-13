@@ -102,8 +102,8 @@ export default function TablaSolicitudes({ rows = [] }) {
             {/* Contenedor con altura máxima y scroll interno exclusivo */}
             <TableContainer 
                 sx={{ 
-                    px: 2.5, 
-                    pt: 2.5, 
+                    px: 0, 
+                    pt: 0, 
                     pb: 0,
                     maxHeight: '500px', 
                     overflowY: 'auto' 
@@ -114,7 +114,8 @@ export default function TablaSolicitudes({ rows = [] }) {
                     sx={{
                         minWidth: 500,
                         borderCollapse: 'separate',
-                        borderSpacing: '0 10px'
+                        borderSpacing: '0 10px',
+                        px: 2.5
                     }}
                 >
                     <TableHead>
@@ -124,10 +125,16 @@ export default function TablaSolicitudes({ rows = [] }) {
                                     border: 0, 
                                     fontWeight: 'bold', 
                                     color: '#1a1a1a', 
-                                    pb: 1,
                                     backgroundColor: '#ffffff',
-                                    py: 1.5
-                                } 
+                                    py: 2,
+                                    zIndex: 2
+                                },
+                                '& th:first-of-type': {
+                                    pl: 2.5
+                                },
+                                '& th:last-child': {
+                                    pr: 2.5
+                                }
                             }}
                         >
                             <TableCell sx={{ width: '60px' }} align='center'>ID</TableCell>

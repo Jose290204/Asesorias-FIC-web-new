@@ -69,27 +69,47 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
     );
 
     return (
-        <Paper 
-            variant="outlined" 
-            sx={{ 
-                width: '100%', 
-                borderRadius: '12px', 
+        <Paper
+            variant="outlined"
+            sx={{
+                width: '100%',
+                borderRadius: '12px',
                 borderColor: '#e0e0e0',
-                overflow: 'hidden' 
+                overflow: 'hidden'
             }}
         >
-            <TableContainer sx={{ px: 2.5, pt: 2.5, pb: 0, maxHeight: '500px', overflowY: 'auto' }}>
-                <Table stickyHeader sx={{ minWidth: 650, borderCollapse: 'separate', borderSpacing: '0 10px' }}>
+            <TableContainer sx={{
+                px: 0,
+                pt: 0,
+                pb: 0,
+                maxHeight: '500px',
+                overflowY: 'auto'
+            }}>
+                <Table
+                    stickyHeader
+                    sx={{
+                        minWidth: 500,
+                        borderCollapse: 'separate',
+                        borderSpacing: '0 10px',
+                        px: 2.5
+                    }}>
                     <TableHead>
-                        <TableRow 
+                        <TableRow
                             sx={{ 
                                 '& th': { 
                                     border: 0, 
                                     fontWeight: 'bold', 
                                     color: '#1a1a1a', 
                                     backgroundColor: '#ffffff',
-                                    py: 1.5
-                                } 
+                                    py: 2,
+                                    zIndex: 2
+                                },
+                                '& th:first-of-type': {
+                                    pl: 2.5
+                                },
+                                '& th:last-child': {
+                                    pr: 2.5
+                                }
                             }}
                         >
                             <TableCell sx={{ width: '60px' }} align='center'>Id</TableCell>
@@ -129,9 +149,9 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
                                     <TableCell align='center'>
                                         <Stack direction="row" spacing={1} sx={{ justifyContent: 'center' }}>
                                             <Tooltip title="Información">
-                                                <IconButton 
-                                                    size="small" 
-                                                    sx={{ color: '#0d47a1' }} 
+                                                <IconButton
+                                                    size="small"
+                                                    sx={{ color: '#0d47a1' }}
                                                     onClick={(e) => handleOpenInfo(row, e)}
                                                 >
                                                     <InfoOutlinedIcon fontSize="medium" />
@@ -139,9 +159,9 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
                                             </Tooltip>
 
                                             <Tooltip title="Eliminar">
-                                                <IconButton 
-                                                    size="small" 
-                                                    sx={{ color: '#c62828' }} 
+                                                <IconButton
+                                                    size="small"
+                                                    sx={{ color: '#c62828' }}
                                                     onClick={(e) => handleOpenEliminar(row, e)}
                                                 >
                                                     <DeleteIcon fontSize="medium" />

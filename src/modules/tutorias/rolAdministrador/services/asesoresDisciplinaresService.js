@@ -22,6 +22,54 @@ const mockAsesores = [
         telefono: "6679876543",
         numero_cuenta: "22116836",
         estado: "INACTIVO"
+    },
+    {
+        id_asesor: 4,
+        nombre: "Crisoforo Ahuelican Ahuejote",
+        correo: "crisoforoahuelican@info.uas.edu.mx",
+        telefono: "6678921230",
+        numero_cuenta: "22116834",
+        estado: "ACTIVO"
+    },
+    {
+        id_asesor: 5,
+        nombre: "Jenifer Guadalupe Tizoc Lopez",
+        correo: "jenifer.tizoc@info.uas.edu.mx",
+        telefono: "6671234567",
+        numero_cuenta: "22116835",
+        estado: "ACTIVO"
+    },
+    {
+        id_asesor: 6,
+        nombre: "Jose Angel Astorga Mejia",
+        correo: "jose.astorga@info.uas.edu.mx",
+        telefono: "6679876543",
+        numero_cuenta: "22116836",
+        estado: "INACTIVO"
+    },
+    {
+        id_asesor: 7,
+        nombre: "Crisoforo Ahuelican Ahuejote",
+        correo: "crisoforoahuelican@info.uas.edu.mx",
+        telefono: "6678921230",
+        numero_cuenta: "22116834",
+        estado: "ACTIVO"
+    },
+    {
+        id_asesor: 8,
+        nombre: "Jenifer Guadalupe Tizoc Lopez",
+        correo: "jenifer.tizoc@info.uas.edu.mx",
+        telefono: "6671234567",
+        numero_cuenta: "22116835",
+        estado: "ACTIVO"
+    },
+    {
+        id_asesor: 9,
+        nombre: "Jose Angel Astorga Mejia",
+        correo: "jose.astorga@info.uas.edu.mx",
+        telefono: "6679876543",
+        numero_cuenta: "22116836",
+        estado: "INACTIVO"
     }
 ];
 

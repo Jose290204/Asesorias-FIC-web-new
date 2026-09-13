@@ -41,6 +41,46 @@ const mockResponseAPI = {
             grupo: "4-2",
             id_estatus: 1,
             estatus_texto: "ACTIVO"
+        },
+        {
+            id_estudiante: 5,
+            nombre: "Crisoforo Ahuelican Ahuejote",
+            correo: "crisoforoahuelican@info.uas.edu.mx",
+            licenciatura:"Licenciatura en Informatica",
+            numero_cuenta: "22116834",
+            grupo: "4-1",
+            id_estatus: 1,
+            estatus_texto: "ACTIVO"
+        },
+        {
+            id_estudiante: 6,
+            nombre: "Leslie Mayram Barrera Rodriguez",
+            correo: "leslie.barrera@info.uas.edu.mx",
+            licenciatura:"Licenciatura en Informatica",
+            numero_cuenta: "22116835",
+            grupo: "4-1",
+            id_estatus: 1,
+            estatus_texto: "ACTIVO"
+        },
+        {
+            id_estudiante: 7,
+            nombre: "Jenifer Guadalupe Tizoc Lopez",
+            correo: "jenifer.tizoc@info.uas.edu.mx",
+            licenciatura:"Licenciatura en Informatica",
+            numero_cuenta: "22116836",
+            grupo: "4-2",
+            id_estatus: 2,
+            estatus_texto: "INACTIVO"
+        },
+        {
+            id_estudiante: 8,
+            nombre: "Alexander Israel Barrera Herrera",
+            correo: "alexander.barrera@info.uas.edu.mx",
+            licenciatura:"Licenciatura en Informatica",
+            numero_cuenta: "22116837",
+            grupo: "4-2",
+            id_estatus: 1,
+            estatus_texto: "ACTIVO"
         }
     ]
 };
