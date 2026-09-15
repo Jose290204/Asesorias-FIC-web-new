@@ -1,4 +1,5 @@
 // Mock estático que simula la respuesta de la API real
+
 const mockResponseAPI = {
     success: true,
     data: [
@@ -20,7 +21,8 @@ const mockResponseAPI = {
             licenciatura_nombre: "Licenciatura en Informática",
             grado_grupo: "3-1",
             sesiones_tomadas: 2,
-            observaciones: "El estudiante solicita apoyo con los temas de integrales triples.",
+            observaciones:
+                "El estudiante solicita apoyo con los temas de integrales triples.",
             id_estatus_asesoria: 3,
             id_horario: 10,
             horario_texto: "9:00 - 10:00 AM",
@@ -30,13 +32,15 @@ const mockResponseAPI = {
                     id_asesoria: 1,
                     nombre_archivo: "Guia_Ejercicios_Calculo.pdf",
                     drive_file_id: "1a2b3c4d5e6f7g8h9i0j",
-                    url_archivo: "https://drive.google.com/file/d/1a2b3c4d5e6f7g8h9i0j/view",
+                    url_archivo:
+                        "https://drive.google.com/file/d/1a2b3c4d5e6f7g8h9i0j/view",
                     mime_type: "application/pdf",
                     tamano_archivo: 204800,
                     fecha_subida: "2026-09-10T13:23:38.000Z"
                 }
             ]
         },
+
         {
             id_asesoria: 2,
             id_estudiante: 2,
@@ -55,7 +59,8 @@ const mockResponseAPI = {
             licenciatura_nombre: "Licenciatura en Informática",
             grado_grupo: "3-1",
             sesiones_tomadas: 1,
-            observaciones: "El estudiante solicita apoyo con tablas de verdad.",
+            observaciones:
+                "El estudiante solicita apoyo con tablas de verdad.",
             id_estatus_asesoria: 3,
             id_horario: 10,
             horario_texto: "9:00 - 10:00 AM",
@@ -65,13 +70,15 @@ const mockResponseAPI = {
                     id_asesoria: 2,
                     nombre_archivo: "Guia_NAM.pdf",
                     drive_file_id: "1a2b3c4d5e6f7g8h9i0j",
-                    url_archivo: "https://docs.google.com/document/d/1HXPWIudO2KGPB5cAUV4bnPvYoI3gJ9LlMJYCrNYU7J8/edit?usp=drive_link",
+                    url_archivo:
+                        "https://docs.google.com/document/d/1HXPWIudO2KGPB5cAUV4bnPvYoI3gJ9LlMJYCrNYU7J8/edit?usp=drive_link",
                     mime_type: "application/pdf",
                     tamano_archivo: 204800,
                     fecha_subida: "2026-09-10T13:23:38.000Z"
                 }
             ]
         },
+
         {
             id_asesoria: 3,
             id_estudiante: 3,
@@ -90,12 +97,14 @@ const mockResponseAPI = {
             licenciatura_nombre: "Licenciatura en Informática",
             grado_grupo: "3-1",
             sesiones_tomadas: 0,
-            observaciones: "El estudiante solicita apoyo con POO.",
+            observaciones:
+                "El estudiante solicita apoyo con POO.",
             id_estatus_asesoria: 3,
             id_horario: 10,
             horario_texto: "9:00 - 10:00 AM",
             material_adicional: []
         },
+
         {
             id_asesoria: 4,
             id_estudiante: 4,
@@ -114,7 +123,8 @@ const mockResponseAPI = {
             licenciatura_nombre: "Licenciatura en Informática",
             grado_grupo: "3-1",
             sesiones_tomadas: 0,
-            observaciones: "El estudiante solicita apoyo con sockets en Java.",
+            observaciones:
+                "El estudiante solicita apoyo con sockets en Java.",
             id_estatus_asesoria: 3,
             id_horario: 12,
             horario_texto: "11:00 - 12:00 PM",
@@ -123,7 +133,10 @@ const mockResponseAPI = {
     ]
 };
 
-// Mapas opcionales para traducir IDs a nombres por si el backend no manda los textos
+
+// Mapas opcionales para traducir IDs a nombres
+// por si el backend no manda los textos
+
 const MAP_MATERIAS = {
     5: "Taller Integrador",
     6: "Matemáticas Discretas",
@@ -136,30 +149,78 @@ const MAP_HORARIOS = {
     12: "11:00 - 12:00 PM"
 };
 
+
 // Servicio para obtener asesorías mapeadas para la UI
+
 export const getAsesorias = async () => {
     return new Promise((resolve) => {
         setTimeout(() => {
+
             const filasAdaptadas = mockResponseAPI.data.map((item) => ({
+
                 id: item.id_asesoria,
-                materia: item.materia_nombre || MAP_MATERIAS[item.id_materia] || `Materia #${item.id_materia}`,
-                materia: item.materia_nombre || MAP_MATERIAS[item.id_materia] || '',
-                estudiante: item.estudiante_nombre || `Estudiante #${item.id_estudiante}`,
-                asesor: item.asesor_nombre || `Asesor #${item.id_asesor}`,
-                licenciatura: item.licenciatura_nombre || "Licenciatura en Informática",
-                gradoGrupo: item.grado_grupo || "3-1",
-                horario: item.horario_texto || MAP_HORARIOS[item.id_horario] || `Horario #${item.id_horario}`,
-                modalidad: item.modalidad_nombre || "Presencial",
-                razonAsesoria: item.razon_texto || "Asesoría académica",
-                sesionesTomadas: String(item.sesiones_tomadas || '1'),
-                observaciones: item.observaciones || '',
+
+                materia:
+                    item.materia_nombre ||
+                    MAP_MATERIAS[item.id_materia] ||
+                    "",
+
+                // ID que utilizará el Select
+                materiaId: item.id_materia,
+
+                estudiante:
+                    item.estudiante_nombre ||
+                    `Estudiante #${item.id_estudiante}`,
+
+                asesor:
+                    item.asesor_nombre ||
+                    `Asesor #${item.id_asesor}`,
+
+                licenciatura:
+                    item.licenciatura_nombre ||
+                    "Licenciatura en Informática",
+
+                gradoGrupo:
+                    item.grado_grupo ||
+                    "3-1",
+
+                horario:
+                    item.horario_texto ||
+                    MAP_HORARIOS[item.id_horario] ||
+                    "",
+
+                horarioId: item.id_horario,
+
+
+                modalidad:
+                    item.modalidad_nombre ||
+                    "Presencial",
+
+                razonAsesoria:
+                    item.razon_texto ||
+                    "Asesoría académica",
+
+                sesionesTomadas:
+                    String(item.sesiones_tomadas || "1"),
+
+                observaciones:
+                    item.observaciones || "",
+
                 inicio: item.fecha_inicio
-                    ? new Date(item.fecha_inicio).toLocaleDateString("es-MX", { timeZone: "UTC" })
+                    ? new Date(item.fecha_inicio).toLocaleDateString(
+                        "es-MX",
+                        {
+                            timeZone: "UTC"
+                        }
+                    )
                     : "Fecha no asignada",
+
+
                 raw: item
             }));
 
             resolve(filasAdaptadas);
+
         }, 300);
     });
 };

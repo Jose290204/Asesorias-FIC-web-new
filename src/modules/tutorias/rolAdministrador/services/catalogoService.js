@@ -42,6 +42,11 @@ class CatalogoService {
     ];
 
     this.materias = [
+      { id_materia: 5, materia: 'Taller Integrador', id_licenciaturas: 2, id_semestre: 1 },
+      { id_materia: 6, materia: 'Matemáticas Discretas', id_licenciaturas: 2, id_semestre: 1 },
+      { id_materia: 7, materia: 'Lenguajes de Programación', id_licenciaturas: 2, id_semestre: 1 },
+      { id_materia: 8, materia: 'Sistemas Distribuidos', id_licenciaturas: 2, id_semestre: 1 },
+
       { id_materia: 88, materia: 'Lógica de Programación y Pensamiento Computacional', id_licenciaturas: 2, id_semestre: 1 },
       { id_materia: 89, materia: 'Arquitectura de Computadoras', id_licenciaturas: 2, id_semestre: 1 },
       { id_materia: 90, materia: 'Matemáticas Discretas', id_licenciaturas: 2, id_semestre: 1 },

@@ -27,6 +27,9 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 
+// Importamos la instancia de tu servicio de catálogos
+import { catalogoService } from '../services/catalogoService';
+
 // --- 1. MODAL INFORMACIÓN ---
 export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
     const [formData, setFormData] = useState({
@@ -34,19 +37,22 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
         asesor: '',
         licenciatura: '',
         gradoGrupo: '3-1',
-        materia1: '',
+        materia: '',
+        materiaId: '',
         horario: '',
+        horarioId: '',
         modalidad: '',
+        modalidadId: '',
         inicio: '',
         razonAsesoria: '',
+        razonId: '',
         sesionesTomadas: '1',
         observaciones: ''
     });
 
-    // Guardamos una referencia de los datos iniciales ya normalizados para comparar cambios
     const [initialFormData, setInitialFormData] = useState(null);
 
-    // Cargar y normalizar los datos al abrir el modal
+    // Cargar y normalizar los datos al abrir el modal, asegurando los valores por defecto desde el servicio/data
     useEffect(() => {
         if (data) {
             const rawFecha = data.raw?.fecha_inicio || data.inicio;
@@ -55,21 +61,91 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                 : '';
 
             const normalizedData = {
-                estudiante: data.estudiante || data.raw?.estudiante_nombre || '',
-                asesor: data.asesor || data.raw?.asesor_nombre || '',
-                licenciatura: data.licenciatura || data.raw?.licenciatura_nombre || 'Licenciatura en Informática',
-                gradoGrupo: data.gradoGrupo || data.raw?.grado_grupo || '3-1',
-                materia1: data.materia1 || data.materia || data.raw?.materia_nombre || '',
-                horario: data.horario || data.raw?.horario_texto || '',
-                modalidad: data.modalidad || data.raw?.modalidad_nombre || '',
+                estudiante:
+                    data.estudiante ||
+                    data.raw?.estudiante_nombre ||
+                    '',
+
+
+                asesor:
+                    data.asesor ||
+                    data.raw?.asesor_nombre ||
+                    '',
+
+
+                licenciatura:
+                    data.licenciatura ||
+                    data.raw?.licenciatura_nombre ||
+                    'Licenciatura en Informática',
+
+
+                gradoGrupo:
+                    data.gradoGrupo ||
+                    data.raw?.grado_grupo ||
+                    '3-1',
+
+                // Nombre de la materia
+                materia:
+                    data.materia ||
+                    data.raw?.materia_nombre ||
+                    '',
+
+                // ID de la materia
+                materiaId: String(
+                    data.materiaId ??
+                    data.raw?.id_materia ??
+                    ''
+                ),
+
+                horarioId: String(
+                    data.horarioId ??
+                    data.raw?.id_horario ??
+                    ''
+                ),
+
+                modalidad:
+                    data.modalidad ||
+                    data.raw?.modalidad_nombre ||
+                    '',
+
+                modalidadId: String(
+                    data.modalidadId ??
+                    data.raw?.id_modalidad ??
+                    ''
+                ),
+
+
                 inicio: fechaValida,
-                razonAsesoria: data.razonAsesoria || data.raw?.razon_texto || '',
-                sesionesTomadas: String(data.sesionesTomadas ?? data.raw?.sesiones_tomadas ?? '1'),
-                observaciones: data.observaciones || data.raw?.observaciones || ''
+
+
+                razonAsesoria:
+                    data.razonAsesoria ||
+                    data.raw?.razon_texto ||
+                    '',
+
+                razonId: String(
+                    data.razonId ??
+                    data.raw?.id_razon ??
+                    ''
+                ),
+
+
+                sesionesTomadas:
+                    String(
+                        data.sesionesTomadas ??
+                        data.raw?.sesiones_tomadas ??
+                        '1'
+                    ),
+
+
+                observaciones:
+                    data.observaciones ||
+                    data.raw?.observaciones ||
+                    ''
             };
 
             setFormData(normalizedData);
-            setInitialFormData(normalizedData); // Guardamos la foto inicial para comparar
+            setInitialFormData(normalizedData);
         }
     }, [data]);
 
@@ -78,13 +154,12 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    // Verificamos si existe algún cambio comparando con los datos iniciales
     const isModified = initialFormData ? Object.keys(formData).some(
         (key) => formData[key] !== initialFormData[key]
     ) : false;
 
     const handleApply = () => {
-        if (!isModified) return; // Doble validación por seguridad
+        if (!isModified) return;
         if (onSave) onSave({ ...data, ...formData });
         if (showToast) showToast('Cambios aplicados correctamente', 'info');
         onClose();
@@ -93,6 +168,12 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
     const parsedDate = formData.inicio && dayjs(formData.inicio).isValid()
         ? dayjs(formData.inicio)
         : null;
+
+    // Obtenemos los catálogos directamente desde la instancia de catalogoService
+    const materiasList = catalogoService.getMaterias();
+    const horariosList = catalogoService.getHorarios();
+    const modalidadesList = catalogoService.getModalidades();
+    const razonesList = catalogoService.getRazonesAsesoria();
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -123,7 +204,6 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                 </DialogTitle>
 
                 <DialogContent dividers>
-                    {/* Contenedor principal organizado en una sola columna vertical */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
                         <TextField
                             label="Nombre del Estudiante"
@@ -158,26 +238,49 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                             size="small"
                             fullWidth
                             value={formData.gradoGrupo}
+                            slotProps={{ input: { readOnly: true } }}
                             onChange={handleChange}
                         />
 
+                        {/* Campo Materia como Select utilizando el valor por defecto de cada asesoría */}
                         <TextField
+                            select
                             label="Materia"
-                            name="materia1"
+                            name="materiaId"
                             size="small"
                             fullWidth
-                            value={formData.materia1}
-                            slotProps={{ input: { readOnly: true } }}
-                        />
+                            value={formData.materiaId}
+                            onChange={handleChange}
+                        >
+                            {materiasList.map((item) => (
+                                <MenuItem
+                                    key={item.id_materia}
+                                    value={String(item.id_materia)}
+                                >
+                                    {item.materia}
+                                </MenuItem>
+                            ))}
+                        </TextField>
 
+                        {/* Campo Horario como Select utilizando el valor por defecto de cada asesoría */}
                         <TextField
+                            select
                             label="Horario"
-                            name="horario"
+                            name="horarioId"
                             size="small"
                             fullWidth
-                            value={formData.horario}
-                            slotProps={{ input: { readOnly: true } }}
-                        />
+                            value={formData.horarioId}
+                            onChange={handleChange}
+                        >
+                            {horariosList.map((item) => (
+                                <MenuItem
+                                    key={item.id_horario}
+                                    value={String(item.id_horario)}
+                                >
+                                    {item.horario}
+                                </MenuItem>
+                            ))}
+                        </TextField>
 
                         <DatePicker
                             label="Fecha de Inicio"
@@ -192,22 +295,42 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                         />
 
                         <TextField
+                            select
                             label="Modalidad"
-                            name="modalidad"
+                            name="modalidadId"
                             size="small"
                             fullWidth
-                            value={formData.modalidad}
-                            slotProps={{ input: { readOnly: true } }}
-                        />
+                            value={formData.modalidadId}
+                            onChange={handleChange}
+                        >
+                            {modalidadesList.map((item) => (
+                                <MenuItem
+                                    key={item.id_modalidad}
+                                    value={String(item.id_modalidad)}
+                                >
+                                    {item.modalidad}
+                                </MenuItem>
+                            ))}
+                        </TextField>
 
                         <TextField
+                            select
                             label="Razón de Asesoría"
-                            name="razonAsesoria"
+                            name="razonId"
                             size="small"
                             fullWidth
-                            value={formData.razonAsesoria}
-                            slotProps={{ input: { readOnly: true } }}
-                        />
+                            value={formData.razonId}
+                            onChange={handleChange}
+                        >
+                            {razonesList.map((item) => (
+                                <MenuItem
+                                    key={item.id_razon}
+                                    value={String(item.id_razon)}
+                                >
+                                    {item.razon}
+                                </MenuItem>
+                            ))}
+                        </TextField>
 
                         <TextField
                             select
@@ -239,10 +362,10 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                 </DialogContent>
 
                 <DialogActions sx={{ p: 2, pt: 1.5 }}>
-                    <Button 
-                        variant="contained" 
-                        color="primary" 
-                        onClick={handleApply} 
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleApply}
                         disabled={!isModified}
                         fullWidth
                     >
