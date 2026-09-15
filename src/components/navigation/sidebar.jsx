@@ -6,7 +6,7 @@ import logoUas from '../../assets/logo_uas.png';
 export default function Sidebar({ onLogout }) {
   const [collapsed, setCollapsed] = useState(false);
 
-  // Definimos la propiedad 'path' explícita para cada vista
+  // Elementos principales del menú superior
   const navItems = [
     {
       path: '/admin/asesorias',
@@ -83,7 +83,7 @@ export default function Sidebar({ onLogout }) {
       {/* Botón para colapsar/expandir la barra */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-8 bg-white text-[#122a88] p-1 rounded-full shadow-md hover:scale-110 transition-transform"
+        className="absolute -right-3 top-8 bg-white text-[#122a88] p-1 rounded-full shadow-md hover:scale-110 transition-transform z-10"
         title={collapsed ? "Expandir menú" : "Colapsar menú"}
       >
         <svg className={`w-4 h-4 transform transition-transform ${collapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,23 +131,32 @@ export default function Sidebar({ onLogout }) {
         </nav>
       </div>
 
-      {/* Parte Inferior: Perfil de usuario y Salir */}
-      <div className="p-3 border-t border-blue-900/60">
-        {!collapsed && (
-          <div className="flex items-center gap-3 px-2 py-2 mb-2 bg-blue-900/40 rounded-lg">
-            <div className="w-8 h-8 rounded-full bg-blue-200 text-[#122a88] font-bold flex items-center justify-center text-xs">
-              AD
-            </div>
-            <div className="truncate text-xs">
-              <p className="font-semibold text-white">Administrador</p>
-              <p className="text-[10px] text-blue-200">admin@uas.edu.mx</p>
-            </div>
-          </div>
-        )}
+      {/* Parte Inferior Perfil  */}
+      <div className="p-3 border-t border-blue-900/60 space-y-1.5">
+        <NavLink
+          to="/admin/perfil-administrador"
+          replace
+          className={({ isActive }) =>
+            `w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${
+              isActive
+                ? 'bg-white text-[#122a88] shadow-md font-semibold'
+                : 'text-blue-100 hover:bg-blue-900/50 hover:text-white'
+            }`
+          }
+        >
+          <span className="shrink-0">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </span>
+          {!collapsed && <span className="truncate">Perfil</span>}
+        </NavLink>
 
+        {/* Botón de Cerrar Sesión */}
         <button
           onClick={onLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium text-red-200 hover:bg-red-500/20 hover:text-red-100 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium text-red-200 hover:bg-red-500/40 hover:text-red-100 transition-colors mb-2 cursor-pointer"
+          title="Cerrar Sesión"
         >
           <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

@@ -13,6 +13,7 @@ import Catalogos from './modules/tutorias/rolAdministrador/views/Catalogos';
 import Estudiantes from './modules/tutorias/rolAdministrador/views/Estudiantes';
 import Reportes from './modules/tutorias/rolAdministrador/views/Reportes';
 import Solicitudes from './modules/tutorias/rolAdministrador/views/Solicitudes';
+import PerfilAdministrador from './modules/tutorias/rolAdministrador/views/PerfilAdministrador';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="asesores-disciplinares" element={<AsesoresDisciplinares />} />
           <Route path="asesores-par" element={<AsesoresPar />} />
           <Route path="catalogos" element={<Catalogos />} />
+          <Route path="perfil-administrador" element={<PerfilAdministrador/>}/>
         </Route>
       </Routes>
     </BrowserRouter>
