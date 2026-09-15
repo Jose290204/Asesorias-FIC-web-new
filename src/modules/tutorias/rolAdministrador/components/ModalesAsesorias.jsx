@@ -14,48 +14,57 @@ import {
     ListItemIcon,
     ListItemText,
     Stack,
-    Tooltip
+    Tooltip,
+    MenuItem
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import DownloadIcon from '@mui/icons-material/Download';
 import DeleteIcon from '@mui/icons-material/Delete';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 
-// --- 1. MODAL INFORMACIÓN ---
+// --- 1. MODAL INFORMACIÓN (Adaptado a una sola columna y con grupo por defecto "3-1") ---
 export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
     const [formData, setFormData] = useState({
-        materia: '',
         estudiante: '',
         asesor: '',
-        inicio: '',
+        licenciatura: '',
+        gradoGrupo: '3-1',
+        materia1: '',
+        materia2: '',
         horario: '',
+        modalidad: '',
+        inicio: '',
+        razonAsesoria: '',
+        sesionesTomadas: '1',
         observaciones: ''
     });
 
-    // Cargar y normalizar la fecha desde el mock API al abrir el modal
+    // Cargar y normalizar los datos al abrir el modal integrando las nuevas propiedades del service
     useEffect(() => {
         if (data) {
-            // Priorizamos la fecha ISO original de data.raw.fecha_inicio
             const rawFecha = data.raw?.fecha_inicio || data.inicio;
-            
-            // Si la fecha es válida la formateamos como YYYY-MM-DD para el DatePicker, si no dejamos el string
             const fechaValida = rawFecha && dayjs(rawFecha).isValid()
                 ? dayjs(rawFecha).format('YYYY-MM-DD')
                 : '';
 
             setFormData({
-                materia: data.materia || '',
-                estudiante: data.estudiante || '',
-                asesor: data.asesor || '',
-                inicio: fechaValida, // Queda guardado en formato ISO corto (YYYY-MM-DD)
-                horario: data.horario || '',
-                observaciones: data.raw?.observaciones || ''
+                estudiante: data.estudiante || data.raw?.estudiante_nombre || '',
+                asesor: data.asesor || data.raw?.asesor_nombre || '',
+                licenciatura: data.licenciatura || data.raw?.licenciatura_nombre || 'Licenciatura en Informática',
+                gradoGrupo: data.gradoGrupo || data.raw?.grado_grupo || '3-1',
+                materia1: data.materia1 || data.materia || data.raw?.materia_nombre || '',
+                materia2: data.materia2 || data.raw?.materia_2 || '',
+                horario: data.horario || data.raw?.horario_texto || '',
+                modalidad: data.modalidad || data.raw?.modalidad_nombre || '',
+                inicio: fechaValida,
+                razonAsesoria: data.razonAsesoria || data.raw?.razon_texto || '',
+                sesionesTomadas: String(data.sesionesTomadas ?? data.raw?.sesiones_tomadas ?? '1'),
+                observaciones: data.observaciones || data.raw?.observaciones || ''
             });
         }
     }, [data]);
@@ -71,7 +80,6 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
         onClose();
     };
 
-    // Parseo seguro para el componente DatePicker de Material UI
     const parsedDate = formData.inicio && dayjs(formData.inicio).isValid()
         ? dayjs(formData.inicio)
         : null;
@@ -83,13 +91,12 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                 onClose={onClose}
                 sx={{
                     '& .MuiPaper-root': {
-                        width: '600px',
-                        maxWidth: '600px',
-                        height: '600px',
+                        width: '550px',
+                        maxWidth: '550px',
+                        maxHeight: '90vh',
                         borderRadius: '12px',
                         display: 'flex',
                         flexDirection: 'column',
-                        justify: 'space-between',
                         p: 1.5
                     }
                 }}
@@ -106,72 +113,116 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                 </DialogTitle>
 
                 <DialogContent dividers>
-                    <Box>
+                    {/* Contenedor principal organizado en una sola columna vertical */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
                         <TextField
-                            label="Materia"
-                            name="materia"
-                            size="small"
-                            fullWidth
-                            value={formData.materia}
-                            onChange={handleChange}
-                            sx={{ marginBottom: 2.5 }}
-                        />
-                        <TextField
-                            label="Estudiante"
+                            label="Nombre del Estudiante"
                             name="estudiante"
                             size="small"
                             fullWidth
                             value={formData.estudiante}
-                            onChange={handleChange}
-                            sx={{ marginBottom: 2.5 }}
+                            slotProps={{ input: { readOnly: true } }}
                         />
+
                         <TextField
-                            label="Asesor"
+                            label="Nombre Asesor"
                             name="asesor"
                             size="small"
                             fullWidth
                             value={formData.asesor}
-                            onChange={handleChange}
-                            sx={{ marginBottom: 2.5 }}
+                            slotProps={{ input: { readOnly: true } }}
                         />
 
-                        {/* Horario y DatePicker */}
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                flexDirection: 'row',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                gap: 2,
-                                marginBottom: 2.5
-                            }}
-                        >
-                            <TextField
-                                label="Horario"
-                                name="horario"
-                                size="small"
-                                value={formData.horario}
-                                onChange={handleChange}
-                                sx={{ width: '49%' }}
-                            />
+                        <TextField
+                            label="Licenciatura del Estudiante"
+                            name="licenciatura"
+                            size="small"
+                            fullWidth
+                            value={formData.licenciatura}
+                            slotProps={{ input: { readOnly: true } }}
+                        />
 
-                            <DatePicker
-                                label="Fecha Inicio"
-                                value={parsedDate}
-                                onChange={(newValue) => {
-                                    setFormData((prev) => ({
-                                        ...prev,
-                                        inicio: newValue && newValue.isValid() ? newValue.format('YYYY-MM-DD') : ''
-                                    }));
-                                }}
-                                slotProps={{
-                                    textField: {
-                                        size: 'small',
-                                        sx: { width: '49%' }
-                                    }
-                                }}
-                            />
-                        </Box>
+                        <TextField
+                            label="Grado y Grupo"
+                            name="gradoGrupo"
+                            size="small"
+                            fullWidth
+                            value={formData.gradoGrupo}
+                            onChange={handleChange}
+                        />
+
+                        <TextField
+                            label="Materia 1"
+                            name="materia1"
+                            size="small"
+                            fullWidth
+                            value={formData.materia1}
+                            slotProps={{ input: { readOnly: true } }}
+                        />
+
+                        <TextField
+                            label="Materia 2"
+                            name="materia2"
+                            size="small"
+                            fullWidth
+                            value={formData.materia2}
+                            onChange={handleChange}
+                        />
+
+                        <TextField
+                            label="Horario"
+                            name="horario"
+                            size="small"
+                            fullWidth
+                            value={formData.horario}
+                            slotProps={{ input: { readOnly: true } }}
+                        />
+
+                        <DatePicker
+                            label="Fecha de Inicio"
+                            value={parsedDate}
+                            disabled
+                            slotProps={{
+                                textField: {
+                                    size: 'small',
+                                    fullWidth: true
+                                }
+                            }}
+                        />
+
+                        <TextField
+                            label="Modalidad"
+                            name="modalidad"
+                            size="small"
+                            fullWidth
+                            value={formData.modalidad}
+                            slotProps={{ input: { readOnly: true } }}
+                        />
+
+                        <TextField
+                            label="Razón de Asesoría"
+                            name="razonAsesoria"
+                            size="small"
+                            fullWidth
+                            value={formData.razonAsesoria}
+                            slotProps={{ input: { readOnly: true } }}
+                        />
+
+                        <TextField
+                            select
+                            label="Sesiones Tomadas"
+                            name="sesionesTomadas"
+                            size="small"
+                            fullWidth
+                            value={formData.sesionesTomadas}
+                            onChange={handleChange}
+                        >
+                            {[...Array(10)].map((_, i) => (
+                                <MenuItem key={i + 1} value={String(i + 1)}>
+                                    {i + 1}
+                                </MenuItem>
+                            ))}
+                        </TextField>
 
                         <TextField
                             label="Observaciones"
@@ -187,7 +238,7 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                 </DialogContent>
 
                 <DialogActions sx={{ p: 2, pt: 1.5 }}>
-                    <Button variant="contained" color="primary" onClick={handleApply}>
+                    <Button variant="contained" color="primary" onClick={handleApply} fullWidth>
                         Aplicar Cambios
                     </Button>
                 </DialogActions>
@@ -211,18 +262,13 @@ export function ModalConfirmarAsesoria({ open, onClose, onConfirm, showToast }) 
             sx={{
                 '& .MuiPaper-root': {
                     width: '450px',
-                    maxWidth: '450px',
-                    height: '240px',
                     borderRadius: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justify: 'space-between',
                     p: 1
                 }
             }}
         >
             <DialogTitle sx={{ fontWeight: 'bold' }}>Confirmación</DialogTitle>
-            <DialogContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <DialogContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 3 }}>
                 <Typography variant="body1" align="center">
                     ¿Estás seguro de que deseas aprobar esta asesoría?
                 </Typography>
@@ -254,18 +300,13 @@ export function ModalEliminarAsesoria({ open, onClose, onConfirm, showToast }) {
             sx={{
                 '& .MuiPaper-root': {
                     width: '450px',
-                    maxWidth: '450px',
-                    height: '250px',
                     borderRadius: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justify: 'space-between',
                     p: 1
                 }
             }}
         >
             <DialogTitle sx={{ fontWeight: 'bold' }}>Eliminación</DialogTitle>
-            <DialogContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <DialogContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 3 }}>
                 <Typography variant="body1" align="center">
                     ¿Estás seguro de que deseas eliminar esta asesoría? Esta acción no se puede deshacer.
                 </Typography>
@@ -282,7 +323,7 @@ export function ModalEliminarAsesoria({ open, onClose, onConfirm, showToast }) {
     );
 }
 
-// --- MODAL AUXILIAR: CONFIRMAR ELIMINACIÓN DE UN MATERIAL ADICIONAL ---
+// --- MODAL AUXILIAR: CONFIRMAR ELIMINACIÓN DE MATERIAL ---
 function ModalConfirmarEliminarMaterial({ open, onClose, onConfirm, nombreArchivo }) {
     return (
         <Dialog
@@ -320,7 +361,6 @@ export function ModalMaterialAdicional({ open, onClose, data, onSave, showToast 
     const [archivoAEliminar, setArchivoAEliminar] = useState(null);
     const [modalConfirmEliminarOpen, setModalConfirmEliminarOpen] = useState(false);
 
-    // Actualizar los materiales al abrir el modal o recibir nuevos datos
     useEffect(() => {
         if (data?.raw?.material_adicional) {
             setListaMateriales(data.raw.material_adicional);
@@ -334,13 +374,11 @@ export function ModalMaterialAdicional({ open, onClose, data, onSave, showToast 
         return <InsertDriveFileIcon color="primary" />;
     };
 
-    // Abre el modal de confirmación enviando la información del archivo a eliminar
     const handleOpenConfirmEliminar = (archivo) => {
         setArchivoAEliminar(archivo);
         setModalConfirmEliminarOpen(true);
     };
 
-    // Confirmar eliminación del archivo tras dar click en Aceptar/Eliminar dentro del sub-modal
     const handleConfirmarEliminacion = () => {
         if (archivoAEliminar) {
             setListaMateriales((prev) =>
@@ -351,7 +389,6 @@ export function ModalMaterialAdicional({ open, onClose, data, onSave, showToast 
         setArchivoAEliminar(null);
     };
 
-    // Handler para cargar y agregar archivos locales
     const handleFileUpload = (event) => {
         const files = Array.from(event.target.files);
         if (files.length === 0) return;
@@ -367,7 +404,6 @@ export function ModalMaterialAdicional({ open, onClose, data, onSave, showToast 
         event.target.value = null;
     };
 
-    // Función para guardar cambios
     const handleSave = () => {
         if (onSave) {
             onSave(listaMateriales);
@@ -401,7 +437,6 @@ export function ModalMaterialAdicional({ open, onClose, data, onSave, showToast 
                 </DialogTitle>
 
                 <DialogContent dividers sx={{ overflowY: 'auto' }}>
-                    {/* Zona personalizada de carga de archivos (Movida arriba) */}
                     <Box className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-colors" sx={{ mb: 2 }}>
                         <input
                             type="file"
@@ -423,7 +458,6 @@ export function ModalMaterialAdicional({ open, onClose, data, onSave, showToast 
                         </label>
                     </Box>
 
-                    {/* Lista de archivos abajo del uploader */}
                     {listaMateriales.length === 0 ? (
                         <Typography color="text.secondary" align="center" mt={2} mb={2}>
                             No hay archivos disponibles.
@@ -488,7 +522,6 @@ export function ModalMaterialAdicional({ open, onClose, data, onSave, showToast 
                 </DialogActions>
             </Dialog>
 
-            {/* Modal de Confirmación para eliminar el archivo individual */}
             <ModalConfirmarEliminarMaterial
                 open={modalConfirmEliminarOpen}
                 onClose={() => setModalConfirmEliminarOpen(false)}

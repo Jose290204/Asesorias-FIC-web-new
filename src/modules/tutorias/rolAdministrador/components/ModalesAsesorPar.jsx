@@ -355,14 +355,14 @@ export function ModalAgregarAsesorPar({ open, onClose, onAsesorAgregado }) {
             <DialogActions className="p-4 gap-2">
                 <button
                     onClick={handleCloseModal}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
                 >
                     Cancelar
                 </button>
                 <button
                     onClick={handleConfirmar}
                     disabled={!estudianteSeleccionado}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors ${
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors cursor-pointer ${
                         estudianteSeleccionado
                             ? 'bg-[#2e7d32] hover:bg-[#1b5e20]'
                             : 'bg-gray-300 cursor-not-allowed'

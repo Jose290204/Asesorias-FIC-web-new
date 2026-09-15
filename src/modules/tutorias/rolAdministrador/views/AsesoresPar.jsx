@@ -103,7 +103,7 @@ export default function AsesoresPar() {
                 />
                 <button 
                     onClick={() => setModalAgregarOpen(true)}
-                    className="bg-[#2e7d32] hover:bg-[#1b5e20] text-sm text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2"
+                    className="bg-[#2e7d32] hover:bg-[#1b5e20] text-sm text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
                 >
                     <AddIcon/>
                     Agregar Asesor
