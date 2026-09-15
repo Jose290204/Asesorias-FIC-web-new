@@ -27,14 +27,14 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 
-// --- 1. MODAL INFORMACIÓN (Adaptado a una sola columna y con grupo por defecto "3-1") ---
+// --- 1. MODAL INFORMACIÓN ---
 export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
     const [formData, setFormData] = useState({
         estudiante: '',
         asesor: '',
         licenciatura: '',
         gradoGrupo: '3-1',
-        materia: '',
+        materia1: '',
         horario: '',
         modalidad: '',
         inicio: '',
@@ -43,7 +43,10 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
         observaciones: ''
     });
 
-    // Cargar y normalizar los datos al abrir el modal integrando las nuevas propiedades del service
+    // Guardamos una referencia de los datos iniciales ya normalizados para comparar cambios
+    const [initialFormData, setInitialFormData] = useState(null);
+
+    // Cargar y normalizar los datos al abrir el modal
     useEffect(() => {
         if (data) {
             const rawFecha = data.raw?.fecha_inicio || data.inicio;
@@ -51,19 +54,22 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                 ? dayjs(rawFecha).format('YYYY-MM-DD')
                 : '';
 
-            setFormData({
+            const normalizedData = {
                 estudiante: data.estudiante || data.raw?.estudiante_nombre || '',
                 asesor: data.asesor || data.raw?.asesor_nombre || '',
                 licenciatura: data.licenciatura || data.raw?.licenciatura_nombre || 'Licenciatura en Informática',
                 gradoGrupo: data.gradoGrupo || data.raw?.grado_grupo || '3-1',
-                materia: data.materia || data.materia || data.raw?.materia_nombre || '',
+                materia1: data.materia1 || data.materia || data.raw?.materia_nombre || '',
                 horario: data.horario || data.raw?.horario_texto || '',
                 modalidad: data.modalidad || data.raw?.modalidad_nombre || '',
                 inicio: fechaValida,
                 razonAsesoria: data.razonAsesoria || data.raw?.razon_texto || '',
                 sesionesTomadas: String(data.sesionesTomadas ?? data.raw?.sesiones_tomadas ?? '1'),
                 observaciones: data.observaciones || data.raw?.observaciones || ''
-            });
+            };
+
+            setFormData(normalizedData);
+            setInitialFormData(normalizedData); // Guardamos la foto inicial para comparar
         }
     }, [data]);
 
@@ -72,7 +78,13 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    // Verificamos si existe algún cambio comparando con los datos iniciales
+    const isModified = initialFormData ? Object.keys(formData).some(
+        (key) => formData[key] !== initialFormData[key]
+    ) : false;
+
     const handleApply = () => {
+        if (!isModified) return; // Doble validación por seguridad
         if (onSave) onSave({ ...data, ...formData });
         if (showToast) showToast('Cambios aplicados correctamente', 'info');
         onClose();
@@ -158,7 +170,6 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                             slotProps={{ input: { readOnly: true } }}
                         />
 
-
                         <TextField
                             label="Horario"
                             name="horario"
@@ -228,7 +239,13 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                 </DialogContent>
 
                 <DialogActions sx={{ p: 2, pt: 1.5 }}>
-                    <Button variant="contained" color="primary" onClick={handleApply} fullWidth>
+                    <Button 
+                        variant="contained" 
+                        color="primary" 
+                        onClick={handleApply} 
+                        disabled={!isModified}
+                        fullWidth
+                    >
                         Aplicar Cambios
                     </Button>
                 </DialogActions>

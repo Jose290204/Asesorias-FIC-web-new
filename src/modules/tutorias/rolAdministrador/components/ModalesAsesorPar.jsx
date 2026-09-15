@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -8,51 +8,143 @@ import {
     Button,
     Typography,
     TextField,
-    Box
+    Box,
+    MenuItem
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs from 'dayjs';
 
 // Componentes y Servicios propios
 import InputBuscar from '../../../../components/ui/InputBuscar';
 import { getEstudiantes } from '../services/estudianteService';
+import { catalogoService } from '../services/catalogoService'; // Asegúrate de ajustar esta ruta si es necesario
 
 // --- 1. MODAL INFORMACIÓN ASESOR PAR ---
 export function ModalInfoAsesorPar({ open, onClose, data, onSave, showToast }) {
     const [formData, setFormData] = useState({
-        materia: '',
-        estudiante: '',
-        asesor: '',
-        inicio: '',
-        horario: '',
+        nombre: '',
+        matricula: '',
+        contrasena: '',
+        correo: '',
+        telefono: '',
+        licenciatura: '',
+        grupo: '',
+        promedio: '',
+        materias: [],
+        horarios: [],
         observaciones: ''
     });
 
+    // Estado para guardar los datos originales con los que abrió el modal
+    const [initialData, setInitialData] = useState(null);
+
+    // Estados para controlar los sub-modales de selección
+    const [openModalMateria, setOpenModalMateria] = useState(false);
+    const [openModalHorario, setOpenModalHorario] = useState(false);
+
+    // Listas de catálogos
+    const [catalogoMaterias, setCatalogoMaterias] = useState([]);
+    const [catalogoHorarios, setCatalogoHorarios] = useState([]);
+
     useEffect(() => {
         if (data && open) {
-            const rawFecha = data.raw?.fecha_inicio || data.inicio;
-            
-            const fechaValida = rawFecha && dayjs(rawFecha).isValid()
-                ? dayjs(rawFecha).format('YYYY-MM-DD')
-                : '';
+            const initialValues = {
+                nombre: data.nombre || data.asesor || '',
+                matricula: data.matricula || '',
+                contrasena: data.contrasena || '••••••',
+                correo: data.correo || '',
+                telefono: data.telefono || '',
+                licenciatura: data.licenciatura || '',
+                grupo: data.grupo || '',
+                promedio: data.promedio || '',
+                materias: data.materias || ['Bases de Datos', 'Redes'],
+                horarios: data.horarios || ['9:00 - 10:00 AM', '11:00 - 12:00 PM'],
+                observaciones: data.raw?.observaciones || data.observaciones || ''
+            };
 
-            setFormData({
-                materia: data.materia || '',
-                estudiante: data.estudiante || '',
-                asesor: data.asesor || '',
-                inicio: fechaValida,
-                horario: data.horario || '',
-                observaciones: data.raw?.observaciones || ''
-            });
+            setFormData(initialValues);
+            setInitialData(initialValues); // Guardamos la copia inicial
+
+            // Cargar datos desde catalogoService
+            try {
+                const catalogos = catalogoService.getCatalogos();
+                setCatalogoMaterias(catalogos.materias || []);
+                setCatalogoHorarios(catalogos.horarios || []);
+            } catch (error) {
+                console.error('Error al cargar catálogos:', error);
+            }
         }
     }, [data, open]);
+
+    // Función para detectar si hubo cambios comparando con initialData
+    const hasChanges = useMemo(() => {
+        if (!initialData) return false;
+        
+        // Comparamos campos sencillos de texto/selects
+        const basicFieldsChanged = Object.keys(formData).some((key) => {
+            if (key === 'materias' || key === 'horarios') return false; // Se comparan aparte
+            return formData[key] !== initialData[key];
+        });
+
+        if (basicFieldsChanged) return true;
+
+        // Comparamos las materias (longitud o elementos diferentes)
+        if (formData.materias.length !== initialData.materias.length) return true;
+        const materiasChanged = formData.materias.some((m, i) => m !== initialData.materias[i]);
+        if (materiasChanged) return true;
+
+        // Comparamos los horarios (longitud o elementos diferentes)
+        if (formData.horarios.length !== initialData.horarios.length) return true;
+        const horariosChanged = formData.horarios.some((h, i) => h !== initialData.horarios[i]);
+        if (horariosChanged) return true;
+
+        return false;
+    }, [formData, initialData]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSelectMateria = (materiaObj) => {
+        const nombreMateria = materiaObj.materia;
+        // Evitar duplicados
+        if (!formData.materias.includes(nombreMateria)) {
+            setFormData((prev) => ({
+                ...prev,
+                materias: [...prev.materias, nombreMateria]
+            }));
+        }
+        setOpenModalMateria(false);
+    };
+
+    const handleRemoveMateria = (index) => {
+        setFormData((prev) => ({
+            ...prev,
+            materias: prev.materias.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleSelectHorario = (horarioObj) => {
+        const nombreHorario = horarioObj.horario;
+        // Evitar duplicados
+        if (!formData.horarios.includes(nombreHorario)) {
+            setFormData((prev) => ({
+                ...prev,
+                horarios: [...prev.horarios, nombreHorario]
+            }));
+        }
+        setOpenModalHorario(false);
+    };
+
+    const handleRemoveHorario = (index) => {
+        setFormData((prev) => ({
+            ...prev,
+            horarios: prev.horarios.filter((_, i) => i !== index)
+        }));
     };
 
     const handleApply = () => {
@@ -71,10 +163,6 @@ export function ModalInfoAsesorPar({ open, onClose, data, onSave, showToast }) {
         onClose();
     };
 
-    const parsedDate = formData.inicio && dayjs(formData.inicio).isValid()
-        ? dayjs(formData.inicio)
-        : null;
-
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <Dialog
@@ -83,13 +171,12 @@ export function ModalInfoAsesorPar({ open, onClose, data, onSave, showToast }) {
                 disableRestoreFocus
                 sx={{
                     '& .MuiPaper-root': {
-                        width: '600px',
-                        maxWidth: '600px',
-                        height: '600px',
+                        width: '500px',
+                        maxWidth: '500px',
+                        maxHeight: '90vh',
                         borderRadius: '12px',
                         display: 'flex',
                         flexDirection: 'column',
-                        justifyContent: 'space-between',
                         p: 1.5
                     }
                 }}
@@ -105,93 +192,268 @@ export function ModalInfoAsesorPar({ open, onClose, data, onSave, showToast }) {
                     </IconButton>
                 </DialogTitle>
 
-                <DialogContent dividers>
-                    <Box>
-                        <TextField
-                            label="Materia"
-                            name="materia"
-                            size="small"
-                            fullWidth
-                            value={formData.materia}
-                            onChange={handleChange}
-                            sx={{ marginBottom: 2.5 }}
-                        />
-                        <TextField
-                            label="Estudiante"
-                            name="estudiante"
-                            size="small"
-                            fullWidth
-                            value={formData.estudiante}
-                            onChange={handleChange}
-                            sx={{ marginBottom: 2.5 }}
-                        />
-                        <TextField
-                            label="Asesor"
-                            name="asesor"
-                            size="small"
-                            fullWidth
-                            value={formData.asesor}
-                            onChange={handleChange}
-                            sx={{ marginBottom: 2.5 }}
-                        />
+                <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, py: 3 }}>
+                    {/* TODOS LOS CAMPOS EN UNA SOLA COLUMNA */}
+                    <TextField
+                        label="Nombre completo"
+                        name="nombre"
+                        size="small"
+                        fullWidth
+                        value={formData.nombre}
+                        onChange={handleChange}
+                    />
+                    <TextField
+                        label="Número de Cuenta"
+                        name="matricula"
+                        size="small"
+                        fullWidth
+                        value={formData.matricula}
+                        onChange={handleChange}
+                    />
+                    <TextField
+                        label="Contraseña"
+                        name="contrasena"
+                        type="password"
+                        size="small"
+                        fullWidth
+                        value={formData.contrasena}
+                        onChange={handleChange}
+                    />
+                    <TextField
+                        label="Correo institucional"
+                        name="correo"
+                        size="small"
+                        fullWidth
+                        value={formData.correo}
+                        onChange={handleChange}
+                    />
+                    <TextField
+                        label="Teléfono"
+                        name="telefono"
+                        size="small"
+                        fullWidth
+                        value={formData.telefono}
+                        onChange={handleChange}
+                    />
 
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                flexDirection: 'row',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                gap: 2,
-                                marginBottom: 2.5
-                            }}
+                    <TextField
+                        select
+                        label="Licenciatura"
+                        name="licenciatura"
+                        size="small"
+                        fullWidth
+                        value={formData.licenciatura}
+                        onChange={handleChange}
+                    >
+                        <MenuItem value="Licenciatura en informática">Licenciatura en informática</MenuItem>
+                        <MenuItem value="Ingeniería en Software">Ingeniería en Software</MenuItem>
+                    </TextField>
+
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <TextField
+                            select
+                            label="Grupo"
+                            name="grupo"
+                            size="small"
+                            sx={{ flex: 1 }}
+                            value={formData.grupo}
+                            onChange={handleChange}
                         >
-                            <TextField
-                                label="Horario"
-                                name="horario"
-                                size="small"
-                                value={formData.horario}
-                                onChange={handleChange}
-                                sx={{ width: '49%' }}
-                            />
-
-                            <DatePicker
-                                label="Fecha Inicio"
-                                value={parsedDate}
-                                onChange={(newValue) => {
-                                    setFormData((prev) => ({
-                                        ...prev,
-                                        inicio: newValue && newValue.isValid() ? newValue.format('YYYY-MM-DD') : ''
-                                    }));
-                                }}
-                                slotProps={{
-                                    textField: {
-                                        size: 'small',
-                                        sx: { width: '49%' }
-                                    }
-                                }}
-                            />
-                        </Box>
+                            <MenuItem value="2-1">2-1</MenuItem>
+                            <MenuItem value="2-2">2-2</MenuItem>
+                            <MenuItem value="4-1">4-1</MenuItem>
+                        </TextField>
 
                         <TextField
-                            label="Observaciones"
-                            name="observaciones"
+                            label="Promedio"
+                            name="promedio"
                             size="small"
-                            fullWidth
-                            multiline
-                            rows={3}
-                            value={formData.observaciones}
+                            sx={{ flex: 1 }}
+                            value={formData.promedio}
                             onChange={handleChange}
                         />
                     </Box>
+
+                    {/* SECCIÓN MATERIAS QUE ASESORA */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                                Materias que asesora
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={<AddIcon />}
+                                onClick={() => setOpenModalMateria(true)}
+                                sx={{
+                                    backgroundColor: '#3b945e',
+                                    '&:hover': { backgroundColor: '#2e7d32' },
+                                    textTransform: 'none',
+                                    borderRadius: '20px',
+                                    px: 2
+                                }}
+                            >
+                                Añadir
+                            </Button>
+                        </Box>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxHeight: '120px', overflowY: 'auto', mt: 0.5 }}>
+                            {formData.materias.length === 0 ? (
+                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', px: 1 }}>
+                                    No hay materias añadidas.
+                                </Typography>
+                            ) : (
+                                formData.materias.map((materia, index) => (
+                                    <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 1, py: 0.5, bgcolor: '#f9f9f9', borderRadius: '4px' }}>
+                                        <Typography variant="body2" color="text.secondary">{materia}</Typography>
+                                        <IconButton size="small" color="error" onClick={() => handleRemoveMateria(index)}>
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
+                                ))
+                            )}
+                        </Box>
+                    </Box>
+
+                    {/* SECCIÓN HORARIOS DE ASESORÍA */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                                Horarios de asesoría
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={<AddIcon />}
+                                onClick={() => setOpenModalHorario(true)}
+                                sx={{
+                                    backgroundColor: '#3b945e',
+                                    '&:hover': { backgroundColor: '#2e7d32' },
+                                    textTransform: 'none',
+                                    borderRadius: '20px',
+                                    px: 2
+                                }}
+                            >
+                                Añadir
+                            </Button>
+                        </Box>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, maxHeight: '120px', overflowY: 'auto', mt: 0.5 }}>
+                            {formData.horarios.length === 0 ? (
+                                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', px: 1 }}>
+                                    No hay horarios añadidos.
+                                </Typography>
+                            ) : (
+                                formData.horarios.map((horario, index) => (
+                                    <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 1, py: 0.5, bgcolor: '#f9f9f9', borderRadius: '4px' }}>
+                                        <Typography variant="body2" color="text.secondary">{horario}</Typography>
+                                        <IconButton size="small" color="error" onClick={() => handleRemoveHorario(index)}>
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
+                                ))
+                            )}
+                        </Box>
+                    </Box>
                 </DialogContent>
 
-                <DialogActions sx={{ p: 2, pt: 1.5 }}>
-                    <Button variant="contained" color="primary" onClick={handleApply}>
+                <DialogActions sx={{ p: 2, pt: 1.5, justifyContent: 'flex-end' }}>
+                    <Button variant="outlined" color="inherit" onClick={handleCloseModal}>
+                        Cancelar
+                    </Button>
+                    <Button 
+                        variant="contained" 
+                        disabled={!hasChanges} // <-- Se desactiva si no hay cambios
+                        sx={{ 
+                            backgroundColor: '#2e7d32', 
+                            '&:hover': { backgroundColor: '#1b5e20' },
+                            '&.Mui-disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' } // Estilo opcional cuando está deshabilitado
+                        }} 
+                        onClick={handleApply}
+                    >
                         Aplicar Cambios
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* --- SUB-MODAL SELECCIONAR MATERIA DESDE CATÁLOGO --- */}
+            <SubModalCatalogo
+                open={openModalMateria}
+                onClose={() => setOpenModalMateria(false)}
+                titulo="Seleccionar Materia"
+                elementos={catalogoMaterias}
+                renderTexto={(item) => item.materia}
+                onSelect={handleSelectMateria}
+            />
+
+            {/* --- SUB-MODAL SELECCIONAR HORARIO DESDE CATÁLOGO --- */}
+            <SubModalCatalogo
+                open={openModalHorario}
+                onClose={() => setOpenModalHorario(false)}
+                titulo="Seleccionar Horario"
+                elementos={catalogoHorarios}
+                renderTexto={(item) => item.horario}
+                onSelect={handleSelectHorario}
+            />
         </LocalizationProvider>
+    );
+}
+
+// --- SUB-MODAL GENÉRICO PARA CATÁLOGOS ---
+function SubModalCatalogo({ open, onClose, titulo, elementos, renderTexto, onSelect }) {
+    const [busqueda, setBusqueda] = useState('');
+
+    useEffect(() => {
+        if (!open) setBusqueda('');
+    }, [open]);
+
+    const elementosFiltrados = elementos.filter((item) => {
+        const texto = busqueda.toLowerCase().trim();
+        if (!texto) return true;
+        return renderTexto(item).toLowerCase().includes(texto);
+    });
+
+    return (
+        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth disableRestoreFocus>
+            <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {titulo}
+                <IconButton size="small" onClick={onClose}>
+                    <CloseIcon fontSize="small" />
+                </IconButton>
+            </DialogTitle>
+            <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2 }}>
+                <TextField
+                    size="small"
+                    placeholder="Buscar..."
+                    fullWidth
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                />
+                <Box sx={{ maxH: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                    {elementosFiltrados.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
+                            No se encontraron resultados.
+                        </Typography>
+                    ) : (
+                        elementosFiltrados.map((item, index) => (
+                            <Box
+                                key={item.id_materia || item.id_horario || index}
+                                onClick={() => onSelect(item)}
+                                sx={{
+                                    p: 1.2,
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    '&:hover': { bgcolor: '#f1f8e9', color: '#2e7d32' },
+                                    transition: 'background-color 0.2s'
+                                }}
+                            >
+                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                    {renderTexto(item)}
+                                </Typography>
+                            </Box>
+                        ))
+                    )}
+                </Box>
+            </DialogContent>
+        </Dialog>
     );
 }
 

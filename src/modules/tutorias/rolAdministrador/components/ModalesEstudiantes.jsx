@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -15,25 +15,31 @@ import CloseIcon from '@mui/icons-material/Close';
 
 // --- 1. MODAL INFORMACIÓN DEL ESTUDIANTE ---
 export function ModalInfoEstudiante({ open, onClose, data, onSave, showToast }) {
-    const [formData, setFormData] = useState({
-        nombre: '',
-        correo: '',
-        numeroCuenta: '',
-        grupo: '',
-        estado: 'ACTIVO'
+    const getInitialValues = (sourceData) => ({
+        nombre: sourceData?.nombre || sourceData?.raw?.nombre || '',
+        correo: sourceData?.correo || sourceData?.raw?.correo || '',
+        numeroCuenta: sourceData?.numeroCuenta || sourceData?.raw?.numeroCuenta || '',
+        grupo: sourceData?.grupo || sourceData?.raw?.grupo || '',
+        promedio: sourceData?.promedio || sourceData?.raw?.promedio || '',
+        contrasena: sourceData?.contrasena || sourceData?.raw?.contrasena || '',
+        licenciatura: sourceData?.licenciatura || sourceData?.raw?.licenciatura || 'Licenciatura en informática',
+        telefono: sourceData?.telefono || sourceData?.raw?.telefono || '',
+        estado: sourceData?.estado || sourceData?.raw?.estado || 'ACTIVO'
     });
+
+    const [formData, setFormData] = useState(getInitialValues(data));
+    const [initialData, setInitialData] = useState(getInitialValues(data));
 
     useEffect(() => {
         if (data) {
-            setFormData({
-                nombre: data.nombre || '',
-                correo: data.correo || '',
-                numeroCuenta: data.numeroCuenta || '',
-                grupo: data.grupo || '',
-                estado: data.estado || 'ACTIVO'
-            });
+            const initialValues = getInitialValues(data);
+            setFormData(initialValues);
+            setInitialData(initialValues);
         }
     }, [data]);
+
+    // Compara si el formulario actual es diferente al original
+    const hasChanges = JSON.stringify(formData) !== JSON.stringify(initialData);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -56,12 +62,12 @@ export function ModalInfoEstudiante({ open, onClose, data, onSave, showToast }) 
             onClose={onClose}
             sx={{
                 '& .MuiPaper-root': {
-                    width: '600px',
-                    maxWidth: '600px',
+                    width: '550px',
+                    maxWidth: '550px',
+                    maxHeight: '90vh',
                     borderRadius: '12px',
                     display: 'flex',
                     flexDirection: 'column',
-                    justifyContent: 'space-between',
                     p: 1.5
                 }
             }}
@@ -78,7 +84,8 @@ export function ModalInfoEstudiante({ open, onClose, data, onSave, showToast }) 
             </DialogTitle>
 
             <DialogContent dividers>
-                <Box sx={{ pt: 1 }}>
+                {/* Contenedor principal en una sola columna vertical */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
                     <TextField
                         label="Nombre Completo"
                         name="nombre"
@@ -86,46 +93,72 @@ export function ModalInfoEstudiante({ open, onClose, data, onSave, showToast }) 
                         fullWidth
                         value={formData.nombre}
                         onChange={handleChange}
-                        sx={{ marginBottom: 2.5 }}
                     />
+
                     <TextField
-                        label="Correo Electrónico"
+                        label="Número de Cuenta"
+                        name="numeroCuenta"
+                        size="small"
+                        fullWidth
+                        value={formData.numeroCuenta}
+                        onChange={handleChange}
+                    />
+
+                    <TextField
+                        label="Grupo"
+                        name="grupo"
+                        size="small"
+                        fullWidth
+                        value={formData.grupo}
+                        onChange={handleChange}
+                    />
+
+                    <TextField
+                        label="Promedio"
+                        name="promedio"
+                        size="small"
+                        fullWidth
+                        value={formData.promedio}
+                        onChange={handleChange}
+                    />
+
+                    <TextField
+                        label="Correo Institucional"
                         name="correo"
                         type="email"
                         size="small"
                         fullWidth
                         value={formData.correo}
                         onChange={handleChange}
-                        sx={{ marginBottom: 2.5 }}
                     />
 
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            gap: 2,
-                            marginBottom: 2.5
-                        }}
-                    >
-                        <TextField
-                            label="Número de Cuenta"
-                            name="numeroCuenta"
-                            size="small"
-                            value={formData.numeroCuenta}
-                            onChange={handleChange}
-                            sx={{ width: '49%' }}
-                        />
-                        <TextField
-                            label="Grupo"
-                            name="grupo"
-                            size="small"
-                            value={formData.grupo}
-                            onChange={handleChange}
-                            sx={{ width: '49%' }}
-                        />
-                    </Box>
+                    <TextField
+                        label="Contraseña"
+                        name="contrasena"
+                        type="password"
+                        size="small"
+                        fullWidth
+                        value={formData.contrasena}
+                        onChange={handleChange}
+                    />
+
+                    <TextField
+                        label="Licenciatura"
+                        name="licenciatura"
+                        size="small"
+                        fullWidth
+                        value={formData.licenciatura}
+                        onChange={handleChange}
+                    />
+
+                    <TextField
+                        label="Teléfono"
+                        name="telefono"
+                        size="small"
+                        fullWidth
+                        value={formData.telefono}
+                        onChange={handleChange}
+                    />
 
                     <TextField
                         select
@@ -143,7 +176,13 @@ export function ModalInfoEstudiante({ open, onClose, data, onSave, showToast }) 
             </DialogContent>
 
             <DialogActions sx={{ p: 2, pt: 1.5 }}>
-                <Button variant="contained" color="primary" onClick={handleApply}>
+                <Button 
+                    variant="contained" 
+                    color="primary" 
+                    onClick={handleApply} 
+                    disabled={!hasChanges} // <--- Deshabilitado si no hay cambios
+                    fullWidth
+                >
                     Aplicar Cambios
                 </Button>
             </DialogActions>
@@ -197,4 +236,3 @@ export function ModalEliminarEstudiante({ open, onClose, onConfirm, data, showTo
         </Dialog>
     );
 }
-
