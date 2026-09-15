@@ -3,7 +3,7 @@ import BotonFiltro from "../../../../components/ui/BotonFlitro";
 import TablaAsesorias from "../components/TablaAsesorias";
 import InputBuscar from "../../../../components/ui/InputBuscar";
 import ModalFiltros from "../../../../components/ui/ModalFiltros";
-import { getAsesorias } from "../services/asesoriasService";
+import {asesoriasService} from "../services/asesoriasService1" 
 import ModalCargaExcel from "../components/ModalCargaExel";
 import { catalogoService } from "../services/catalogoService";
 
@@ -47,10 +47,10 @@ export default function Asesorias() {
     setHorarios(horData);
     setRazones(razData);
 
-    // Cargar asesorías
-    getAsesorias()
+    // Cargar asesorías usando el nuevo método del servicio
+    asesoriasService.getAsesoriasEnCurso()
       .then((data) => {
-        setAsesorias(data);
+        setAsesorias(data || []);
       })
       .catch((error) => {
         console.error("Error al obtener las asesorías:", error);
@@ -85,7 +85,6 @@ export default function Asesorias() {
       const idLic = Number(value);
       if (idLic) {
         const filtrados = grupos.filter((g) => g.id_licenciatura === idLic);
-        // Si no existen grupos específicos para la licenciatura elegida, se muestran todos los grupos disponibles
         setGruposFiltrados(filtrados.length > 0 ? filtrados : grupos);
       } else {
         setGruposFiltrados(grupos);
@@ -103,7 +102,6 @@ export default function Asesorias() {
     }
   };
 
-  // Funciones auxiliares para controlar el despliegue sin romper el evento onChange
   const handleFocus = (e) => {
     e.target.size = 5;
   };
@@ -133,9 +131,9 @@ export default function Asesorias() {
     const texto = busqueda.toLowerCase().trim();
     if (!texto) return true;
 
-    const materia = (row.materia || "").toLowerCase();
-    const estudiante = (row.estudiante || "").toLowerCase();
-    const asesor = (row.asesor || "").toLowerCase();
+    const materia = (row.materia_nombre || row.materia || "").toLowerCase();
+    const estudiante = (row.estudiante_nombre || row.estudiante || "").toLowerCase();
+    const asesor = (row.asesor_nombre || row.asesor || "").toLowerCase();
 
     return (
       materia.includes(texto) ||
@@ -151,9 +149,7 @@ export default function Asesorias() {
       </div>
 
       <div className="flex gap-8 items-center w-full">
-        <BotonFiltro 
-        onClick={handleOpenModalFiltros}
-        />
+        <BotonFiltro onClick={handleOpenModalFiltros} />
 
         <InputBuscar
           value={busqueda}
@@ -185,7 +181,6 @@ export default function Asesorias() {
         onClear={handleClear}
       >
         <div className="flex flex-col gap-4">
-          {/* Select Licenciatura */}
           <div>
             <label className="font-bold text-sm block mb-1">Licenciatura</label>
             <select
@@ -205,7 +200,6 @@ export default function Asesorias() {
             </select>
           </div>
 
-          {/* Select Grupo */}
           <div>
             <label className="font-bold text-sm block mb-1">Grupo</label>
             <select
@@ -225,7 +219,6 @@ export default function Asesorias() {
             </select>
           </div>
 
-          {/* Select Modalidad */}
           <div>
             <label className="font-bold text-sm block mb-1">Modalidad</label>
             <select
@@ -245,7 +238,6 @@ export default function Asesorias() {
             </select>
           </div>
 
-          {/* Select Horario */}
           <div>
             <label className="font-bold text-sm block mb-1">Horario</label>
             <select
@@ -265,7 +257,6 @@ export default function Asesorias() {
             </select>
           </div>
 
-          {/* Select Razón */}
           <div>
             <label className="font-bold text-sm block mb-1">Razón</label>
             <select

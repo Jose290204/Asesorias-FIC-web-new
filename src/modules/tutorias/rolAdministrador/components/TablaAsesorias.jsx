@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -14,16 +14,21 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Tooltip from '@mui/material/Tooltip';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import ToastNotification from '../../../../components/ui/ToastNotification';
+import { asesoriasService } from '../services/asesoriasService1'; // Ajusta la ruta si es necesario
 import {
     ModalInfoAsesoria,
     ModalConfirmarAsesoria,
     ModalEliminarAsesoria,
     ModalMaterialAdicional
-} from './ModalesAsesorias';
+} from '../components/ModalesAsesorias';
 
-export default function TablaAsesorias({ rows = [] }) {
+export default function TablaAsesorias() {
+    const [rows, setRows] = useState([]);
+    const [loading, setLoading] = useState(true);
+
     // Estados para Modales
     const [selectedRow, setSelectedRow] = useState(null);
     const [modalInfoOpen, setModalInfoOpen] = useState(false);
@@ -42,7 +47,32 @@ export default function TablaAsesorias({ rows = [] }) {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
-    // Handlers para Paginación
+    // Cargar asesorías usando el servicio
+    const fetchAsesorias = async () => {
+        try {
+            setLoading(true);
+            const data = await asesoriasService.getAsesoriasEnCurso();
+            console.log("Datos de la API (Row completo):", data);
+            setRows(data || []);
+        } catch (error) {
+            console.error(error);
+            showToast('No se pudieron cargar las asesorías', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAsesorias();
+    }, []);
+
+    useEffect(() => {
+        const maxPage = Math.max(0, Math.ceil(rows.length / rowsPerPage) - 1);
+        if (page > maxPage) {
+            setPage(maxPage);
+        }
+    }, [rows.length, rowsPerPage, page]);
+
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
@@ -60,13 +90,12 @@ export default function TablaAsesorias({ rows = [] }) {
         setToast((prev) => ({ ...prev, open: false }));
     };
 
-    // Helper para desenfocar elementos antes de abrir un modal
     const clearFocus = (event) => {
         if (event?.currentTarget) event.currentTarget.blur();
         document.activeElement?.blur();
     };
 
-    // Handlers para Abrir Modales con remoción de foco
+    // Handlers para Abrir Modales
     const handleOpenInfo = (row, event) => {
         clearFocus(event);
         setSelectedRow(row);
@@ -91,18 +120,36 @@ export default function TablaAsesorias({ rows = [] }) {
         setModalEliminarOpen(true);
     };
 
-    const handleConfirmAprobar = () => {
-        console.log('Asesoría aprobada:', selectedRow?.id);
-        setModalConfirmOpen(false);
+    // Consumir servicio para Completar/Aprobar
+    const handleConfirmAprobar = async () => {
+        try {
+            await asesoriasService.completarAsesoria(selectedRow?.id);
+            showToast('Asesoría completada correctamente', 'success');
+            setModalConfirmOpen(false);
+            fetchAsesorias();
+        } catch (error) {
+            console.error(error);
+            showToast('Hubo un error al completar la asesoría', 'error');
+        }
     };
 
-    const handleConfirmEliminar = () => {
-        console.log('Asesoría eliminada:', selectedRow?.id);
-        setModalEliminarOpen(false);
+    // Consumir servicio para Eliminar
+    const handleConfirmEliminar = async () => {
+        try {
+            await asesoriasService.eliminarAsesoria(selectedRow?.id);
+            showToast('Asesoría eliminada con éxito', 'success');
+            setModalEliminarOpen(false);
+            fetchAsesorias();
+        } catch (error) {
+            console.error(error);
+            showToast('Hubo un error al eliminar la asesoría', 'error');
+        }
     };
 
     const handleSaveInfo = (updatedData) => {
         console.log('Datos actualizados:', updatedData);
+        showToast('Información actualizada con éxito', 'success');
+        fetchAsesorias();
     };
 
     const visibleRows = rows.slice(
@@ -149,12 +196,8 @@ export default function TablaAsesorias({ rows = [] }) {
                                     py: 2,
                                     zIndex: 2
                                 },
-                                '& th:first-of-type': {
-                                    pl: 2.5
-                                },
-                                '& th:last-child': {
-                                    pr: 2.5
-                                }
+                                '& th:first-of-type': { pl: 2.5 },
+                                '& th:last-child': { pr: 2.5 }
                             }}
                         >
                             <TableCell sx={{ width: '60px' }} align='center'>ID</TableCell>
@@ -168,7 +211,13 @@ export default function TablaAsesorias({ rows = [] }) {
                     </TableHead>
 
                     <TableBody>
-                        {visibleRows.length === 0 ? (
+                        {loading ? (
+                            <TableRow>
+                                <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
+                                    <CircularProgress size={30} />
+                                </TableCell>
+                            </TableRow>
+                        ) : visibleRows.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={7} align="center" sx={{ py: 3, color: '#666' }}>
                                     No se encontraron registros
@@ -196,11 +245,11 @@ export default function TablaAsesorias({ rows = [] }) {
                                             },
                                         }}
                                     >
-                                        <TableCell align='center'>{row.id}</TableCell>
+                                        <TableCell align='center'>{row.id_asesoria}</TableCell>
                                         <TableCell align='left'>{row.materia}</TableCell>
                                         <TableCell align='left'>{row.estudiante}</TableCell>
                                         <TableCell align='left'>{row.asesor}</TableCell>
-                                        <TableCell align='center'>{row.inicio}</TableCell>
+                                        <TableCell align='center'>{row.fecha_inicio ? row.fecha_inicio.split('T')[0] : ''}</TableCell>
                                         <TableCell align='center'>{row.horario}</TableCell>
                                         <TableCell align='center'>
                                             <Stack direction="row" spacing={0.2} sx={{ justifyContent: 'center' }}>
