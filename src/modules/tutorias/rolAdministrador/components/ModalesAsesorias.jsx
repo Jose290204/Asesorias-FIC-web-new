@@ -34,8 +34,7 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
         asesor: '',
         licenciatura: '',
         gradoGrupo: '3-1',
-        materia1: '',
-        materia2: '',
+        materia: '',
         horario: '',
         modalidad: '',
         inicio: '',
@@ -57,8 +56,7 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                 asesor: data.asesor || data.raw?.asesor_nombre || '',
                 licenciatura: data.licenciatura || data.raw?.licenciatura_nombre || 'Licenciatura en Informática',
                 gradoGrupo: data.gradoGrupo || data.raw?.grado_grupo || '3-1',
-                materia1: data.materia1 || data.materia || data.raw?.materia_nombre || '',
-                materia2: data.materia2 || data.raw?.materia_2 || '',
+                materia: data.materia || data.materia || data.raw?.materia_nombre || '',
                 horario: data.horario || data.raw?.horario_texto || '',
                 modalidad: data.modalidad || data.raw?.modalidad_nombre || '',
                 inicio: fechaValida,
@@ -152,7 +150,7 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                         />
 
                         <TextField
-                            label="Materia 1"
+                            label="Materia"
                             name="materia1"
                             size="small"
                             fullWidth
@@ -160,14 +158,6 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                             slotProps={{ input: { readOnly: true } }}
                         />
 
-                        <TextField
-                            label="Materia 2"
-                            name="materia2"
-                            size="small"
-                            fullWidth
-                            value={formData.materia2}
-                            onChange={handleChange}
-                        />
 
                         <TextField
                             label="Horario"
