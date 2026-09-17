@@ -14,6 +14,7 @@ import Estudiantes from './modules/tutorias/rolAdministrador/views/Estudiantes';
 import Reportes from './modules/tutorias/rolAdministrador/views/Reportes';
 import Solicitudes from './modules/tutorias/rolAdministrador/views/Solicitudes';
 import PerfilAdministrador from './modules/tutorias/rolAdministrador/views/PerfilAdministrador';
+import Conocenos from './modules/paginasInicio/Conocenos';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
@@ -23,6 +24,7 @@ export default function App() {
       <Routes>
         {/* Ruta del Login */}
         <Route path="/" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+        <Route path="/conocenos" element={<Conocenos />}/>
 
         {/* Rutas del Administrador protegidas */}
         <Route 
