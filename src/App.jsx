@@ -11,8 +11,9 @@ import SeleccionModulo from './modules/seleccionModulo/views/SeleccionModulo';
 // Rol Adminstrador
 import AdminLayout from './layouts/moduloTutorias/AdminLayout';
 // Rol Asesor
-
+import AsesorLayout from './layouts/moduloTutorias/AsesorLayout';
 // Rol Estudiantes
+import EstudianteLayout from './layouts/moduloTutorias/EstudianteLayout';
 
 // Vistas de admnistrador
 import AsesoresDisciplinares from './modules/tutorias/rolAdministrador/views/AsesoresDisciplinares';
@@ -30,6 +31,14 @@ import AsesoriasEnCurso from './modules/tutorias/rolAsesor/views/AsesoriasEnCurs
 import HistorialAsesorias from './modules/tutorias/rolAsesor/views/HistorialAsesorias';
 import PerfilAsesor from './modules/tutorias/rolAsesor/views/PerfilAsesor';
 
+//Vistas de Estudiante
+import SolicitarAsesoria from './modules/tutorias/rolEstudiante/views/SolicitarAsesoria'
+import AsesoriasEstudiante from './modules/tutorias/rolEstudiante/views/AsesoriasEstudiante'
+import SolicitudesEnRevision from './modules/tutorias/rolEstudiante/views/SolicitudesEnRevision';
+import HistorialAsesoriasEstudiante from './modules/tutorias/rolEstudiante/views/HistorialAsesoriasEstudiante';
+import PerfilEstudiante from './modules/tutorias/rolEstudiante/views/PerfilEstudiante';
+
+
 // MODULO ASISTENCIAS
 
 // Layouts
@@ -42,7 +51,6 @@ import MaestroLayout from './layouts/moduloAsistencias/MaestroLayout';
 import Asistencias from './modules/asistencias/rolMaestro/views/Asistencia';
 import Alumnos from './modules/asistencias/rolMaestro/views/Alumnos';
 import PerfilMaestro from './modules/asistencias/rolMaestro/views/PerfilMaestro'
-import AsesorLayout from './layouts/moduloTutorias/AsesorLayout';
 
 
 export default function App() {
@@ -94,7 +102,7 @@ export default function App() {
           element={isAuthenticated && userRole === 'asesor' ? <AsesorLayout setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/" />}
         >
 
-          {/* Redirección por defecto DE ADMIN*/}
+          {/* Redirección por defecto DE ASESOR*/}
           <Route index element={<Navigate to="/tutorias/asesor/solicitudes-pendientes" replace />} />
 
           {/* Subrutas DE ASESOR*/}
@@ -107,6 +115,24 @@ export default function App() {
         </Route>
 
         {/* RUATAS DE ESTUDIANTE */}
+
+        <Route
+          path="/tutorias/estudiante"
+          element={isAuthenticated && userRole === 'estudiante' ? <EstudianteLayout setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/" />}
+        >
+
+          {/* Redirección por defecto DE ESTUDIANTE*/}
+          <Route index element={<Navigate to="/tutorias/estudiante/solicitar-asesorias" replace />} />
+
+          {/* Subrutas DE ESTUDIANTE*/}
+          <Route path="solicitar-asesorias" element={<SolicitarAsesoria />} />
+          <Route path="asesorias-estudiante" element={<AsesoriasEstudiante />} />
+          <Route path="solicitudes-en-revision" element={<SolicitudesEnRevision />} />
+          <Route path="historial-de-asesorias" element={<HistorialAsesoriasEstudiante />} />
+          <Route path="perfil-estudiante" element={<PerfilEstudiante />} />
+          
+
+        </Route>
 
         {/* ------------------------ MOUDLO DE aSISTENCIAS ------------------------*/}
         {/* -------------------RUTAS DE ADMIN, ESTUDIANTE, ASESOR -----------------*/}
