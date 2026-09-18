@@ -1,29 +1,29 @@
-import { useState, useEffect } from 'react';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import DeleteIcon from '@mui/icons-material/Delete';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import Stack from '@mui/material/Stack';
-import IconButton from '@mui/material/IconButton';
 import TablePagination from '@mui/material/TablePagination';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import DeleteIcon from '@mui/icons-material/Delete';
+import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
-import CircularProgress from '@mui/material/CircularProgress';
+import { useCallback, useEffect, useState } from 'react';
 
 import ToastNotification from '../../../../components/ui/ToastNotification';
-import { asesoriasService } from '../services/asesoriasService1'; // Ajusta la ruta si es necesario
 import {
-    ModalInfoAsesoria,
     ModalConfirmarAsesoria,
     ModalEliminarAsesoria,
+    ModalInfoAsesoria,
     ModalMaterialAdicional
 } from '../components/ModalesAsesorias';
+import { asesoriasService } from '../services/asesoriasService1'; // Ajusta la ruta si es necesario
 
 export default function TablaAsesorias() {
     const [rows, setRows] = useState([]);
@@ -36,6 +36,10 @@ export default function TablaAsesorias() {
     const [modalEliminarOpen, setModalEliminarOpen] = useState(false);
     const [modalMaterialOpen, setModalMaterialOpen] = useState(false);
 
+     // Estados para la Paginación
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+
     // Estado para el Toast Global
     const [toast, setToast] = useState({
         open: false,
@@ -43,16 +47,17 @@ export default function TablaAsesorias() {
         type: 'info'
     });
 
-    // Estados para la Paginación
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+     const showToast = (message, type = 'info') => {
+        setToast({ open: true, message, type });
+    };
 
-    // Cargar asesorías usando el servicio
-    const fetchAsesorias = async () => {
+   
+
+     // Cargar asesorías usando el servicio
+       const fetchAsesorias = useCallback(async (isInitialLoad = false) => {
+        if (!isInitialLoad) setLoading(true);
         try {
-            setLoading(true);
             const data = await asesoriasService.getAsesoriasEnCurso();
-            console.log("Datos de la API (Row completo):", data);
             setRows(data || []);
         } catch (error) {
             console.error(error);
@@ -60,18 +65,15 @@ export default function TablaAsesorias() {
         } finally {
             setLoading(false);
         }
-    };
-
-    useEffect(() => {
-        fetchAsesorias();
     }, []);
 
+    
+    // efecto para cargar datos al montar
     useEffect(() => {
-        const maxPage = Math.max(0, Math.ceil(rows.length / rowsPerPage) - 1);
-        if (page > maxPage) {
-            setPage(maxPage);
-        }
-    }, [rows.length, rowsPerPage, page]);
+        fetchAsesorias();
+    }, [fetchAsesorias]);
+
+ 
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -82,9 +84,6 @@ export default function TablaAsesorias() {
         setPage(0);
     };
 
-    const showToast = (message, type = 'info') => {
-        setToast({ open: true, message, type });
-    };
 
     const handleCloseToast = () => {
         setToast((prev) => ({ ...prev, open: false }));
