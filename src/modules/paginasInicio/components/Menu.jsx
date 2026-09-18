@@ -32,7 +32,7 @@ const Menuopciones = [
 export default function Menu() {
     return (
         <nav className='w-full bg-[#D49A17] shadow-md'>
-            <div className='flex justify-center items-center lg:justify-center gap-10 sm:gap-10 py-3 px-4 overflow-x-auto whitespace-nowrap scrollbar-hide'>
+            <div className='flex justify-center items-center lg:justify-center gap-6 sm:gap-10 py-3 px-4 overflow-x-auto whitespace-nowrap scrollbar-hide'>
                 {Menuopciones.map((nombre) => (
                     <button key={nombre.id} 
                     onClick={() => {

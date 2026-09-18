@@ -3,10 +3,10 @@ import Container from "@mui/material/Container";
 
 export default function ComoSurgio() {
     return (
-        <section id="comoSurgio" className="bg-slate-100 py-12 sm:py-16 lg:py-20">
+        <section id="comoSurgio" className="py-2 sm:py-16 lg:py-2">
 
             <Container maxWidth="md" className="text-center">
-                <div className="p-6 sm:p-10 lg:p-12" style={{ backgroundColor: "#244B91" }}>
+                <div className="text-white bg-[#244B91] text-white rounded-xl p-6 sm:p-10">
 
                     <h2 className="font-bold text-2xl sm:text-3xl lg:text-4xl leading-relaxed text-white mb-6">Como Surgio</h2>
                     <p className="text-white text-base sm:text-lg leading-relaxed text-justify">

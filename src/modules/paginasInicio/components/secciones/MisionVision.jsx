@@ -16,11 +16,11 @@ const Item = styled(Paper)(({ theme }) => ({
 
 export default function MisionVision() {
     return (
-        <section id="misionVision" className="py-16 px-6">
+        <section id="misionVision" className="py-15 px-15">
 
             <Box sx={{ flexGrow: 1 }}>
 
-                <Grid container spacing={4}>
+                <Grid container spacing={4} className="rounded-xl">
 
                     <Grid size={{ xs: 12, md: 6 }}>
 
