@@ -1,5 +1,6 @@
 import LogoUas from "../../assets/logo_uas.png";
 import Menu from "./components/Menu";
+import { useNavigate } from 'react-router-dom';
 
 
 import NuestroEquipo from "./components/secciones/NuestroEquipo";
@@ -12,7 +13,18 @@ import MisionVision from "./components/secciones/MisionVision";
 import Vinculacion from "./components/secciones/Vinculacion";
 
 
+
 export default function Conocenos() {
+
+    // Funcion para navegar entre pantallas
+  const navigate = useNavigate();
+
+  function irInicioPage() {
+    navigate('/');
+  }
+
+
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col">
 
@@ -22,15 +34,15 @@ export default function Conocenos() {
         {/* Logo UAS */}
         <div className="flex items-center">
 
+        <button onClick={irInicioPage} className="cursor-pointer">
+
           <img
             src={LogoUas}
             alt="Logo Institucional"
             className="h-12 sm:h-[55px] ml-[60px] sm:ml-[90px] w-auto object-contain"
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src = 'https://placehold.co/48x48/2b3a55/FFFFFF?text=UAS';
-            }}
-          />
+           />
+
+          </button>
         </div>
 
         {/* Título y Subtítulo de la Facultad */}
