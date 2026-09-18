@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from 'react-router-dom';
-import Sidebar from '../components/navigation/sidebar';
+import AdminSidebar from '../../components/navigation/moduloTutorias/AdminSidebar';
 
 
 export default function AdminLayout({ setIsAuthenticated }) {
@@ -13,7 +13,7 @@ export default function AdminLayout({ setIsAuthenticated }) {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* El Sidebar ahora gestiona su propia navegación y estado activo */}
-      <Sidebar onLogout={handleLogout} />
+      <AdminSidebar onLogout={handleLogout} />
       
       <main className="flex-1 p-6 overflow-y-auto">
         {/* Aquí se renderiza la subruta activa según la URL */}

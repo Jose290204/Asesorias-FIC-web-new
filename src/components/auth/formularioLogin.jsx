@@ -4,33 +4,49 @@ import { useNavigate } from 'react-router-dom';
 import LogoTutorias from '../../assets/Logo_tutorias.png';
 
 
-export default function FormularioLogin({setIsAuthenticated}) {
- const [user, setUser] = useState('');
+export default function FormularioLogin({ setIsAuthenticated, setUserRole }) { //Se agrego tempralmente para el rol
+  const [user, setUser] = useState('');
   const [nip, setNip] = useState('');
 
- const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if(user && nip){
-    setIsAuthenticated(true);
-    console.log("me hiciste click");
-    navigate('/admin/asesorias')
-    
+    if (user && nip) {
+      let rolAsignado = '';
+
+      //Credenciale sara pruebas
+      if (user === '12345' && nip === '1234') {
+        rolAsignado = 'admin';
+      } else if (user === '12348' && nip === '1238') {
+        rolAsignado = 'asesor';
+      } else if (user === '12347' && nip === '1237') {
+        rolAsignado = 'estudiante';
+      } else {
+        alert('Credenciales incorrectas. Verifica tu No. Cuenta y NIP.');
+        return;
+      }
+
+      setIsAuthenticated(true);
+      setUserRole(rolAsignado); //temporal
+      console.log("me hiciste click");
+      console.log("Se inicio sesion con rol: ", rolAsignado)
+      navigate('/seleccion-modulo')
+
     } else {
-        alert('Porfavor rellene los campos')
+      alert('Porfavor rellene los campos')
     }
   }
 
-  
+
 
   return (
     <div className="bg-white rounded-[15px] shadow-[0_0_7px_4px_rgba(158,158,158,0.3)] w-[300px] sm:w-[380px] h-[450px] sm:h-[530px] p-[25px] sm:p-[40px] flex flex-col items-center">
-      
+
       {/* Logo FIC Asesorías */}
-      <img 
-        src={LogoTutorias} 
-        alt="Logo Asesorías FIC" 
+      <img
+        src={LogoTutorias}
+        alt="Logo Asesorías FIC"
         className="w-[200px] sm:w-[227px] object-contain"
         onError={(e) => {
           e.target.onerror = null;
@@ -42,7 +58,7 @@ export default function FormularioLogin({setIsAuthenticated}) {
       <div className="h-[35px] sm:h-[80px]"></div>
 
       <form onSubmit={handleSubmit} className="w-full flex flex-col">
-        
+
         {/* Input No. Cuenta */}
         <div className="relative flex items-center">
           <User className="absolute left-[15px] w-[18px] h-[18px] text-[#244B91]" />

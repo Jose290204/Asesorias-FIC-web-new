@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import logoFic from '../../assets/fic_logo.png';
-import logoUas from '../../assets/logo_uas.png';
+import logoFic from '../../../assets/fic_logo.png';
+import logoUas from '../../../assets/logo_uas.png';
 
-export default function Sidebar({ onLogout }) {
+export default function AdminSidebar({ onLogout }) {
   const [collapsed, setCollapsed] = useState(false);
 
   // Elementos principales del menú superior
   const navItems = [
     {
-      path: '/admin/asesorias',
+      path: '/tutorias/admin/asesorias',
       label: 'Asesorías',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,7 +18,7 @@ export default function Sidebar({ onLogout }) {
       )
     },
     {
-      path: '/admin/solicitudes',
+      path: '/tutorias/admin/solicitudes',
       label: 'Solicitudes',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,7 +27,7 @@ export default function Sidebar({ onLogout }) {
       )
     },
     {
-      path: '/admin/reportes',
+      path: '/tutorias/admin/reportes',
       label: 'Reportes',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,7 +36,7 @@ export default function Sidebar({ onLogout }) {
       )
     },
     {
-      path: '/admin/asesores-disciplinares',
+      path: '/tutorias/admin/asesores-disciplinares',
       label: 'Asesores Disciplinares',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,7 +45,7 @@ export default function Sidebar({ onLogout }) {
       )
     },
     {
-      path: '/admin/asesores-par',
+      path: '/tutorias/admin/asesores-par',
       label: 'Asesores Par',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,7 +54,7 @@ export default function Sidebar({ onLogout }) {
       )
     },
     {
-      path: '/admin/estudiantes',
+      path: '/tutorias/admin/estudiantes',
       label: 'Estudiantes',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +64,7 @@ export default function Sidebar({ onLogout }) {
       )
     },
     {
-      path: '/admin/catalogos',
+      path: '/tutorias/admin/catalogos',
       label: 'Catálogos',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,7 +134,7 @@ export default function Sidebar({ onLogout }) {
       {/* Parte Inferior Perfil  */}
       <div className="p-3 border-t border-blue-900/60 space-y-1.5">
         <NavLink
-          to="/admin/perfil-administrador"
+          to="/tutorias/admin/perfil-administrador"
           replace
           className={({ isActive }) =>
             `w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${
