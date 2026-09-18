@@ -1,13 +1,13 @@
 import { ExternalLink, Menu } from 'lucide-react';
 // import { useState } from 'react';
-import FormularioLogin from '../../../components/auth/formularioLogin';
 import LogoBienestar from '../../../assets/dependencias/bienestar.png';
 import LidatFic from '../../../assets/dependencias/lidatfic.png';
 import LogoFicFooter from '../../../assets/dependencias/logofic.png';
 import fondoInicio from '../../../assets/fondo_inicio.jpeg';
 import LogoUas from '../../../assets/logo_uas.png';
+import FormularioLogin from '../../../components/auth/formularioLogin';
 
-export default function Login({setIsAuthenticated}) {
+export default function Login() {
 
   
 
@@ -56,7 +56,7 @@ export default function Login({setIsAuthenticated}) {
         className="flex-1 flex justify-center items-center py-10 pb-[150px] pt-[150px] bg-cover bg-center relative"
         style={{ backgroundImage: `url(${fondoInicio})` }}
       >
-        <FormularioLogin setIsAuthenticated={setIsAuthenticated}/>
+        <FormularioLogin/>
       </main>
 
      <footer className="bg-[#244B91] text-white rounded-t-[30px] px-6 sm:px-16 py-8 w-full mt-auto">

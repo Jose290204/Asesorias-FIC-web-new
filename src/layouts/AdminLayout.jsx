@@ -1,12 +1,14 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/navigation/sidebar';
+import { useAuth } from '../context/AuthContext';
 
 
-export default function AdminLayout({ setIsAuthenticated }) {
+export default function AdminLayout() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
+    logout();
     navigate('/', { replace: true });
   };
 

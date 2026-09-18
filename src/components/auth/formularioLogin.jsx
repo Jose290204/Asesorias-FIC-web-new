@@ -2,13 +2,16 @@ import { Lock, User } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LogoTutorias from '../../assets/Logo_tutorias.png';
+import { useAuth } from '../../context/AuthContext';
 import usuariosService from '../../Services/usuariosService';
 import ToastNotification from '../ui/ToastNotification'; // Asegúrate de ajustar esta ruta
 
-export default function FormularioLogin({ setIsAuthenticated }) {
+
+export default function FormularioLogin() {
   const [user, setUser] = useState('');
   const [nip, setNip] = useState('');
   const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
   // Estado unificado para controlar el Toast
   const [toast, setToast] = useState({
@@ -50,21 +53,18 @@ export default function FormularioLogin({ setIsAuthenticated }) {
         password_hash: nip
       });
 
-      const { token} = response.data;
+      const data = await response.data;
 
-      // Guardar sesión correctamente serializando los datos del usuario
-      localStorage.setItem('token', token);
-      
 
-      // Notificación de éxito
-      showToast('Inicio de sesión exitoso', 'success');
+        login(data.token);
 
-      setIsAuthenticated(true);
-
-      // Redirigir
-      setTimeout(() => {
+        // Notificación de éxito
+        showToast('Inicio de sesión exitoso', 'success');
+        
+        setTimeout(() => {
         navigate('/admin/asesorias');
       }, 1000);
+      
     } catch (error) {
       if (error.response) {
         const mensaje = error.response.data.details || error.response.data.message || 'Credenciales incorrectas';

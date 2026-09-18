@@ -70,7 +70,7 @@ export default function TablaAsesorias() {
     
     // efecto para cargar datos al montar
     useEffect(() => {
-        fetchAsesorias();
+    fetchAsesorias();
     }, [fetchAsesorias]);
 
  
