@@ -6,6 +6,7 @@ import AdminLayout from './layouts/AdminLayout';
 import Login from './modules/auth/view/Login';
 
 // Vistas del Dashboard admin
+import Conocenos from './modules/paginasInicio/Conocenos';
 import AsesoresDisciplinares from './modules/tutorias/rolAdministrador/views/AsesoresDisciplinares';
 import AsesoresPar from './modules/tutorias/rolAdministrador/views/AsesoresPar';
 import Asesorias from './modules/tutorias/rolAdministrador/views/Asesorias';
@@ -31,6 +32,9 @@ export default function App() {
           element={token ? <Navigate to="/admin" replace /> : <Login />}
         />
 
+        {/*Ruta publica */}
+        <Route path="conocenos" element={<Conocenos />} />
+
         {/* Rutas del Administrador protegidas */}
         <Route
           path="/admin"
@@ -48,6 +52,7 @@ export default function App() {
           <Route path="asesores-par" element={<AsesoresPar />} />
           <Route path="catalogos" element={<Catalogos />} />
           <Route path="perfil-administrador" element={<PerfilAdministrador />} />
+
         </Route>
       </Routes>
     </BrowserRouter>
