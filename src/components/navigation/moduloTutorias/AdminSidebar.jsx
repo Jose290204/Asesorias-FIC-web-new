@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import logoFic from '../../assets/fic_logo.png';
-import logoUas from '../../assets/logo_uas.png';
+import logoFic from '../../../assets/fic_logo.png';
+import logoUas from '../../../assets/logo_uas.png';
 
-export default function Sidebar({ onLogout }) {
+export default function AdminSidebar({ onLogout }) {
   const [collapsed, setCollapsed] = useState(false);
 
   // Elementos principales del menú superior

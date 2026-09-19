@@ -79,11 +79,11 @@ export default function FormularioLogin() {
 
   return (
     <div className="bg-white rounded-[15px] shadow-[0_0_7px_4px_rgba(158,158,158,0.3)] w-[300px] sm:w-[380px] h-[450px] sm:h-[530px] p-[25px] sm:p-[40px] flex flex-col items-center">
-      
+
       {/* Logo FIC Asesorías */}
-      <img 
-        src={LogoTutorias} 
-        alt="Logo Asesorías FIC" 
+      <img
+        src={LogoTutorias}
+        alt="Logo Asesorías FIC"
         className="w-[200px] sm:w-[227px] object-contain"
         onError={(e) => {
           e.target.onerror = null;
@@ -95,7 +95,7 @@ export default function FormularioLogin() {
       <div className="h-[35px] sm:h-[80px]"></div>
 
       <form onSubmit={handleSubmit} className="w-full flex flex-col">
-        
+
         {/* Input No. Cuenta */}
         <div className="relative flex items-center">
           <User className="absolute left-[15px] w-[18px] h-[18px] text-[#244B91]" />

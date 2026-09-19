@@ -1,10 +1,10 @@
 import { Outlet, useNavigate } from 'react-router-dom';
-import Sidebar from '../components/navigation/sidebar';
-import { useAuth } from '../context/AuthContext';
+import AsesorSidebar from '../../components/navigation/moduloTutorias/AsesorSidebar';
+import { useAuth } from '../../context/AuthContext';
 
-
-export default function AdminLayout() {
+export default function AsesorLayout() {
   const navigate = useNavigate();
+
   const { logout } = useAuth();
 
   const handleLogout = () => {
@@ -15,7 +15,7 @@ export default function AdminLayout() {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* El Sidebar ahora gestiona su propia navegación y estado activo */}
-      <Sidebar onLogout={handleLogout} />
+      <AsesorSidebar onLogout={handleLogout} />
       
       <main className="flex-1 p-6 overflow-y-auto">
         {/* Aquí se renderiza la subruta activa según la URL */}
