@@ -104,10 +104,10 @@ export default function TarjetaHistorialAsesorias() {
                             gap: '10px'
                         }}
                     >
-                        <Button variant="contained" sx={{ backgroundColor: '#2E7D32', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }} size="small" startIcon={<InfoOutlinedIcon />}>
+                        <Button variant="contained" sx={{ color: '#ffffff', borderRadius: '5px', textTransform: 'none' }} size="small" startIcon={<InfoOutlinedIcon />}>
                             Informacion
                         </Button>
-                        <Button variant="contained" sx={{ backgroundColor: '#2E7D32', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }} size="small" startIcon={<ChatOutlinedIcon />}>
+                        <Button variant="contained" sx={{ backgroundColor: '#C49E0D', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }} size="small" startIcon={<ChatOutlinedIcon />}>
                             Chat
                         </Button>
                     </CardActions>

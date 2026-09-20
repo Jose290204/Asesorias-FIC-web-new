@@ -108,10 +108,10 @@ export default function TarjetaSolicitudesPendientes() {
                         }}
                     >
                         <Button variant="contained" sx={{ backgroundColor: '#C42525', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }} size="small" startIcon={<CloseOutlinedIcon />}>
-                            Informacion
+                            Rechazar
                         </Button>
                         <Button variant="contained" sx={{ backgroundColor: '#2E7D32', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }} size="small" startIcon={<CheckOutlinedIcon />}>
-                            Chat
+                            Aceptar
                         </Button>
                     </CardActions>
                 </Card>
