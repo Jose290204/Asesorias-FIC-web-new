@@ -6,23 +6,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // NUEVO: manda y recibe cookies en cada petición
 });
-
-// Interceptor: actua como un filtro de salida
-api.interceptors.request.use(
-  (config) => {
-    // 1. Busca el token guardado en el navegador
-    const token = localStorage.getItem('token');
-
-    // 2. Si existe, lo adjunta automáticamente a las cabeceras HTTP de la petición
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 export default api;

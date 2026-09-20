@@ -53,10 +53,10 @@ export default function FormularioLogin() {
         password_hash: nip
       });
 
-      const data = await response.data;
+      const data = response.data;
 
 
-        login(data.token);
+        login(data.usuario);
 
         // Notificación de éxito
         showToast('Inicio de sesión exitoso', 'success');

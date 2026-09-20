@@ -45,7 +45,7 @@ function getRutaPorRol(rol) {
 }
 
 export default function App() {
-  const { token, rol, loading } = useAuth();
+  const { usuario, rol, loading } = useAuth();
 
   if (loading) {
     return <div>Cargando...</div>;
@@ -57,7 +57,7 @@ export default function App() {
         {/* Login */}
         <Route
           path="/"
-          element={token ? <Navigate to={getRutaPorRol(rol)} replace /> : <Login />}
+          element={usuario ? <Navigate to={getRutaPorRol(rol)} replace /> : <Login />}
         />
 
         {/* Ruta pública */}
@@ -67,7 +67,7 @@ export default function App() {
         <Route
           path="/admin"
           element={
-            token && ROLES_ADMIN.includes(rol)
+            usuario && ROLES_ADMIN.includes(rol)
               ? <AdminLayout />
               : <Navigate to="/" replace />
           }
@@ -87,7 +87,7 @@ export default function App() {
         <Route
           path="/tutorias/asesor"
           element={
-            token && ROLES_ASESOR.includes(rol)
+            usuario && ROLES_ASESOR.includes(rol)
               ? <AsesorLayout />
               : <Navigate to="/" replace />
           }
@@ -103,7 +103,7 @@ export default function App() {
         <Route
           path="/tutorias/estudiante"
           element={
-            token && rol === ROL_ESTUDIANTE
+            usuario && rol === ROL_ESTUDIANTE
               ? <EstudianteLayout />
               : <Navigate to="/" replace />
           }

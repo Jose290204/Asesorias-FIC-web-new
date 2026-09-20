@@ -1,76 +1,51 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import usuariosService from '../Services/usuariosService'; // ajusta la ruta según tu proyecto
 
 const AuthContext = createContext();
 
-function decodeToken(token) {
-    
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-            atob(base64)
-                .split('')
-                .map((c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0'))
-                .join('')
-        );
-        return JSON.parse(jsonPayload);
-    } catch (error) {
-        console.error('Error en token', error);
-        return null;
-    }
-}
-
 export function AuthProvider({ children }) {
-    const [token, setToken] = useState(null);
+    const [usuario, setUsuario] = useState(null);
     const [rol, setRol] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    
-
+    // Al montar la app (o al recargar), preguntamos al backend si la cookie sigue viva
     useEffect(() => {
-        const checkSession = () => {
-            const storedToken = localStorage.getItem('token');
-
-            if (storedToken) {
-                const payload = decodeToken(storedToken);
-
-                if (!payload) {
-                    localStorage.removeItem('token');
-                    setToken(null);
-                    setRol(null);
-                } else if (payload.exp && payload.exp * 1000 < Date.now()) {
-                    localStorage.removeItem('token');
-                    setToken(null);
-                    setRol(null);
-                } else {
-                    setToken(storedToken);
-                    setRol(payload?.id_rol != null ? Number(payload.id_rol) : null);// ← sacamos el rol del token
-                }
-            } else {
-                setToken(null);
+        const checkSession = async () => {
+            try {
+                const response = await usuariosService.get('/perfil');
+                setUsuario(response.data.usuario);
+                setRol(response.data.usuario?.id_rol != null ? Number(response.data.usuario.id_rol) : null);
+            } catch (error) {
+                console.error('Error en sesion', error)
+                setUsuario(null);
                 setRol(null);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
 
         checkSession();
     }, []);
 
-    const login = (newToken) => {
-        localStorage.setItem('token', newToken);
-        setToken(newToken);
-        const payload = decodeToken(newToken);
-        setRol(payload?.id_rol ? Number(payload.id_rol) : null);
+    // login recibe directo los datos que ya te regresó el endpoint /login
+    const login = (usuarioData) => {
+        setUsuario(usuarioData);
+        setRol(usuarioData?.id_rol != null ? Number(usuarioData.id_rol) : null);
     };
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        setToken(null);
-        setRol(null);
+    const logout = async () => {
+        try {
+            await usuariosService.post('/logout');
+        } catch (error) {
+            console.error('Error al cerrar sesión', error);
+        } finally {
+            setUsuario(null);
+            setRol(null);
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ token, rol, loading, login, logout }}>
+        <AuthContext.Provider value={{ usuario, rol, loading, login, logout }}>
             {children}
         </AuthContext.Provider>
     );
