@@ -1,4 +1,6 @@
 
+import TarjetaSolicitudesEnRevision from "../components/TarjetaSolicitudesEnRevision";
+
 export default function SolicitudesEnRevision() {
     return (
 
@@ -8,6 +10,11 @@ export default function SolicitudesEnRevision() {
             </div>
 
             <p className="text-gray-500">Sin reportes</p>
+
+            {/* Solicitudes en revision */}
+             <TarjetaSolicitudesEnRevision />
         </div>
+
+        
     )
 }
