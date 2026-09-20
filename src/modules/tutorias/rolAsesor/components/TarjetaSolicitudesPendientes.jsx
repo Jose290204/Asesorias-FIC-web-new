@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
@@ -8,6 +9,13 @@ import Avatar from '@mui/material/Avatar';
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 
+// Ajusta estas rutas según dónde esté ubicado este archivo en tu proyecto
+import ToastNotification from '../../../../components/ui/ToastNotification';
+import {
+    ModalAceptarSolicitud,
+    ModalRechazarSolicitud
+} from './ModalesSolicitudPendiente';
+
 export default function TarjetaSolicitudesPendientes() {
 
     //Datos de prueba - solo cambia estos segun tu tarjeta para pruebas
@@ -17,107 +25,190 @@ export default function TarjetaSolicitudesPendientes() {
         { id: 14, alumno: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
         { id: 15, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
         { id: 16, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 12, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 13, alumno: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 14, alumno: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 15, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 16, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" }
+        { id: 17, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
+        { id: 18, alumno: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
+        { id: 19, alumno: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
+        { id: 20, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
+        { id: 21, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" }
     ];
 
+    // Estados para Modales
+    const [selectedSolicitud, setSelectedSolicitud] = useState(null);
+    const [modalAceptarOpen, setModalAceptarOpen] = useState(false);
+    const [modalRechazarOpen, setModalRechazarOpen] = useState(false);
 
+    // Estado para el Toast Global
+    const [toast, setToast] = useState({
+        open: false,
+        message: '',
+        type: 'info'
+    });
+
+    const showToast = (message, type = 'info') => {
+        setToast({ open: true, message, type });
+    };
+
+    const handleCloseToast = () => {
+        setToast((prev) => ({ ...prev, open: false }));
+    };
+
+    // Helper para desenfocar elementos activos antes de abrir el modal
+    const clearFocus = (event) => {
+        if (event?.currentTarget) event.currentTarget.blur();
+        document.activeElement?.blur();
+    };
+
+    // Handlers para Abrir Modales
+    const handleOpenAceptar = (solicitud, event) => {
+        clearFocus(event);
+        setSelectedSolicitud(solicitud);
+        setModalAceptarOpen(true);
+    };
+
+    const handleOpenRechazar = (solicitud, event) => {
+        clearFocus(event);
+        setSelectedSolicitud(solicitud);
+        setModalRechazarOpen(true);
+    };
+
+    // Handlers de confirmación (aquí va la llamada a tu API cuando la tengas)
+    // Los modales ya se encargan de mostrar el toast y de cerrarse.
+    const handleConfirmAceptar = async () => {
+        console.log('Solicitud aceptada:', selectedSolicitud?.id);
+    };
+
+    const handleConfirmRechazar = async (motivo) => {
+        console.log('Solicitud rechazada:', selectedSolicitud?.id, '| Motivo:', motivo);
+    };
 
     return (
-        <Box className="flex flex-row flex-wrap gap-7 justify-center">
-            {solicitudesPendientes.map((solicitud) => ( //Este es apra que recorra el arreglo de datos y lso vaya imprimeindo
+        <>
+            <Box className="flex flex-row flex-wrap gap-7 justify-center">
+                {solicitudesPendientes.map((solicitud) => ( //Este es apra que recorra el arreglo de datos y lso vaya imprimeindo
 
+                    <Card key={solicitud.id}
+                        sx={{
+                            //Si ocupas moverle a cualquier cosa de tamaño, margen color de la taerjeta es aqui
+                            width: '400px',
+                            background: '#FFFFFF',
+                            borderLeft: '20px solid #08338F',
 
-                <Card key={solicitud.id}
-                    sx={{
-                        //Si ocupas moverle a cualquier cosa de tamaño, margen color de la taerjeta es aqui
-                        width: '400px',
-                        background: '#FFFFFF',
-                        borderLeft: '20px solid #08338F',
+                            borderRadius: '5px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            boxShadow: '0px 4px 12.3px rgba(0, 0, 0, 0.20)',
 
-                        borderRadius: '5px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        boxShadow: '0px 4px 12.3px rgba(0, 0, 0, 0.20)',
+                        }}
+                    >
+                        <CardContent sx={{ padding: '24px 24px 10px 24px' }}> {/* La informacion de la tarjeta */}
 
-                    }}
-                >
-                    <CardContent sx={{ padding: '24px 24px 10px 24px' }}> {/* La informacion de la tarjeta */}
+                            {/* Contenedor principal de la img, nombre del alumno y email de alumno */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', mb: 3 }}>
 
-                        {/* Contenedor principal de la img, nombre del alumno y email de alumno */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', mb: 3 }}>
+                                <Avatar
+                                    sx={{
+                                        //Estilos de la foto de usuario
+                                        backgroundColor: '#EBD9B4',
+                                        color: '#8A6D2B',
+                                        width: 50,
+                                        height: 50,
+                                        fontSize: '24px',
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    {solicitud.alumno.charAt(0)}
+                                </Avatar>
 
-                            <Avatar
-                                sx={{
-                                    //Estilos de la foto de usuario
-                                    backgroundColor: '#EBD9B4',
-                                    color: '#8A6D2B',
-                                    width: 50,
-                                    height: 50,
-                                    fontSize: '24px',
-                                    fontWeight: 'bold'
-                                }}
-                            >
-                                {solicitud.alumno.charAt(0)}
-                            </Avatar>
+                                {/* contenedor para separar nombre y email */}
+                                <Box>
 
-                            {/* contenedor para separar nombre y email */}
-                            <Box>
+                                    <Typography sx={{ fontSize: '16px', fontWeight: "700", color: '#000000', lineHeight: 1.2 }}>
+                                        {solicitud.alumno}
+                                    </Typography>
+                                    <Typography sx={{ fontSize: '13px', color: '#6A6A6A' }}>
+                                        {solicitud.email}
+                                    </Typography>
 
-                                <Typography sx={{ fontSize: '16px', fontWeight: "700", color: '#000000', lineHeight: 1.2 }}>
-                                    {solicitud.alumno}
-                                </Typography>
-                                <Typography sx={{ fontSize: '13px', color: '6A6A6A' }}>
-                                    {solicitud.email}
-                                </Typography>
+                                </Box>
+
 
                             </Box>
 
 
-                        </Box>
+                            {/* Contenedor principal de los datos */}
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', mb: '5px' }}>
 
+                                <Typography sx={{ fontSize: '15px', color: '#333333' }}>
+                                    <span className="font-bold">Materia: </span> {solicitud.materia}
+                                </Typography>
+                                <Typography sx={{ fontSize: '15px', color: '#333333' }}>
+                                    <span className="font-bold">Fecha: </span> {solicitud.fecha}
+                                </Typography>
+                                <Typography sx={{ fontSize: '15px', color: '#333333' }}>
+                                    <span className="font-bold">Modalidad: </span> {solicitud.modalidad}
+                                </Typography>
 
-                        {/* Contenedor principal de los datos */}
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', mb: '5px'}}>
+                            </Box>
 
-                            <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                <span className="font-bold">Materia: </span> {solicitud.materia}
-                            </Typography>
-                            <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                <span className="font-bold">Fecha: </span> {solicitud.fecha}
-                            </Typography>
-                            <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                <span className="font-bold">Modalidad: </span> {solicitud.modalidad}
-                            </Typography>
+                        </CardContent>
 
-                        </Box>
+                        {/* Donde se ponen los botones que se ocupen, se pueden quitar o agregar mas */}
+                        <CardActions
+                            sx={{
+                                //Para poner los botones a un lado
+                                padding: '0px 24px 20px 24px',
+                                justifyContent: 'flex-end',
+                                gap: '10px'
+                            }}
+                        >
+                            <Button
+                                variant="contained"
+                                sx={{ backgroundColor: '#C42525', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
+                                size="small"
+                                startIcon={<CloseOutlinedIcon />}
+                                onClick={(e) => handleOpenRechazar(solicitud, e)}
+                            >
+                                Rechazar
+                            </Button>
+                            <Button
+                                variant="contained"
+                                sx={{ backgroundColor: '#2E7D32', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
+                                size="small"
+                                startIcon={<CheckOutlinedIcon />}
+                                onClick={(e) => handleOpenAceptar(solicitud, e)}
+                            >
+                                Aceptar
+                            </Button>
+                        </CardActions>
+                    </Card>
+                )
 
-                    </CardContent>
+                )}
+            </Box>
 
-                    {/* Donde se ponen los botones que se ocupen, se pueden quitar o agregar mas */}
-                    <CardActions
-                        sx={{
-                            //Para poner los botones a un lado
-                            padding: '0px 24px 20px 24px',
-                            justifyContent: 'flex-end',
-                            gap: '10px'
-                        }}
-                    >
-                        <Button variant="contained" sx={{ backgroundColor: '#C42525', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }} size="small" startIcon={<CloseOutlinedIcon />}>
-                            Rechazar
-                        </Button>
-                        <Button variant="contained" sx={{ backgroundColor: '#2E7D32', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }} size="small" startIcon={<CheckOutlinedIcon />}>
-                            Aceptar
-                        </Button>
-                    </CardActions>
-                </Card>
-            )
+            {/* Modales */}
+            <ModalAceptarSolicitud
+                open={modalAceptarOpen}
+                onClose={() => setModalAceptarOpen(false)}
+                onConfirm={handleConfirmAceptar}
+                showToast={showToast}
+            />
 
-            )}
-        </Box>
+            <ModalRechazarSolicitud
+                open={modalRechazarOpen}
+                onClose={() => setModalRechazarOpen(false)}
+                onConfirm={handleConfirmRechazar}
+                showToast={showToast}
+            />
+
+            {/* Toast Global */}
+            <ToastNotification
+                open={toast.open}
+                onClose={handleCloseToast}
+                message={toast.message}
+                type={toast.type}
+            />
+        </>
     );
 }
