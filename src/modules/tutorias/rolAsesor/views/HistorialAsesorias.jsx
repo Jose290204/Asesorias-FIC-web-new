@@ -9,7 +9,7 @@ export default function HistorialAsesorias() {
                 </div>
     
                 {/* Contenedor para las tarjetas o contenido de la pagina */}
-                <div className="w-full overflow-y-auto pr-4 max-h-[calc(100vh-180px)]">
+                <div className="w-full overflow-y-auto max-h-[calc(100vh-180px)] pb-5">
                     <TarjetaHistorialAsesorias/>
                 </div>
             </div>
