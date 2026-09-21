@@ -7,6 +7,10 @@ import {asesoriasService} from "../services/asesoriasService1"
 import ModalCargaExcel from "../components/ModalCargaExel";
 import { catalogoService } from "../services/catalogoService";
 
+// Ajusta esta ruta si tu archivo de modales está en otra carpeta
+import { ModalCrearAsesoria } from "../components/ModalesAsesorias";
+import ToastNotification from "../../../../components/ui/ToastNotification";
+
 const initialFiltros = {
   licenciatura: "",
   grupo: "",
@@ -20,8 +24,16 @@ export default function Asesorias() {
   const [cargando, setCargando] = useState(true);
   const [openModalFiltros, setopenModalFiltros] = useState(false);
   const [modalExcelOpen, setModalExcelOpen] = useState(false);
+  const [modalCrearOpen, setModalCrearOpen] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [filtros, setFiltros] = useState(initialFiltros);
+
+  // Estado para el Toast Global
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    type: "info"
+  });
 
   // Estados para almacenar los datos de los catálogos
   const [licenciaturas, setLicenciaturas] = useState([]);
@@ -60,6 +72,14 @@ export default function Asesorias() {
       });
   }, []);
 
+  const showToast = (message, type = "info") => {
+    setToast({ open: true, message, type });
+  };
+
+  const handleCloseToast = () => {
+    setToast((prev) => ({ ...prev, open: false }));
+  };
+
   // Handler para abrir modales removiendo foco activo
   const handleOpenModalFiltros = (e) => {
     if (e?.currentTarget) e.currentTarget.blur();
@@ -73,8 +93,25 @@ export default function Asesorias() {
     setModalExcelOpen(true);
   };
 
+  const handleOpenModalCrear = (e) => {
+    if (e?.currentTarget) e.currentTarget.blur();
+    document.activeElement?.blur();
+    setModalCrearOpen(true);
+  };
+
   const handleExcelData = (datosCargados) => {
     console.log("Datos cargados desde Excel:", datosCargados);
+  };
+
+  // Aquí va tu llamada a la API para crear la asesoría (y de ahí tomar el id real)
+  // El modal ya se encarga de mostrar el toast y de cerrarse.
+  const handleCrearAsesoria = async (nuevaAsesoria) => {
+    console.log("Asesoría creada:", nuevaAsesoria);
+
+    setAsesorias((prev) => {
+      const nuevoId = prev.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1;
+      return [{ ...nuevaAsesoria, id: nuevoId }, ...prev];
+    });
   };
 
   // Manejo de cambios en los inputs del filtro
@@ -164,6 +201,16 @@ export default function Asesorias() {
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1.8 14.8l-1.4 1.4L12 15.8l-2.4 2.4-1.4-1.4 2.4-2.4-2.4-2.4 1.4-1.4 2.4 2.4 2.4-2.4 1.4 1.4-2.4 2.4 2.4 2.4zM13 9V3.5L18.5 9H13z" />
           </svg>
           Cargar Asesorias
+        </button>
+
+        <button
+          onClick={handleOpenModalCrear}
+          className="bg-[#2e7d32] hover:bg-[#1b5e20]  text-sm text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
+        >
+          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+          </svg>
+          Crear Asesoria
         </button>
       </div>
 
@@ -282,6 +329,22 @@ export default function Asesorias() {
         open={modalExcelOpen}
         onClose={() => setModalExcelOpen(false)}
         onDataLoaded={handleExcelData}
+      />
+
+      {/* Modal de Crear Asesoría */}
+      <ModalCrearAsesoria
+        open={modalCrearOpen}
+        onClose={() => setModalCrearOpen(false)}
+        onSave={handleCrearAsesoria}
+        showToast={showToast}
+      />
+
+      {/* Toast Global */}
+      <ToastNotification
+        open={toast.open}
+        onClose={handleCloseToast}
+        message={toast.message}
+        type={toast.type}
       />
     </div>
   );
