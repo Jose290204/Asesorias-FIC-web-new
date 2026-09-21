@@ -8,7 +8,7 @@ export default function SolicitudesPendientes() {
             </div>
 
             {/* Contenedor para las tarjetas o contenido de la pagina */}
-            <div className="w-full overflow-y-auto max-h-[calc(100vh-180px)]">
+            <div className="w-full overflow-y-auto max-h-[calc(100vh-180px)] pb-5">
                 <TarjetaSolicitudesPendientes />
             </div>
         </div>

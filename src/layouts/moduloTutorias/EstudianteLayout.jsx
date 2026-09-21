@@ -13,11 +13,11 @@ export default function EstudianteLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-[#244B91] justify-center items-center pr-2">
       {/* El Sidebar ahora gestiona su propia navegación y estado activo */}
       <EstudianteSidebar onLogout={handleLogout} />
 
-      <main className="flex-1 p-6 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto">
         {/* Aquí se renderiza la subruta activa según la URL */}
         <Outlet />
       </main>

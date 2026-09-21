@@ -48,7 +48,7 @@ export default function EstudianteSidebar({ onLogout }) {
 
     return (
         <aside
-            className={`bg-[#244B91] text-white flex flex-col justify-between min-h-screen transition-all duration-300 border-r-4 border-white relative shadow-xl ${collapsed ? 'w-20' : 'w-70'
+            className={`bg-[#244B91] text-white flex flex-col justify-between min-h-screen transition-all duration-300 relative shadow-xl ${collapsed ? 'w-20' : 'w-70'
                 }`}
         >
             {/* Botón para colapsar/expandir la barra */}
