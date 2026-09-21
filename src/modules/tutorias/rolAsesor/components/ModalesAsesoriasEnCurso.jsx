@@ -15,7 +15,9 @@ import {
     ListItemText,
     Stack,
     Tooltip,
-    MenuItem
+    MenuItem,
+    Autocomplete,
+    createFilterOptions
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -26,11 +28,18 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
+import 'dayjs/locale/es';
 
 import { catalogoService } from '../../rolAdministrador/services/catalogoService';
+// Ajusta esta ruta según dónde esté tu estudianteService
+import { getEstudiantes } from '../../rolAdministrador/services/estudianteService';
 
+// --- HELPERS ---
+
+// Quita espacios y pasa a minúsculas para comparar textos ("7:00 - 8:00 AM" == "7:00-8:00 AM")
 const normalizar = (texto) => String(texto ?? '').replace(/\s+/g, '').toLowerCase();
 
+// Busca en un catálogo el id que corresponde a un nombre. Devuelve '' si no lo encuentra.
 const buscarId = (lista, campoNombre, campoId, nombre) => {
     const objetivo = normalizar(nombre);
     if (!objetivo) return '';
@@ -38,11 +47,13 @@ const buscarId = (lista, campoNombre, campoId, nombre) => {
     return encontrado ? String(encontrado[campoId]) : '';
 };
 
+// Busca en un catálogo el nombre que corresponde a un id.
 const buscarNombre = (lista, campoId, campoNombre, id) => {
     const encontrado = lista.find((item) => String(item[campoId]) === String(id));
     return encontrado ? encontrado[campoNombre] : undefined;
 };
 
+// La tarjeta muestra la fecha como DD/MM/YYYY. dayjs la leería como MM/DD/YYYY, así que se convierte a mano.
 const parsearFecha = (valor) => {
     if (!valor) return null;
     if (typeof valor === 'string') {
@@ -167,6 +178,8 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
 
     const [initialFormData, setInitialFormData] = useState(null);
 
+    // Cargar y normalizar los datos cada vez que se abre el modal.
+    // Si data no trae los ids (como la tarjeta, que solo manda nombres), se buscan en catalogoService.
     useEffect(() => {
         if (!open || !data) return;
 
@@ -259,6 +272,7 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
         (key) => formData[key] !== initialFormData[key]
     ) : false;
 
+    // Obtenemos los catálogos directamente desde la instancia de catalogoService
     const materiasList = catalogoService.getMaterias();
     const horariosList = catalogoService.getHorarios();
     const modalidadesList = catalogoService.getModalidades();
@@ -267,6 +281,7 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
     const handleApply = () => {
         if (!isModified) return;
 
+        // Se sincronizan los nombres con los ids elegidos para que la tarjeta muestre el valor nuevo
         const actualizado = {
             ...data,
             ...formData,
@@ -710,3 +725,274 @@ export function ModalMaterialAdicional({ open, onClose, data, onSave, showToast 
     );
 }
 
+// --- 5. MODAL CREAR ASESORÍA ---
+
+
+const IDS_MATERIAS_DEMO = [94, 95, 96];
+
+// Permite buscar al alumno por nombre, número de cuenta o correo
+const filtrarEstudiantes = createFilterOptions({
+    stringify: (estudiante) => `${estudiante.nombre} ${estudiante.numeroCuenta ?? ''} ${estudiante.correo ?? ''}`
+});
+
+const FORMULARIO_CREAR_INICIAL = {
+    estudiante: null,
+    materiaId: '',
+    horarioId: '',
+    modalidadId: '',
+    razonId: '',
+    inicio: null
+};
+
+export function ModalCrearAsesoria({ open, onClose, onSave, showToast, materiasAsesor }) {
+    const [formData, setFormData] = useState(FORMULARIO_CREAR_INICIAL);
+    const [estudiantes, setEstudiantes] = useState([]);
+    const [cargandoEstudiantes, setCargandoEstudiantes] = useState(false);
+    const [calendarioOpen, setCalendarioOpen] = useState(false);
+    const [guardando, setGuardando] = useState(false);
+
+    // Al abrir: se limpia el formulario y se cargan los estudiantes
+    useEffect(() => {
+        if (!open) return;
+
+        setFormData(FORMULARIO_CREAR_INICIAL);
+        setCalendarioOpen(false);
+
+        let cancelado = false;
+        setCargandoEstudiantes(true);
+
+        getEstudiantes()
+            .then((lista) => {
+                if (!cancelado) setEstudiantes(lista);
+            })
+            .catch((error) => console.error('Error al cargar estudiantes:', error))
+            .finally(() => {
+                if (!cancelado) setCargandoEstudiantes(false);
+            });
+
+        return () => {
+            cancelado = true;
+        };
+    }, [open]);
+
+    // Materias del asesor (de prueba mientras no se pase la prop) y catálogos desde catalogoService
+    const materiasList =
+        materiasAsesor ??
+        catalogoService.getMaterias().filter((item) => IDS_MATERIAS_DEMO.includes(item.id_materia));
+    const horariosList = catalogoService.getHorarios();
+    const modalidadesList = catalogoService.getModalidades();
+    const razonesList = catalogoService.getRazonesAsesoria();
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    // Se quita el foco del campo antes de abrir el calendario. Si el calendario se abre como su propio
+    // diálogo, el modal de abajo queda con aria-hidden y no debe tener ningún elemento enfocado.
+    const abrirCalendario = () => {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
+        setCalendarioOpen(true);
+    };
+
+    // El botón de crear se habilita solo cuando todos los campos están llenos
+    const formularioCompleto =
+        Boolean(formData.estudiante) &&
+        Boolean(formData.materiaId) &&
+        Boolean(formData.horarioId) &&
+        Boolean(formData.modalidadId) &&
+        Boolean(formData.razonId) &&
+        Boolean(formData.inicio?.isValid());
+
+    const handleCrear = async () => {
+        if (!formularioCompleto || guardando) return;
+
+        setGuardando(true);
+        try {
+            const estudiante = formData.estudiante;
+
+            // Misma forma de datos que lee el modal de información (ids + nombres)
+            const nuevaAsesoria = {
+                estudianteId: estudiante.id,
+                estudiante: estudiante.nombre,
+                alumno: estudiante.nombre,
+                email: estudiante.correo,
+                licenciatura: estudiante.licenciatura,
+                gradoGrupo: estudiante.grupo,
+                materiaId: formData.materiaId,
+                materia: buscarNombre(materiasList, 'id_materia', 'materia', formData.materiaId),
+                horarioId: formData.horarioId,
+                horario: buscarNombre(horariosList, 'id_horario', 'horario', formData.horarioId),
+                modalidadId: formData.modalidadId,
+                modalidad: buscarNombre(modalidadesList, 'id_modalidad', 'modalidad', formData.modalidadId),
+                razonId: formData.razonId,
+                razonAsesoria: buscarNombre(razonesList, 'id_razon', 'razon', formData.razonId),
+                inicio: formData.inicio.format('YYYY-MM-DD'),
+                fecha: formData.inicio.format('DD/MM/YYYY')
+            };
+
+            if (onSave) await onSave(nuevaAsesoria);
+            if (showToast) showToast('Asesoría creada correctamente', 'success');
+            if (onClose) onClose();
+        } catch (error) {
+            if (showToast) showToast('Ocurrió un error al crear la asesoría', 'error');
+        } finally {
+            setGuardando(false);
+        }
+    };
+
+    return (
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
+            <Dialog
+                open={Boolean(open)}
+                onClose={onClose}
+                sx={{
+                    '& .MuiPaper-root': {
+                        width: '550px',
+                        maxWidth: '550px',
+                        maxHeight: '90vh',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        p: 1.5
+                    }
+                }}
+            >
+                <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.2rem' }}>
+                    Crear Asesoría
+                    <IconButton
+                        aria-label="close"
+                        onClick={onClose}
+                        sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+
+                <DialogContent dividers>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
+                        {/* Buscador de alumno: al hacer clic se despliega la lista y al escribir se filtra */}
+                        <Autocomplete
+                            fullWidth
+                            size="small"
+                            openOnFocus
+                            options={estudiantes}
+                            value={formData.estudiante}
+                            onChange={(_, nuevoEstudiante) =>
+                                setFormData((prev) => ({ ...prev, estudiante: nuevoEstudiante }))
+                            }
+                            getOptionLabel={(option) => option.nombre}
+                            getOptionKey={(option) => option.id}
+                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                            filterOptions={filtrarEstudiantes}
+                            loading={cargandoEstudiantes}
+                            loadingText="Cargando alumnos..."
+                            noOptionsText="No se encontraron alumnos"
+                            renderInput={(params) => (
+                                <TextField {...params} label="Alumno" placeholder="Buscar alumno" />
+                            )}
+                        />
+
+                        <TextField
+                            select
+                            label="Materia"
+                            name="materiaId"
+                            size="small"
+                            fullWidth
+                            value={formData.materiaId}
+                            onChange={handleChange}
+                        >
+                            {materiasList.map((item) => (
+                                <MenuItem key={item.id_materia} value={String(item.id_materia)}>
+                                    {item.materia}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+
+                        <TextField
+                            select
+                            label="Horario"
+                            name="horarioId"
+                            size="small"
+                            fullWidth
+                            value={formData.horarioId}
+                            onChange={handleChange}
+                        >
+                            {horariosList.map((item) => (
+                                <MenuItem key={item.id_horario} value={String(item.id_horario)}>
+                                    {item.horario}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+
+                        <TextField
+                            select
+                            label="Modalidad"
+                            name="modalidadId"
+                            size="small"
+                            fullWidth
+                            value={formData.modalidadId}
+                            onChange={handleChange}
+                        >
+                            {modalidadesList.map((item) => (
+                                <MenuItem key={item.id_modalidad} value={String(item.id_modalidad)}>
+                                    {item.modalidad}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+
+                        <TextField
+                            select
+                            label="Razón de Asesoría"
+                            name="razonId"
+                            size="small"
+                            fullWidth
+                            value={formData.razonId}
+                            onChange={handleChange}
+                        >
+                            {razonesList.map((item) => (
+                                <MenuItem key={item.id_razon} value={String(item.id_razon)}>
+                                    {item.razon}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+
+                        {/* Al hacer clic en el campo se abre el calendario y la fecha elegida se muestra en el campo */}
+                        <DatePicker
+                            label="Fecha de Inicio"
+                            value={formData.inicio}
+                            onChange={(nuevaFecha) => setFormData((prev) => ({ ...prev, inicio: nuevaFecha }))}
+                            format="DD/MM/YYYY"
+                            open={calendarioOpen}
+                            onOpen={abrirCalendario}
+                            onClose={() => setCalendarioOpen(false)}
+                            slotProps={{
+                                textField: {
+                                    size: 'small',
+                                    fullWidth: true,
+                                    onClick: abrirCalendario
+                                }
+                            }}
+                        />
+                    </Box>
+                </DialogContent>
+
+                <DialogActions sx={{ p: 2, pt: 1.5, justifyContent: 'flex-end', gap: 1 }}>
+                    <Button variant="outlined" color="inherit" onClick={onClose}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleCrear}
+                        disabled={!formularioCompleto || guardando}
+                    >
+                        Crear asesoría
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </LocalizationProvider>
+    );
+}
