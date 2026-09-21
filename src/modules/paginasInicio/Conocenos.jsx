@@ -26,10 +26,10 @@ export default function Conocenos() {
 
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#F4F4F6] flex flex-col">
 
       {/* Barra de navegación superior (AppBar) */}
-      <header className="bg-[#244B91] text-white min-h-[80px] sm:min-h-[90px] px-4 sm:px-8 lg:px-12 flex items-center justify-between shadow-lg relative border-b border-white/10">
+      <header className="bg-gradient-to-r from-[#3267c4] to-[#244391] text-white min-h-[80px] sm:min-h-[90px] px-4 sm:px-8 lg:px-12 flex items-center justify-between shadow-lg relative border-b border-white/10">
 
         {/* Logo UAS */}
         <div className="flex items-center z-10">
@@ -92,7 +92,7 @@ export default function Conocenos() {
       </main>
 
       {/* ===============   FOOTER    ==========================*/}
-      <footer id="contacto" className="w-full bg-[#244B91] text-white py-10 px-6 sm:px-10 lg:px-16 shadow-inner border-t border-white/10">
+      <footer id="contacto" className="w-full bg-gradient-to-r from-[#3267c4] to-[#244391] text-white py-10 px-6 sm:px-10 lg:px-16 shadow-inner border-t border-white/10">
 
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
 

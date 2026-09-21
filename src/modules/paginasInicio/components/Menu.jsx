@@ -31,7 +31,7 @@ const Menuopciones = [
 
 export default function Menu() {
     return (
-        <nav className="w-full bg-[#D49A17] shadow-lg sticky top-0 z-50 border-b border-black/10 backdrop-blur-md">
+        <nav className="w-full bg-gradient-to-r from-[#c49e0d] to-[#c4a30dea] shadow-lg sticky top-0 z-50 border-b border-black/10 backdrop-blur-md">
             <div className='flex justify-center items-center lg:justify-center gap-1.5 sm:gap-5 sm:gap-2 py-1.5 py-3 px-3 overflow-x-auto whitespace-nowrap scrollbar-hide'>
                 {Menuopciones.map((nombre) => (
                     <button key={nombre.id} 

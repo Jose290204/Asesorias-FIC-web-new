@@ -39,13 +39,13 @@ export default function NuestroEquipo() {
     return (
         <section id="nuestroEquipo" className="py-12 sm:py-16 scroll-mt-24">
             <Container>
-                <div className="text-center mb-8">
-                    <h1 className="font-bold text-black text-2xl sm:text-3xl lg:text-2xl">Acerca de Nosotros</h1>
-                    <p className="text-gray-800 font-semibold text-lg sm:text-xl mt-2">Sistemas de tutorias FIC</p>
+                <div className="text-center mb-18">
+                    <h1 className="font-black text-slate-900 text-2xl sm:text-4xl lg:text-5xl tracking-tight drop-shadow-sm">Acerca de Nosotros</h1>
+                    <p className="text-slate-800 font-semibold text-base sm:text-xl lg:text-2xl mt-3 tracking-wide">Sistemas de tutorias FIC</p>
                 </div>
 
-                <div className="max-w-4xl mx-auto mb-12">
-                    <p className="text-center text-black text-base sm:text-lg leading-relaxed font-medium">
+                <div className="max-w-5xl mx-auto mb-22 px-2">
+                    <p className="font-extrabold text-center text-base sm:text-lg leading-relaxed">
                         La Universidad Autónoma de Sinaloa a través de Bienestar Universitario y la Facultad de Informática Culiacán en colaboración con el Laboratorio de Innovación,
                         Desarrollo Académico y Tecnológico de la Facultad de Informática Culiacán, presenta el Sistema de tutorias FIC.</p>
                 </div>
@@ -64,10 +64,10 @@ export default function NuestroEquipo() {
                             }}
                         >
 
-                            <h2 className="font-bold text-black text-base sm:text-lg mb-3 text-center tracking-tight border-b border-black/10 pb-2">
+                            <h2 className="font-extrabold text-sm sm:text-base font-bold text-gray-900 tracking-wider text-center uppercase pb-3 border-b border-gray-200 w-full">
                                 {tarjeta.titulo}</h2>
 
-                            <div className="space-y-1.5 text-center">
+                            <div className="space-y-1.5 text-center w-full">
                                 {tarjeta.personas.map((persona) => (
                                     <p
                                         key={persona}

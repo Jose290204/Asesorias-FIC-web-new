@@ -7,7 +7,7 @@ export default function NuestroProyecto() {
 
             <Container  maxWidth="lg" className="text-center">
 
-                <div className="bg-[#244B91] text-white rounded-2xl px-6 py-10 sm:px-10 sm:py-12 lg:px-16 transition-all duration-300"
+                <div className="bg-gradient-to-r from-[#3267c4] to-[#244B91] text-white rounded-2xl px-6 py-10 sm:px-10 sm:py-12 lg:px-16 transition-all duration-300"
                     style={{
                         boxShadow: "0 15px 35px -5px rgba(36, 75, 145, 0.35), 0 8px 15px -6px rgba(0, 0, 0, 0.1)",
                         border: "1px solid rgba(255, 255, 255, 0.1)"
