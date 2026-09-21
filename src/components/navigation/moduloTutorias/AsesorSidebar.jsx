@@ -78,7 +78,7 @@ export default function AseosrSidbar({ onLogout }) {
                             to={item.path}
                             replace
                             className={({ isActive }) =>
-                                `w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${isActive
+                                `w-full flex items-center gap-3 px-3 py-3 rounded-[5px] font-medium text-sm transition-all duration-200 ${isActive
                                     ? 'bg-white text-[#122a88] shadow-md font-semibold'
                                     : 'text-blue-100 hover:bg-blue-900/50 hover:text-white'
                                 }`
@@ -97,7 +97,7 @@ export default function AseosrSidbar({ onLogout }) {
                     to="/tutorias/asesor/perfil-asesor"
                     replace
                     className={({ isActive }) =>
-                        `w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium text-sm transition-all duration-200 ${isActive
+                        `w-full flex items-center gap-3 px-3 py-3 rounded-[5px] font-medium text-sm transition-all duration-200 ${isActive
                             ? 'bg-white text-[#122a88] shadow-md font-semibold'
                             : 'text-blue-100 hover:bg-blue-900/50 hover:text-white'
                         }`
@@ -114,7 +114,7 @@ export default function AseosrSidbar({ onLogout }) {
                 {/* Botón de Cerrar Sesión */}
                 <button
                     onClick={onLogout}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium text-red-200 hover:bg-red-500/40 hover:text-red-100 transition-colors mb-2 cursor-pointer"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[5px] text-xs font-medium text-red-200 hover:bg-red-500/40 hover:text-red-100 transition-colors mb-2 cursor-pointer"
                     title="Cerrar Sesión"
                 >
                     <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
