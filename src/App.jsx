@@ -4,6 +4,8 @@ import AdminLayout from './layouts/moduloTutorias/AdminLayout';
 import AsesorLayout from './layouts/moduloTutorias/AsesorLayout';
 import EstudianteLayout from './layouts/moduloTutorias/EstudianteLayout';
 
+import SkeletonApp from './components/ui/SkeletonApp';
+
 // vistas
 import Login from './modules/auth/view/Login';
 
@@ -48,7 +50,7 @@ export default function App() {
   const { usuario, rol, loading } = useAuth();
 
   if (loading) {
-    return <div>Cargando...</div>;
+    return <SkeletonApp/>;
   }
 
   return (

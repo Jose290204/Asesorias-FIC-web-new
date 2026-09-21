@@ -1,25 +1,24 @@
-import { useState, useEffect } from 'react';
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    IconButton,
-    Button,
-    Typography,
-    TextField,
-    Box
-} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    IconButton,
+    TextField,
+    Typography
+} from '@mui/material';
+import { useCallback, useEffect, useState } from 'react';
 
-// Ajusta estas rutas según dónde esté este archivo en tu proyecto
-import { catalogoService } from '../../rolAdministrador/services/catalogoService';
+import Loading from '../../../../components/ui/Loading';
+
+
+import { asesoresService } from '../../../../Services/asesoresService';
 import ToastNotification from '../../../../components/ui/ToastNotification';
-
-// Datos de prueba - reemplázalos con los datos reales del asesor
-const MATERIAS_INICIALES = ['Programación Estructurada', 'Fundamentos de Bases de Datos'];
-const HORARIOS_INICIALES = ['10:00-11:00 AM', '4:00-5:00 PM'];
+import { catalogoService } from '../../rolAdministrador/services/catalogoService';
 
 // --- SUBCOMPONENTE: SELECTOR DE CATÁLOGO (búsqueda y selección) ---
 function SubModalCatalogo({ open, onClose, titulo, elementos, campoTexto, onSelect }) {
@@ -82,13 +81,16 @@ function SubModalCatalogo({ open, onClose, titulo, elementos, campoTexto, onSele
 }
 
 // --- SUBCOMPONENTE: SECCIÓN CON LISTA + BOTÓN AÑADIR (se usa para materias y para horarios) ---
-function SeccionCatalogoEditable({ titulo, tituloSelector, textoVacio, items, catalogo, campoTexto, onAdd, onRemove }) {
+function SeccionCatalogoEditable({ titulo, tituloSelector, textoVacio, items, catalogo, campoTexto, campoId, onAdd, onRemove }) {
     const [openSelector, setOpenSelector] = useState(false);
 
     const handleSelect = (elemento) => {
-        const nombre = elemento[campoTexto];
-        if (!items.includes(nombre)) onAdd(nombre);
+       const yaExiste = items.some((item) => item[campoId] === elemento[campoId])
+       if(!yaExiste) {
+        onAdd(elemento)
         setOpenSelector(false);
+       }
+       
     };
 
     return (
@@ -122,7 +124,7 @@ function SeccionCatalogoEditable({ titulo, tituloSelector, textoVacio, items, ca
                 ) : (
                     items.map((item, index) => (
                         <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 1, py: 0.5, bgcolor: '#f9f9f9', borderRadius: '4px' }}>
-                            <Typography variant="body2" color="text.secondary">{item}</Typography>
+                            <Typography variant="body2" color="text.secondary">{item[campoTexto]}</Typography>
                             <IconButton size="small" color="error" onClick={() => onRemove(index)}>
                                 <DeleteIcon fontSize="small" />
                             </IconButton>
@@ -145,14 +147,18 @@ function SeccionCatalogoEditable({ titulo, tituloSelector, textoVacio, items, ca
 
 // --- PÁGINA ---
 export default function PerfilAsesor() {
-    const [materias, setMaterias] = useState(MATERIAS_INICIALES);
-    const [horarios, setHorarios] = useState(HORARIOS_INICIALES);
+    //estado para el perfil completo
+    const [perfil, setPerfil] = useState(null);
 
-    // Última versión guardada, para saber si hay cambios
-    const [guardado, setGuardado] = useState({
-        materias: MATERIAS_INICIALES,
-        horarios: HORARIOS_INICIALES
-    });
+    //estado de carga, mientras llega la respuesta del back
+    const [loading, setLoading] = useState(true);
+
+    //arreglos para llenar materias y horarios
+    const [materias, setMaterias] = useState([]);
+    const [horarios, setHorarios] = useState([])
+
+    //materias y horarios seleccionados
+    const [guardado, setGuardado] = useState({ materias: [], horarios: [] });
 
     // Estado para el Toast Global
     const [toast, setToast] = useState({
@@ -169,6 +175,30 @@ export default function PerfilAsesor() {
         setToast((prev) => ({ ...prev, open: false }));
     };
 
+      const cargarPerfil = useCallback(async () => {
+        try {
+            setLoading(true); // mostramos la pantalla de carga
+            const respuesta = await asesoresService.obtenerPerfilAsesor(); // corremos la api
+            const datos = respuesta.data;
+
+            // recibimos los datos y actualizamos las listas
+            setPerfil(datos.datosAsesor);
+            setMaterias(datos.materiasAsesor);
+            setHorarios(datos.horariosAsesor);
+            setGuardado({ materias: datos.materias, horarios: datos.horarios });
+        } catch (error) {
+            console.error('Error al cargar el perfil', error);
+            showToast('No se pudo cargar el perfil', 'error');
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    //cargamos el perfil
+    useEffect(() => {
+        cargarPerfil();
+    }, [cargarPerfil]);
+
     // Catálogos desde catalogoService
     const catalogoMaterias = catalogoService.getMaterias();
     const catalogoHorarios = catalogoService.getHorarios();
@@ -178,42 +208,45 @@ export default function PerfilAsesor() {
         JSON.stringify(horarios) !== JSON.stringify(guardado.horarios);
 
     // Handlers de materias
-    const handleAgregarMateria = (nombre) => setMaterias((prev) => [...prev, nombre]);
+    const handleAgregarMateria = (materia) => setMaterias((prev) => [...prev, materia]);
     const handleQuitarMateria = (index) => setMaterias((prev) => prev.filter((_, i) => i !== index));
 
     // Handlers de horarios
-    const handleAgregarHorario = (nombre) => setHorarios((prev) => [...prev, nombre]);
+    const handleAgregarHorario = (horario) => setHorarios((prev) => [...prev, horario]);
     const handleQuitarHorario = (index) => setHorarios((prev) => prev.filter((_, i) => i !== index));
 
-    const handleApply = () => {
-        if (!hasChanges) return; // Evitar ejecución si no hay cambios
+    const handleApply = async () => {
+        if (!hasChanges) return;
+
 
         if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur();
         }
 
-        // Aquí va tu llamada a la API
-        console.log('Perfil actualizado:', { materias, horarios });
+        
+        try {
 
-        setGuardado({ materias, horarios });
-        showToast('Cambios aplicados correctamente', 'info');
+            await asesoresService.actualizarMateriasYHorarios(materias, horarios);
+
+            setGuardado({ materias, horarios });
+            showToast('Cambios aplicados correctamente', 'success');
+            cargarPerfil()
+        } catch (error) {
+            const mensaje = error.response?.data?.message || 'Error al guardar los cambios';
+            showToast(mensaje, 'error');
+        }
     };
+    
+    if (loading) {
+        return <Loading mensaje='cargando perfil...'/>;
+    }
 
-    return (
-        <div className="h-[calc(100vh-1rem)] w-full rounded-2xl pl-17 py-10 pr-4 flex flex-col items-start justify-start gap-5 bg-gray-100">
-            <div>
-                <p className="text-2xl font-bold">Perfil</p>
-            </div>
+   return (
+    <div className="h-[calc(100vh-1rem)] w-full rounded-2xl pl-17 py-10 pr-4 flex flex-col items-start justify-start gap-5 bg-gray-100 overflow-hidden">
+        <p className="text-2xl font-bold">Perfil</p>
 
-
+        <div className="w-full overflow-y-auto max-h-[calc(100vh-180px)] pb-5">
             <div className="w-full flex flex-col items-center gap-8">
-
-                {/* <div className="w-28 h-28 rounded-full bg-gray-100 border-2 border-gray-200 flex items-center justify-center text-gray-400 shadow-sm overflow-hidden">
-                    <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                </div> */}
-
 
                 <div className="w-full max-w-xl bg-white border border-gray-200 rounded-[10px] shadow-sm p-8 flex flex-col gap-6">
                     {/* Campo Nombre Completo */}
@@ -223,7 +256,7 @@ export default function PerfilAsesor() {
                         </label>
                         <input
                             type="text"
-                            value="Leslie Mayram Barrera Rodriguez"
+                            value={perfil.nombre_completo}
                             readOnly
                             className="w-full bg-gray-100 border border-gray-200 rounded-sm px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed focus:outline-none"
                         />
@@ -236,7 +269,7 @@ export default function PerfilAsesor() {
                         </label>
                         <input
                             type="text"
-                            value="19519958"
+                            value={perfil.numero_cuenta}
                             readOnly
                             className="w-full bg-gray-100 border border-gray-200 rounded-sm px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed focus:outline-none"
                         />
@@ -250,6 +283,7 @@ export default function PerfilAsesor() {
                         items={materias}
                         catalogo={catalogoMaterias}
                         campoTexto="materia"
+                        campoId="id_materia"
                         onAdd={handleAgregarMateria}
                         onRemove={handleQuitarMateria}
                     />
@@ -262,6 +296,7 @@ export default function PerfilAsesor() {
                         items={horarios}
                         catalogo={catalogoHorarios}
                         campoTexto="horario"
+                        campoId="id_horario"
                         onAdd={handleAgregarHorario}
                         onRemove={handleQuitarHorario}
                     />
@@ -283,14 +318,15 @@ export default function PerfilAsesor() {
                     </Box>
                 </div>
             </div>
-
-            {/* Toast Global */}
-            <ToastNotification
-                open={toast.open}
-                onClose={handleCloseToast}
-                message={toast.message}
-                type={toast.type}
-            />
         </div>
-    );
+
+        {/* Toast Global */}
+        <ToastNotification
+            open={toast.open}
+            onClose={handleCloseToast}
+            message={toast.message}
+            type={toast.type}
+        />
+    </div>
+);
 }

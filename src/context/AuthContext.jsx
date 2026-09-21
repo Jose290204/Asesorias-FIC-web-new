@@ -12,6 +12,8 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         const checkSession = async () => {
             try {
+
+                 await new Promise((resolve) => setTimeout(resolve, 500));
                 const response = await usuariosService.get('/perfil');
                 setUsuario(response.data.usuario);
                 setRol(response.data.usuario?.id_rol != null ? Number(response.data.usuario.id_rol) : null);

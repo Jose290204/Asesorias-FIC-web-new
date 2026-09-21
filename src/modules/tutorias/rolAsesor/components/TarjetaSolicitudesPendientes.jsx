@@ -1,36 +1,41 @@
-import { useState } from 'react';
+import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
+import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
+import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
-import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
-import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
+import { useEffect, useState } from 'react';
+import { useAuth } from '../../../../context/AuthContext';
+
+import Loading from '../../../../components/ui/Loading';
 
 // Ajusta estas rutas según dónde esté ubicado este archivo en tu proyecto
 import ToastNotification from '../../../../components/ui/ToastNotification';
+import { solicitudesService } from '../../../../Services/solicitudesService';
 import {
     ModalAceptarSolicitud,
     ModalRechazarSolicitud
 } from './ModalesSolicitudPendiente';
 
-export default function TarjetaSolicitudesPendientes() {
+function formatearFechaVisible(fechaISO) {
+    const meses = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
 
-    //Datos de prueba - solo cambia estos segun tu tarjeta para pruebas
-    const solicitudesPendientes = [
-        { id: 12, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 13, alumno: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 14, alumno: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 15, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 16, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 17, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 18, alumno: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 19, alumno: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 20, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-        { id: 21, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" }
-    ];
+    const fecha = new Date(fechaISO);
+    const dia = String(fecha.getUTCDate()).padStart(2, '0');
+    const mes = meses[fecha.getUTCMonth()]; // getUTCMonth() regresa 0-11, así que indexa directo al array
+    const anio = fecha.getUTCFullYear();
+
+    return `${dia}/${mes}/${anio}`;
+}
+
+export default function TarjetaSolicitudesPendientes() {
+    const { usuario } = useAuth();
+
+    const [solicitudesPendientes, setSolicitudesPendientes] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     // Estados para Modales
     const [selectedSolicitud, setSelectedSolicitud] = useState(null);
@@ -47,6 +52,54 @@ export default function TarjetaSolicitudesPendientes() {
     const showToast = (message, type = 'info') => {
         setToast({ open: true, message, type });
     };
+
+    const cargarSolicitudes = async () => {
+        try {
+            setLoading(true);
+            const response = await solicitudesService.obtenerTodas({
+                id_asesor: usuario.id_usuario 
+            });
+            setSolicitudesPendientes(response.data);
+            
+        } catch (error) {
+            console.error('Error al cargar solicitudes', error);
+            showToast('No se pudieron cargar las solicitudes', 'error');
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const rechazarSolicitudes = async (id_solicitud, razon) => {
+        try {
+            const response = await solicitudesService.rechazar(id_solicitud, razon);//hacemos la llamada al service
+            showToast(response.message, 'success'); //mostramo el toast con el mensaje exitoso
+            setModalRechazarOpen(false);//cerramos el modal de rechazar
+            cargarSolicitudes(); //hacemos otra carga de las solicitudes
+
+        } catch (error) {
+            const message = error.response?.data?.message || 'No se pudo rechazar la solicitud'
+            showToast(message, 'error'); // usa el message del error del backend, si existe
+        }
+    }
+
+    const aceptarSolicitudes = async (solicitud) => {
+        try {
+            const response = await solicitudesService.aceptar(solicitud);//hacemos la llamada al service
+            showToast(response.message, 'success'); //mostramo el toast con el mensaje exitoso
+            setModalAceptarOpen(false);//cerramos el modal de aceptar
+            cargarSolicitudes(); //hacemos otra carga de las solicitudes
+
+        } catch (error) {
+            const message = error.response?.data?.message || 'No se pudo rechazar la solicitud'
+            showToast(message, 'error'); // usa el message del error del backend, si existe
+        }
+    }
+
+    useEffect(() => {
+    if (usuario) {
+        cargarSolicitudes();
+    }
+}, [usuario]);
 
     const handleCloseToast = () => {
         setToast((prev) => ({ ...prev, open: false }));
@@ -74,12 +127,20 @@ export default function TarjetaSolicitudesPendientes() {
     // Handlers de confirmación (aquí va la llamada a tu API cuando la tengas)
     // Los modales ya se encargan de mostrar el toast y de cerrarse.
     const handleConfirmAceptar = async () => {
-        console.log('Solicitud aceptada:', selectedSolicitud?.id);
+        aceptarSolicitudes(selectedSolicitud)
     };
 
     const handleConfirmRechazar = async (motivo) => {
-        console.log('Solicitud rechazada:', selectedSolicitud?.id, '| Motivo:', motivo);
+        rechazarSolicitudes(selectedSolicitud.id_solicitud, motivo);//se manda al rechazar solicitudes el id y el motivo
     };
+
+    if (loading) {
+        return <Loading mensaje='cargando solicitudes...'/>
+    }
+
+    if (solicitudesPendientes.length === 0) {
+        return <p>No tienes solicitudes pendientes por revisar.</p>;
+    }
 
     return (
         <>
@@ -117,17 +178,17 @@ export default function TarjetaSolicitudesPendientes() {
                                         fontWeight: 'bold'
                                     }}
                                 >
-                                    {solicitud.alumno.charAt(0)}
+                                    {solicitud.nombre_estudiante.charAt(0)}
                                 </Avatar>
 
                                 {/* contenedor para separar nombre y email */}
                                 <Box>
 
                                     <Typography sx={{ fontSize: '16px', fontWeight: "700", color: '#000000', lineHeight: 1.2 }}>
-                                        {solicitud.alumno}
+                                        {solicitud.nombre_estudiante}
                                     </Typography>
                                     <Typography sx={{ fontSize: '13px', color: '#6A6A6A' }}>
-                                        {solicitud.email}
+                                        {solicitud.correo}
                                     </Typography>
 
                                 </Box>
@@ -143,7 +204,10 @@ export default function TarjetaSolicitudesPendientes() {
                                     <span className="font-bold">Materia: </span> {solicitud.materia}
                                 </Typography>
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                    <span className="font-bold">Fecha: </span> {solicitud.fecha}
+                                    <span className="font-bold">Fecha de inicio: </span> {formatearFechaVisible(solicitud.fecha_inicio)}
+                                </Typography>
+                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
+                                    <span className="font-bold">Horario: </span> {solicitud.horario}
                                 </Typography>
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
                                     <span className="font-bold">Modalidad: </span> {solicitud.modalidad}

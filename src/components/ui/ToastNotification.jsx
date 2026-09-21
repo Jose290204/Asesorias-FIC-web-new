@@ -23,7 +23,7 @@ export function ToastNotification({ open, onClose, message, type = 'info' }) {
     return (
         <Snackbar
             open={open}
-            autoHideDuration={4000}
+            autoHideDuration={2500}
             onClose={onClose}
             anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             sx={{ bottom: { xs: 16, sm: 24 }, width: '98%', maxWidth: '1100px' }}

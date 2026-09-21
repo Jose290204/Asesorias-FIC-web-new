@@ -1,12 +1,12 @@
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
+import Button from '@mui/material/Button';
+import { useState } from "react";
 import InputBuscar from "../../../../components/ui/InputBuscar";
 import TarjetaAsesoriasEnCurso from "../components/TajetaAsesoriasEnCurso";
-import { useState } from "react";
-import Button from '@mui/material/Button';
-import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 
 // Ajusta esta ruta si tu archivo de modales está en otra carpeta
-import { ModalCrearAsesoria } from "../components/ModalesAsesoriasEnCurso";
 import ToastNotification from "../../../../components/ui/ToastNotification";
+import { ModalCrearAsesoria } from "../components/ModalesAsesoriasEnCurso";
 
 // Datos de prueba
 const ASESORIAS_PRUEBA = [
@@ -78,52 +78,46 @@ export default function AsesoriasEnCurso() {
     });
 
     return (
-        <div className="h-[calc(100vh-1rem)] w-full rounded-2xl pl-17 py-10 pr-17 flex flex-col items-start justify-start gap-10 bg-gray-100 overflow-hidden">
-            <div className="w-full flex justify-between">
-                <p className="text-2xl font-bold">Asesorias en curso</p>
+    <div className="h-[calc(100vh-1rem)] w-full rounded-2xl pl-17 py-10 pr-17 flex flex-col items-start justify-start gap-10 bg-gray-100 overflow-hidden">
+        <p className="text-2xl font-bold">Asesorias en curso</p>
 
-                <InputBuscar
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
-                    placeholder="Buscar por materia o alumno..."
-                />
-
-
-
-
-            </div>
-
-            <div className="w-full overflow-y-auto max-h-[calc(100vh-180px)] pb-5">
-                <TarjetaAsesoriasEnCurso asesorias={asesoriasFiltradas} />
-            </div>
-
-            <div className="w-full flex justify-end">
-                <Button
-                    variant="contained"
-                    sx={{ borderRadius: '5px', textTransform: 'none', backgroundColor: '#2E7D32' }}
-                    size="medium"
-                    startIcon={<AddOutlinedIcon />}
-                    onClick={handleOpenCrear}
-                >
-                    Crear Asesoria
-                </Button>
-            </div>
-
-            {/* Modal */}
-            <ModalCrearAsesoria
-                open={modalCrearOpen}
-                onClose={() => setModalCrearOpen(false)}
-                onSave={handleCrearAsesoria}
-                showToast={showToast}
+        <div className="w-full flex items-center gap-6">
+            <InputBuscar
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                placeholder="Buscar por materia o alumno..."
             />
 
-            {/* Toast Global */}
-            <ToastNotification
-                open={toast.open}
-                onClose={handleCloseToast}
-                message={toast.message}
-                type={toast.type}
-            />
+            <Button
+                variant="contained"
+                sx={{ borderRadius: '5px', textTransform: 'none', backgroundColor: '#2E7D32' }}
+                size="medium"
+                startIcon={<AddOutlinedIcon />}
+                onClick={handleOpenCrear}
+            >
+                Crear Asesoria
+            </Button>
         </div>
-    );
+
+        <div className="w-full overflow-y-auto max-h-[calc(100vh-180px)] pb-5">
+            <TarjetaAsesoriasEnCurso asesorias={asesoriasFiltradas} />
+        </div>
+
+        {/* Modal */}
+        <ModalCrearAsesoria
+            open={modalCrearOpen}
+            onClose={() => setModalCrearOpen(false)}
+            onSave={handleCrearAsesoria}
+            showToast={showToast}
+        />
+
+        {/* Toast Global */}
+        <ToastNotification
+            open={toast.open}
+            onClose={handleCloseToast}
+            message={toast.message}
+            type={toast.type}
+        />
+    </div>
+);
 }
