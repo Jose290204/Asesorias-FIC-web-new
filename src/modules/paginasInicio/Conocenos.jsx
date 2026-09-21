@@ -29,10 +29,10 @@ export default function Conocenos() {
     <div className="min-h-screen bg-slate-100 flex flex-col">
 
       {/* Barra de navegación superior (AppBar) */}
-      <header className="bg-[#244B91] text-white min-h-[80px]  sm:min-h-[90px] px-4 sm:px-8 lg:px-12 flex items-center justify-between shadow-md relative">
+      <header className="bg-[#244B91] text-white min-h-[80px] sm:min-h-[90px] px-4 sm:px-8 lg:px-12 flex items-center justify-between shadow-lg relative border-b border-white/10">
 
         {/* Logo UAS */}
-        <div className="flex items-center">
+        <div className="flex items-center z-10">
 
         <button onClick={irInicioPage} className="cursor-pointer">
 
@@ -92,9 +92,9 @@ export default function Conocenos() {
       </main>
 
       {/* ===============   FOOTER    ==========================*/}
-      <footer id="contacto" className="w-full border-t border-blue-gray-50 px-4 py-8 sm:px-8 lg:px-12  bg-[#244B91] text-white">
+      <footer id="contacto" className="w-full bg-[#244B91] text-white py-10 px-6 sm:px-10 lg:px-16 shadow-inner border-t border-white/10">
 
-        <div className="max-w-7x1 mx-auto flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
 
           {/* ============================= PARTE IZQUIERDA ========================= */}
           <div className="w-full md:w-[45%] text-center md:text-left">
@@ -108,11 +108,10 @@ export default function Conocenos() {
           </div>
 
           {/* ============================= PARTE DERECHA ========================= */}
-          <div className="w-full h-full md:w-[50%] h-[250%] sm:h-[300px] lg:h-[350px]  rounded-xl overflow-hidden">
-
-            <iframe className="w-full h-full"
+          <div className="w-full md:w-[50%] h-[260px] sm:h-[300px] lg:h-[320px] rounded-2xl overflow-hidden shadow-2xl border border-white/20">
+            <iframe className="w-full h-full border-0"
               title="Facultad de informatica UAS"
-              width="425" height="350" src="https://www.openstreetmap.org/export/embed?bbox=-107.38368362188342%2C24.821274192730453%2C-107.38023430109025%2C24.82302940506748&amp;layer=mapnik&amp;marker=24.822151802007767%2C-107.38195896148682"   style={{ border: "1px solid black" }}> 
+              width="425" height="350" src="https://www.openstreetmap.org/export/embed?bbox=-107.38368362188342%2C24.821274192730453%2C-107.38023430109025%2C24.82302940506748&amp;layer=mapnik&amp;marker=24.822151802007767%2C-107.38195896148682"  loading="lazy" style={{ border: "1px solid black" }}> 
               
                 </iframe>
 

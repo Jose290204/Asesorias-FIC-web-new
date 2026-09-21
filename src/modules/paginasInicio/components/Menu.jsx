@@ -31,8 +31,8 @@ const Menuopciones = [
 
 export default function Menu() {
     return (
-        <nav className='w-full bg-[#D49A17] shadow-md'>
-            <div className='flex justify-center items-center lg:justify-center gap-6 sm:gap-10 py-3 px-4 overflow-x-auto whitespace-nowrap scrollbar-hide'>
+        <nav className="w-full bg-[#D49A17] shadow-lg sticky top-0 z-50 border-b border-black/10 backdrop-blur-md">
+            <div className='flex justify-center items-center lg:justify-center gap-1.5 sm:gap-5 sm:gap-2 py-1.5 py-3 px-3 overflow-x-auto whitespace-nowrap scrollbar-hide'>
                 {Menuopciones.map((nombre) => (
                     <button key={nombre.id} 
                     onClick={() => {
@@ -40,10 +40,19 @@ export default function Menu() {
                             behavior: "smooth",
                         })
                     }}
-                        className="text-white hover:bg-[#B9820F]
-              rounded-md
-              transition
-              shrink-0"
+                        className="
+                            text-white 
+                            font-medium 
+                            text-sm sm:text-base 
+                            px-3.5 py-1.5 
+                            rounded-lg 
+                            transition-all duration-200 ease-in-out
+                            hover:bg-white/20 
+                            hover:scale-105 
+                            active:scale-95 
+                            shrink-0 
+                            tracking-wide
+                        "
                     >
                     {nombre.nombre}
                     </button>

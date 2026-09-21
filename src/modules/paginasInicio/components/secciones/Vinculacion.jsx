@@ -127,10 +127,10 @@ const dependencias = [
 
 export default function Vinculacion() {
     return (
-        <section id="vinculacion" className="py-8 px-6">
+        <section id="vinculacion" className="my-12 sm:my-16">
 
-            <Container>
-                <h2 className="text-center font-bold text-2xl sm:text-3xl lg:text-4xl leading-relaxed text-black mb-6">Dependencias Vinculadas</h2>
+            <Container className="text-center">
+               <h2 className="font-bold text-xl sm:text-2xl lg:text-3xl leading-relaxed text-black mb-10">Dependencias Vinculadas</h2>
 
                 <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-6 lg:grid-cols-11 gap-5">
 
