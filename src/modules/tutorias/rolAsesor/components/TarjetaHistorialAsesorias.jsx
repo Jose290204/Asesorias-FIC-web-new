@@ -1,42 +1,33 @@
-import { useState } from 'react';
+import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
+import { useState } from 'react';
 
 import ToastNotification from '../../../../components/ui/ToastNotification';
-import {
-    ModalInfoHistorialAsesoria,
-    ModalChatAsesoria
-} from './ModalesHistorialAsesorias';
+// Modal de material adicional (solo consulta y descarga), el mismo que usa el estudiante
+import ModalMaterialEstudiante from '../../rolEstudiante/components/ModalMaterialEstudiante';
+import { ModalInfoHistorialAsesoria } from './ModalesHistorialAsesorias';
+// Chat del asesor con el estudiante (el mismo que usa Asesorías en curso)
+import ModalChatAsesoriaAsesor from './ModalChatAsesoriaAsesor';
 
 
-const DATOS_PRUEBA = [
-    { id: 12, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 13, alumno: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 14, alumno: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 15, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 16, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 17, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 18, alumno: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 19, alumno: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 20, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 21, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" }
-];
-
-export default function TarjetaHistorialAsesorias() {
-
-    const [solicitudesPendientes, setSolicitudesPendientes] = useState(DATOS_PRUEBA);
+// Las asesorías del historial las carga la vista; la tarjeta solo las muestra.
+export default function TarjetaHistorialAsesorias({ historial = [], onActualizar }) {
 
     // Estados para Modales
     const [selectedAsesoria, setSelectedAsesoria] = useState(null);
     const [modalInfoOpen, setModalInfoOpen] = useState(false);
     const [modalChatOpen, setModalChatOpen] = useState(false);
+    const [modalMaterialOpen, setModalMaterialOpen] = useState(false);
 
     // Estado para el Toast Global
     const [toast, setToast] = useState({
@@ -65,36 +56,48 @@ export default function TarjetaHistorialAsesorias() {
         setModalInfoOpen(true);
     };
 
+    const handleOpenMaterial = (solicitud, event) => {
+        clearFocus(event);
+        setSelectedAsesoria(solicitud);
+        setModalMaterialOpen(true);
+    };
+
     const handleOpenChat = (solicitud, event) => {
         clearFocus(event);
         setSelectedAsesoria(solicitud);
         setModalChatOpen(true);
     };
 
-   
+    // La edición se guarda en la vista (que es la dueña de los datos)
     const handleGuardarInfo = (asesoriaActualizada) => {
-        console.log('Información actualizada:', asesoriaActualizada);
-        setSolicitudesPendientes((prev) =>
-            prev.map((item) =>
-                item.id === asesoriaActualizada.id ? { ...item, ...asesoriaActualizada } : item
-            )
-        );
+        if (onActualizar) onActualizar(asesoriaActualizada);
     };
 
-    const handleSendMessage = (asesoria, mensaje) => {
+    // Si esta función lanza un error, el chat quita el mensaje y muestra un toast de error.
+    const handleSendMessage = async (asesoria, mensaje) => {
         console.log('Mensaje enviado en la asesoría', asesoria?.id, mensaje);
     };
 
+    if (historial.length === 0) {
+        return (
+            <Box className="w-full text-center py-10">
+                <Typography sx={{ fontSize: '16px', color: '#666666' }}>
+                    No tienes asesorías en tu historial.
+                </Typography>
+            </Box>
+        );
+    }
+
     return (
         <>
-            <Box className="flex flex-row flex-wrap gap-7 justify-center">
-                {solicitudesPendientes.map((solicitud) => ( //Este es apra que recorra el arreglo de datos y lso vaya imprimeindo
-
+            <Box className="grid w-full grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-4 md:gap-5">
+                {historial.map((solicitud) => ( // Recorre el arreglo de datos y los va imprimiendo
 
                     <Card key={solicitud.id}
                         sx={{
                             //Si ocupas moverle a cualquier cosa de tamaño, margen color de la taerjeta es aqui
-                            width: '410px',
+                            width: '100%',
+                            maxWidth: '410px',
                             background: '#FFFFFF',
                             borderLeft: '20px solid #08338F',
 
@@ -119,19 +122,33 @@ export default function TarjetaHistorialAsesorias() {
                                         width: 50,
                                         height: 50,
                                         fontSize: '24px',
-                                        fontWeight: 'bold'
+                                        fontWeight: 'bold',
+                                        flexShrink: 0
                                     }}
                                 >
                                     {solicitud.alumno.charAt(0)}
                                 </Avatar>
 
                                 {/* contenedor para separar nombre y email */}
-                                <Box>
+                                <Box sx={{ minWidth: 0 }}>
 
-                                    <Typography sx={{ fontSize: '16px', fontWeight: "700", color: '#000000', lineHeight: 1.2 }}>
-                                        {solicitud.alumno}
-                                    </Typography>
-                                    <Typography sx={{ fontSize: '13px', color: '#6A6A6A' }}>
+                                    {/* Nombre + icono chico de información al lado */}
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                        <Typography sx={{ fontSize: '16px', fontWeight: "700", color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', minWidth: 0 }}>
+                                            {solicitud.alumno}
+                                        </Typography>
+                                        <Tooltip title="Información">
+                                            <IconButton
+                                                size="small"
+                                                aria-label="Información"
+                                                sx={{ color: '#08338F', p: '3px', flexShrink: 0 }}
+                                                onClick={(e) => handleOpenInfo(solicitud, e)}
+                                            >
+                                                <InfoOutlinedIcon sx={{ fontSize: 18 }} />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Box>
+                                    <Typography sx={{ fontSize: '13px', color: '#6A6A6A', overflowWrap: 'anywhere' }}>
                                         {solicitud.email}
                                     </Typography>
 
@@ -161,21 +178,22 @@ export default function TarjetaHistorialAsesorias() {
                                 //Para poner los botones a un lado
                                 padding: '0px 24px 20px 24px',
                                 justifyContent: 'flex-end',
+                                flexWrap: 'wrap',
                                 gap: '10px'
                             }}
                         >
                             <Button
                                 variant="contained"
-                                sx={{ color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
+                                sx={{ backgroundColor: '#C49E0D', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
                                 size="small"
-                                startIcon={<InfoOutlinedIcon />}
-                                onClick={(e) => handleOpenInfo(solicitud, e)}
+                                startIcon={<FileDownloadOutlinedIcon />}
+                                onClick={(e) => handleOpenMaterial(solicitud, e)}
                             >
-                                Informacion
+                                Material
                             </Button>
                             <Button
                                 variant="contained"
-                                sx={{ backgroundColor: '#C49E0D', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
+                                sx={{ color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
                                 size="small"
                                 startIcon={<ChatOutlinedIcon />}
                                 onClick={(e) => handleOpenChat(solicitud, e)}
@@ -198,11 +216,18 @@ export default function TarjetaHistorialAsesorias() {
                 showToast={showToast}
             />
 
-            <ModalChatAsesoria
+            <ModalMaterialEstudiante
+                open={modalMaterialOpen}
+                onClose={() => setModalMaterialOpen(false)}
+                data={selectedAsesoria}
+            />
+
+            <ModalChatAsesoriaAsesor
                 open={modalChatOpen}
                 onClose={() => setModalChatOpen(false)}
                 data={selectedAsesoria}
                 onSendMessage={handleSendMessage}
+                showToast={showToast}
             />
 
             {/* Toast Global */}

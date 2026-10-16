@@ -16,9 +16,9 @@ import { useCallback, useEffect, useState } from 'react';
 import Loading from '../../../../components/ui/Loading';
 
 
-import { asesoresService } from '../../../../Services/asesoresService';
 import ToastNotification from '../../../../components/ui/ToastNotification';
-import { catalogoService } from '../../rolAdministrador/services/catalogoService';
+import { asesoresService } from '../../../../Services/asesoresService';
+import { catalogosService } from '../../../../Services/catalogosService';
 
 // --- SUBCOMPONENTE: SELECTOR DE CATÁLOGO (búsqueda y selección) ---
 function SubModalCatalogo({ open, onClose, titulo, elementos, campoTexto, onSelect }) {
@@ -160,6 +160,10 @@ export default function PerfilAsesor() {
     //materias y horarios seleccionados
     const [guardado, setGuardado] = useState({ materias: [], horarios: [] });
 
+    // CAMBIO: nuevo estado para guardar los catálogos completos (materias y horarios disponibles para elegir)
+    const [catalogoMaterias, setCatalogoMaterias] = useState([]);
+    const [catalogoHorarios, setCatalogoHorarios] = useState([]);
+
     // Estado para el Toast Global
     const [toast, setToast] = useState({
         open: false,
@@ -194,14 +198,24 @@ export default function PerfilAsesor() {
         }
     }, []);
 
+    const cargarCatalogos = useCallback(async () => {
+        try {
+            const datos = await catalogosService.obtenerCatalogos();
+            setCatalogoMaterias(datos.materias);
+            setCatalogoHorarios(datos.horarios);
+        } catch (error) {
+            console.error('Error al cargar catálogos', error);
+            showToast('No se pudieron cargar los catálogos', 'error');
+        }
+    }, []);
+
     //cargamos el perfil
     useEffect(() => {
         cargarPerfil();
-    }, [cargarPerfil]);
+        cargarCatalogos();
+    }, [cargarPerfil, cargarCatalogos]);
 
-    // Catálogos desde catalogoService
-    const catalogoMaterias = catalogoService.getMaterias();
-    const catalogoHorarios = catalogoService.getHorarios();
+    
 
     const hasChanges =
         JSON.stringify(materias) !== JSON.stringify(guardado.materias) ||

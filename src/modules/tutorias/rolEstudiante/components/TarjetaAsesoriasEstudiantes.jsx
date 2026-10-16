@@ -1,43 +1,25 @@
-import { useState } from 'react';
+import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
+import { useState } from 'react';
 
-// Ajusta estas rutas según dónde estén los archivos en tu proyecto
 import ToastNotification from '../../../../components/ui/ToastNotification';
-import {
-    ModalInfoAsesoriaEstudiante,
-    ModalChatAsesoriaEstudiante
-} from '../components/ModalesAsesoriasEstudiantes';
+import ModalChatAsesoriaEstudiante from '../components/ModalChatAsesoriaEstudiante';
+import ModalMaterialEstudiante from '../components/ModalMaterialEstudiante';
 
-// Datos de prueba
-const ASESORIAS_PRUEBA = [
-    { id: 12, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Base de Datos", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 13, asesor: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 14, asesor: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 15, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 16, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 17, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 18, asesor: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 19, asesor: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 20, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 21, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" }
-];
+// Las asesorías las carga la vista; la tarjeta solo las muestra.
+export default function TarjetaAsesoriasEstudiantes({ asesorias = [] }) {
 
-export default function TarjetaAsesoriasEstudiantes() {
-
-    // La lista es un estado para que los cambios del modal de información se vean en la tarjeta
-    const [asesorias, setAsesorias] = useState(ASESORIAS_PRUEBA);
 
     // Estados para Modales
     const [selectedAsesoria, setSelectedAsesoria] = useState(null);
-    const [modalInfoOpen, setModalInfoOpen] = useState(false);
+    const [modalMaterialOpen, setModalMaterialOpen] = useState(false);
     const [modalChatOpen, setModalChatOpen] = useState(false);
 
     // Estado para el Toast Global
@@ -62,10 +44,10 @@ export default function TarjetaAsesoriasEstudiantes() {
     };
 
     // Handlers para Abrir Modales
-    const handleOpenInfo = (asesoria, event) => {
+    const handleOpenMaterial = (asesoria, event) => {
         clearFocus(event);
         setSelectedAsesoria(asesoria);
-        setModalInfoOpen(true);
+        setModalMaterialOpen(true);
     };
 
     const handleOpenChat = (asesoria, event) => {
@@ -74,29 +56,27 @@ export default function TarjetaAsesoriasEstudiantes() {
         setModalChatOpen(true);
     };
 
-    // Guardar cambios del modal de información (aquí va tu llamada a la API)
-    // El modal ya se encarga de mostrar el toast y de cerrarse.
-    const handleGuardarInfo = (asesoriaActualizada) => {
-        console.log('Información actualizada:', asesoriaActualizada);
-        setAsesorias((prev) =>
-            prev.map((item) =>
-                item.id === asesoriaActualizada.id ? { ...item, ...asesoriaActualizada } : item
-            )
-        );
-    };
-
-    // Aquí va tu llamada a la API / socket para enviar el mensaje.
     // Si esta función lanza un error, el chat quita el mensaje y muestra un toast de error.
     const handleSendMessage = async (asesoria, mensaje) => {
         console.log('Mensaje enviado en la asesoría', asesoria?.id, mensaje);
     };
 
+    if (asesorias.length === 0) {
+        return (
+            <Box className="w-full text-center py-10">
+                <Typography sx={{ fontSize: '16px', color: '#666666' }}>
+                    No tienes asesorías en curso.
+                </Typography>
+            </Box>
+        );
+    }
+
     return (
         <>
-            <Box className="flex flex-row flex-wrap gap-7 justify-center">
+            <Box className="w-full grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-4 md:gap-5">
                 {asesorias.map((asesoria) => (
                     <Card
-                    key={asesoria.id}
+                        key={asesoria.id}
                         sx={{
                             width: '100%',
                             maxWidth: '400px',
@@ -125,6 +105,9 @@ export default function TarjetaAsesoriasEstudiantes() {
                                 </Avatar>
 
                                 <Box>
+                                    <Typography sx={{ fontSize: '11px', fontWeight: 700, color: '#08338F', textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1.2 }}>
+                                        Asesor
+                                    </Typography>
                                     <Typography sx={{ fontSize: '16px', fontWeight: "700", color: '#000000', lineHeight: 1.2 }}>
                                         {asesoria.asesor}
                                     </Typography>
@@ -136,7 +119,10 @@ export default function TarjetaAsesoriasEstudiantes() {
 
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', mb: '5px' }}>
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                    <span className="font-bold">Materias: </span> {asesoria.materia}
+                                    <span className="font-bold">Materia: </span> {asesoria.materia}
+                                </Typography>
+                                <Typography sx={{ fontSize: '15px', color: '#333333' }}>
+                                    <span className="font-bold">Horario: </span> {asesoria.horario || "N/A"}
                                 </Typography>
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
                                     <span className="font-bold">Modalidad: </span> {asesoria.modalidad || "N/A"}
@@ -148,21 +134,22 @@ export default function TarjetaAsesoriasEstudiantes() {
                             sx={{
                                 padding: '0px 24px 20px 24px',
                                 justifyContent: 'flex-end',
+                                flexWrap: 'wrap',
                                 gap: '10px'
                             }}
                         >
                             <Button
                                 variant="contained"
-                                sx={{ color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
+                                sx={{ backgroundColor: '#C49E0D', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
                                 size="small"
-                                startIcon={<InfoOutlinedIcon />}
-                                onClick={(e) => handleOpenInfo(asesoria, e)}
+                                startIcon={<FileDownloadOutlinedIcon />}
+                                onClick={(e) => handleOpenMaterial(asesoria, e)}
                             >
-                                Informacion
+                                Material adicional
                             </Button>
                             <Button
                                 variant="contained"
-                                sx={{ backgroundColor: '#C49E0D', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
+                                sx={{ color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
                                 size="small"
                                 startIcon={<ChatOutlinedIcon />}
                                 onClick={(e) => handleOpenChat(asesoria, e)}
@@ -177,12 +164,10 @@ export default function TarjetaAsesoriasEstudiantes() {
             </Box>
 
             {/* Modales */}
-            <ModalInfoAsesoriaEstudiante
-                open={modalInfoOpen}
-                onClose={() => setModalInfoOpen(false)}
+            <ModalMaterialEstudiante
+                open={modalMaterialOpen}
+                onClose={() => setModalMaterialOpen(false)}
                 data={selectedAsesoria}
-                onSave={handleGuardarInfo}
-                showToast={showToast}
             />
 
             <ModalChatAsesoriaEstudiante

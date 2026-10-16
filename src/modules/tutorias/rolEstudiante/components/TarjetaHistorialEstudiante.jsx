@@ -1,144 +1,21 @@
-import { useState } from 'react';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import { useState } from 'react';
 
-// Ajusta estas rutas según dónde estén los archivos en tu proyecto
-import ToastNotification from '../../../../components/ui/ToastNotification';
-import {
-    ModalInfoHistorialEstudiante,
-    ModalMaterialHistorialEstudiante
-} from '../components/ModalesHistorialAsesoriasEstudiantes';
+// Modal de material adicional del estudiante (solo consulta y descarga)
+import ModalMaterialEstudiante from '../components/ModalMaterialEstudiante';
 
-//Datos de prueba - solo cambia estos segun tu tarjeta para pruebas
-const HISTORIAL_PRUEBA = [
-    {
-        id: 1,
-        asesor: "Juan Pérez",
-        materia: "Programación",
-        modalidad: "Presencial",
-        fecha: "15/09/2026",
-        horario: "10:00 AM - 11:00 AM",
-        estado: "Finalizada",
-        descripcion:
-            "Asesoría sobre estructuras de datos y algoritmos.",
-        material: [
-            {
-                id: 1,
-                nombre: "Material de estructuras de datos",
-                url: "#",
-            },
-        ],
-    },
-    {
-        id: 2,
-        asesor: "María López",
-        materia: "Bases de Datos",
-        modalidad: "Virtual",
-        fecha: "12/09/2026",
-        horario: "12:00 PM - 1:00 PM",
-        estado: "Finalizada",
-        descripcion:
-            "Repaso de consultas SQL y relaciones entre tablas.",
-        material: [
-            {
-                id: 1,
-                nombre: "Ejercicios SQL",
-                url: "#",
-            },
-        ],
-    },
-    {
-        id: 3,
-        asesor: "Carlos Ramírez",
-        materia: "Matemáticas",
-        modalidad: "Presencial",
-        fecha: "10/09/2026",
-        horario: "09:00 AM - 10:00 AM",
-        estado: "Finalizada",
-        descripcion:
-            "Asesoría de álgebra y resolución de ejercicios.",
-        material: [],
-    },
-    {
-        id: 4,
-        asesor: "Leslie Mayram",
-        materia: "Programacion Avanzada",
-        modalidad: "Presencial",
-        fecha: "10/09/2026",
-        horario: "10:00 AM - 1:00 PM",
-        estado: "Finalizada",
-        descripcion:
-            "Asesoría de Programacion y resolución de ejercicios.",
-        material: [],
-    },
-    {
-        id: 5,
-        asesor: "Juan Pérez",
-        materia: "Programación",
-        modalidad: "Presencial",
-        fecha: "15/09/2026",
-        horario: "10:00 AM - 11:00 AM",
-        estado: "Finalizada",
-        descripcion:
-            "Asesoría sobre estructuras de datos y algoritmos.",
-        material: [
-            {
-                id: 1,
-                nombre: "Material de estructuras de datos",
-                url: "#",
-            },
-        ],
-    },
-    {
-        id: 6,
-        asesor: "María López",
-        materia: "Bases de Datos",
-        modalidad: "Virtual",
-        fecha: "12/09/2026",
-        horario: "12:00 PM - 1:00 PM",
-        estado: "Finalizada",
-        descripcion:
-            "Repaso de consultas SQL y relaciones entre tablas.",
-        material: [
-            {
-                id: 1,
-                nombre: "Ejercicios SQL",
-                url: "#",
-            },
-        ],
-    },
-];
-
-export default function TarjetaHistorialEstudiante() {
-
-    // La lista es un estado para que los cambios de los modales se vean en la tarjeta
-    const [historialEstudiante, setHistorialEstudiante] = useState(HISTORIAL_PRUEBA);
+// Las asesorías las carga la vista; la tarjeta solo las muestra.
+export default function TarjetaHistorialEstudiante({ historial = [] }) {
 
     // Estados para Modales
     const [selectedAsesoria, setSelectedAsesoria] = useState(null);
-    const [modalInfoOpen, setModalInfoOpen] = useState(false);
     const [modalMaterialOpen, setModalMaterialOpen] = useState(false);
-
-    // Estado para el Toast Global
-    const [toast, setToast] = useState({
-        open: false,
-        message: '',
-        type: 'info'
-    });
-
-    const showToast = (message, type = 'info') => {
-        setToast({ open: true, message, type });
-    };
-
-    const handleCloseToast = () => {
-        setToast((prev) => ({ ...prev, open: false }));
-    };
 
     // Helper para desenfocar elementos activos antes de abrir el modal
     const clearFocus = (event) => {
@@ -147,51 +24,34 @@ export default function TarjetaHistorialEstudiante() {
     };
 
     // Handlers para Abrir Modales
-    const handleOpenInfo = (asesoria, event) => {
-        clearFocus(event);
-        setSelectedAsesoria(asesoria);
-        setModalInfoOpen(true);
-    };
-
+    // Handler para abrir el modal
     const handleOpenMaterial = (asesoria, event) => {
         clearFocus(event);
         setSelectedAsesoria(asesoria);
         setModalMaterialOpen(true);
     };
 
-    // Guardar cambios del modal de información (aquí va tu llamada a la API)
-    // El modal ya se encarga de mostrar el toast y de cerrarse.
-    const handleGuardarInfo = (asesoriaActualizada) => {
-        console.log('Información actualizada:', asesoriaActualizada);
-        setHistorialEstudiante((prev) =>
-            prev.map((item) =>
-                item.id === asesoriaActualizada.id ? { ...item, ...asesoriaActualizada } : item
-            )
+    if (historial.length === 0) {
+        return (
+            <Box className="w-full text-center py-10">
+                <Typography sx={{ fontSize: '16px', color: '#666666' }}>
+                    No tienes asesorías en tu historial.
+                </Typography>
+            </Box>
         );
-    };
-
-    // Guardar el material (aquí va tu llamada a la API)
-    // El modal ya se encarga de mostrar el toast y de cerrarse.
-    // La lista queda en material_adicional y el modal la lee primero al volver a abrirse.
-    const handleGuardarMaterial = (listaMateriales) => {
-        console.log('Material guardado para la asesoría', selectedAsesoria?.id, listaMateriales);
-        setHistorialEstudiante((prev) =>
-            prev.map((item) =>
-                item.id === selectedAsesoria?.id ? { ...item, material_adicional: listaMateriales } : item
-            )
-        );
-    };
+    }
 
     return (
         <>
-            <Box className="flex flex-row flex-wrap gap-7 justify-center">
-                {historialEstudiante.map((asesoria) => ( //Este es apra que recorra el arreglo de datos y lso vaya imprimeindo
+            <Box className="w-full grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-4 md:gap-5">
+                {historial.map((asesoria) => ( // Recorre el arreglo de datos y los va imprimiendo
 
 
                     <Card key={asesoria.id}
                         sx={{
                             //Si ocupas moverle a cualquier cosa de tamaño, margen color de la taerjeta es aqui
-                            width: '410px',
+                            width: '100%',
+                            maxWidth: '410px',
                             background: '#FFFFFF',
                             borderLeft: '20px solid #08338F',
 
@@ -280,9 +140,9 @@ export default function TarjetaHistorialEstudiante() {
                                     }}
                                 >
                                     <span className="font-bold">
-                                        Fecha:
+                                        Periodo:
                                     </span>{' '}
-                                    {asesoria.fecha}
+                                    {asesoria.fechaInicio && asesoria.fechaFin ? `${asesoria.fechaInicio} - ${asesoria.fechaFin}` : asesoria.fecha}
                                 </Typography>
 
                             </Box>
@@ -294,23 +154,10 @@ export default function TarjetaHistorialEstudiante() {
                             sx={{
                                 padding: '0px 24px 20px 24px',
                                 justifyContent: 'flex-end',
+                                flexWrap: 'wrap',
                                 gap: '10px'
                             }}
                         >
-
-                            <Button
-                                variant="contained"
-                                sx={{
-                                    color: '#fff',
-                                    borderRadius: '5px',
-                                    textTransform: 'none'
-                                }}
-                                size="small"
-                                startIcon={<InfoOutlinedIcon />}
-                                onClick={(e) => handleOpenInfo(asesoria, e)}
-                            >
-                                Informacion
-                            </Button>
 
                             <Button
                                 variant="contained"
@@ -335,29 +182,11 @@ export default function TarjetaHistorialEstudiante() {
 
             </Box>
 
-            {/* Modales */}
-            <ModalInfoHistorialEstudiante
-                open={modalInfoOpen}
-                onClose={() => setModalInfoOpen(false)}
-                data={selectedAsesoria}
-                onSave={handleGuardarInfo}
-                showToast={showToast}
-            />
-
-            <ModalMaterialHistorialEstudiante
+            {/* Modal de material adicional (el modal ya adapta la lista a lo que lee) */}
+            <ModalMaterialEstudiante
                 open={modalMaterialOpen}
                 onClose={() => setModalMaterialOpen(false)}
                 data={selectedAsesoria}
-                onSave={handleGuardarMaterial}
-                showToast={showToast}
-            />
-
-            {/* Toast Global */}
-            <ToastNotification
-                open={toast.open}
-                onClose={handleCloseToast}
-                message={toast.message}
-                type={toast.type}
             />
         </>
     );

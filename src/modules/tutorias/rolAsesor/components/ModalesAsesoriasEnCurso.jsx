@@ -1,38 +1,43 @@
-import { useState, useEffect } from 'react';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DownloadIcon from '@mui/icons-material/Download';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import SearchIcon from '@mui/icons-material/Search';
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    IconButton,
-    Button,
-    Typography,
-    TextField,
+    Autocomplete,
     Box,
+    Button,
+    createFilterOptions,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    IconButton,
+    InputAdornment,
     List,
     ListItem,
     ListItemIcon,
     ListItemText,
-    Stack,
-    Tooltip,
     MenuItem,
-    Autocomplete,
-    createFilterOptions
+    Stack,
+    TextField,
+    Tooltip,
+    Typography
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import DownloadIcon from '@mui/icons-material/Download';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
+import { useEffect, useRef, useState } from 'react';
 
-import { catalogoService } from '../../rolAdministrador/services/catalogoService';
 // Ajusta esta ruta según dónde esté tu estudianteService
 import { getEstudiantes } from '../../rolAdministrador/services/estudianteService';
+
+import { useAuth } from '../../../../context/AuthContext';
+import { useCatalogos } from '../../../../context/CatalogosContext';
 
 // --- HELPERS ---
 
@@ -66,6 +71,74 @@ const parsearFecha = (valor) => {
     }
     const fecha = dayjs(valor);
     return fecha.isValid() ? fecha : null;
+};
+
+// Select cuya lista desplegable mide lo mismo que el campo (con scroll interno y texto largo en varias líneas)
+function CampoSelect({ children, ...props }) {
+    const campoRef = useRef(null);
+    const [ancho, setAncho] = useState(undefined);
+
+    return (
+        <TextField
+            select
+            ref={campoRef}
+            {...props}
+            slotProps={{
+                select: {
+                    // Se mide el campo justo antes de abrir la lista
+                    onOpen: () => setAncho(campoRef.current?.offsetWidth),
+                    MenuProps: {
+                        slotProps: {
+                            paper: { sx: { maxHeight: 240, width: ancho, maxWidth: ancho } }
+                        }
+                    }
+                }
+            }}
+        >
+            {children}
+        </TextField>
+    );
+}
+
+// Deja solo las opciones del catálogo que ofrece el asesor.
+// asesorLista puede traer objetos ({ id_materia, materia }), ids o nombres.
+// Si el asesor no trae esa lista (undefined), se usa el catálogo completo.
+const filtrarPorAsesor = (catalogo, asesorLista, campoId, campoNombre) => {
+    if (!Array.isArray(asesorLista)) return catalogo;
+
+    return catalogo.filter((item) =>
+        asesorLista.some((a) => {
+            if (a && typeof a === 'object') {
+                return (
+                    String(a[campoId] ?? '') === String(item[campoId]) ||
+                    normalizar(a[campoNombre]) === normalizar(item[campoNombre])
+                );
+            }
+            return String(a) === String(item[campoId]) || normalizar(a) === normalizar(item[campoNombre]);
+        })
+    );
+};
+
+// Si el valor actual de la asesoría no está entre las opciones del asesor, se agrega para que el select lo muestre
+const conOpcionActual = (opciones, catalogo, campoId, idActual) => {
+    if (!idActual || opciones.some((o) => String(o[campoId]) === String(idActual))) return opciones;
+    const actual = catalogo.find((o) => String(o[campoId]) === String(idActual));
+    return actual ? [actual, ...opciones] : opciones;
+};
+
+// Campos que se muestran pero no se pueden modificar: fondo gris, sin cursor al hacer clic
+const CAMPO_BLOQUEADO = {
+    sx: {
+        '& .MuiOutlinedInput-root': {
+            backgroundColor: '#F3F4F6',
+            cursor: 'not-allowed',
+            '& fieldset': { borderColor: '#E0E0E0' },
+            '&:hover fieldset': { borderColor: '#E0E0E0' }
+        },
+        '& .MuiInputBase-input': { pointerEvents: 'none', caretColor: 'transparent', color: '#6B7280' },
+        '& .MuiInputLabel-root': { color: '#6B7280' }
+    },
+    slotProps: { input: { readOnly: true }, htmlInput: { tabIndex: -1 } }
 };
 
 // --- 1. MODAL COMPLETAR ASESORÍA ---
@@ -157,12 +230,20 @@ export function ModalEliminarAsesoria({ open, onClose, onConfirm, showToast }) {
 }
 
 // --- 3. MODAL INFORMACIÓN ASESORÍA ---
-export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
+// Solo lectura: estudiante, asesor, licenciatura, grado y grupo, materia.
+// Editable: horario, modalidad, razón, fecha de inicio, sesiones tomadas y observaciones.
+export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast}) {
+    const { catalogos } = useCatalogos();
+
+    // Asesor logueado: de aquí salen sus horarios y modalidades
+    // TODO: ajusta los nombres (horarios / modalidades) a como vengan en tu usuario
+    const { usuario } = useAuth();
+
     const [formData, setFormData] = useState({
         estudiante: '',
         asesor: '',
         licenciatura: '',
-        gradoGrupo: '3-1',
+        gradoGrupo: '',
         materia: '',
         materiaId: '',
         horario: '',
@@ -177,91 +258,59 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
     });
 
     const [initialFormData, setInitialFormData] = useState(null);
+    const [calendarioOpen, setCalendarioOpen] = useState(false);
 
     // Cargar y normalizar los datos cada vez que se abre el modal.
-    // Si data no trae los ids (como la tarjeta, que solo manda nombres), se buscan en catalogoService.
+    // Si data no trae los ids (como la tarjeta, que solo manda nombres), se buscan en el catálogo.
     useEffect(() => {
         if (!open || !data) return;
 
-        const materias = catalogoService.getMaterias();
-        const horarios = catalogoService.getHorarios();
-        const modalidades = catalogoService.getModalidades();
-        const razones = catalogoService.getRazonesAsesoria();
+        setCalendarioOpen(false);
 
-        const nombreMateria = data.materia || data.raw?.materia_nombre || '';
-        const nombreHorario = data.horario || data.raw?.horario_nombre || '';
-        const nombreModalidad = data.modalidad || data.raw?.modalidad_nombre || '';
-        const nombreRazon = data.razonAsesoria || data.raw?.razon_texto || '';
+        const materias = catalogos?.materias || [];
+        const horarios = catalogos?.horarios || [];
+        const modalidades = catalogos?.modalidades || [];
+        const razones = catalogos?.razon_asesoria || [];
 
-        const fecha = parsearFecha(data.raw?.fecha_inicio || data.inicio || data.fecha);
+        const nombreMateria = data.materia || '';
+        const nombreHorario = data.horario || '';
+        const nombreModalidad = data.modalidad || '';
+        const nombreRazon = data.razon || data.razonAsesoria || '';
+
+        const fecha = parsearFecha(data.fecha_inicio || data.inicio || data.fecha);
 
         const normalizedData = {
-            estudiante:
-                data.estudiante ||
-                data.alumno ||
-                data.raw?.estudiante_nombre ||
-                '',
+            estudiante: data.estudiante || data.alumno || '',
 
-            asesor:
-                data.asesor ||
-                data.raw?.asesor_nombre ||
-                '',
+            asesor: data.asesor || '',
 
-            licenciatura:
-                data.licenciatura ||
-                data.raw?.licenciatura_nombre ||
-                'Licenciatura en Informática',
+            licenciatura: data.licenciatura || 'Licenciatura en Informática',
 
-            gradoGrupo:
-                data.gradoGrupo ||
-                data.raw?.grado_grupo ||
-                '3-1',
+            gradoGrupo: data.grupo || data.gradoGrupo || '3-1',
 
             materia: nombreMateria,
-            materiaId: String(
-                data.materiaId ??
-                data.raw?.id_materia ??
-                buscarId(materias, 'materia', 'id_materia', nombreMateria)
-            ),
+            // Se usa directo el id real del backend, sin necesitar buscar por nombre
+            materiaId: String(data.id_materia ?? data.materiaId ?? buscarId(materias, 'materia', 'id_materia', nombreMateria)),
 
             horario: nombreHorario,
-            horarioId: String(
-                data.horarioId ??
-                data.raw?.id_horario ??
-                buscarId(horarios, 'horario', 'id_horario', nombreHorario)
-            ),
+            horarioId: String(data.id_horario ?? data.horarioId ?? buscarId(horarios, 'horario', 'id_horario', nombreHorario)),
 
             modalidad: nombreModalidad,
-            modalidadId: String(
-                data.modalidadId ??
-                data.raw?.id_modalidad ??
-                buscarId(modalidades, 'modalidad', 'id_modalidad', nombreModalidad)
-            ),
+            modalidadId: String(data.id_modalidad ?? data.modalidadId ?? buscarId(modalidades, 'modalidad', 'id_modalidad', nombreModalidad)),
 
             inicio: fecha ? fecha.format('YYYY-MM-DD') : '',
 
             razonAsesoria: nombreRazon,
-            razonId: String(
-                data.razonId ??
-                data.raw?.id_razon ??
-                buscarId(razones, 'razon', 'id_razon', nombreRazon)
-            ),
+            razonId: String(data.id_razon ?? data.razonId ?? buscarId(razones, 'razon', 'id_razon', nombreRazon)),
 
-            sesionesTomadas: String(
-                data.sesionesTomadas ??
-                data.raw?.sesiones_tomadas ??
-                '1'
-            ),
+            sesionesTomadas: String(data.sesiones_tomadas ?? data.sesionesTomadas ?? '1'),
 
-            observaciones:
-                data.observaciones ||
-                data.raw?.observaciones ||
-                ''
+            observaciones: data.observaciones || ''
         };
 
         setFormData(normalizedData);
         setInitialFormData(normalizedData);
-    }, [data, open]);
+    }, [data, open, catalogos]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -272,11 +321,40 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
         (key) => formData[key] !== initialFormData[key]
     ) : false;
 
-    // Obtenemos los catálogos directamente desde la instancia de catalogoService
-    const materiasList = catalogoService.getMaterias();
-    const horariosList = catalogoService.getHorarios();
-    const modalidadesList = catalogoService.getModalidades();
-    const razonesList = catalogoService.getRazonesAsesoria();
+    // Opciones: horario y modalidad solo las del asesor (más el valor actual de la asesoría); razón del catálogo
+    const horariosCatalogo = catalogos?.horarios || [];
+    const modalidadesCatalogo = catalogos?.modalidades || [];
+    const razonesList = catalogos?.razon_asesoria || [];
+
+    const horariosList = conOpcionActual(
+        filtrarPorAsesor(horariosCatalogo, usuario?.horarios, 'id_horario', 'horario'),
+        horariosCatalogo, 'id_horario', formData.horarioId
+    );
+    const modalidadesList = conOpcionActual(
+        filtrarPorAsesor(modalidadesCatalogo, usuario?.modalidades, 'id_modalidad', 'modalidad'),
+        modalidadesCatalogo, 'id_modalidad', formData.modalidadId
+    );
+
+    const parsedDate = formData.inicio && dayjs(formData.inicio).isValid()
+        ? dayjs(formData.inicio)
+        : null;
+
+    // No se permite elegir una fecha anterior a hoy (la fecha original de la asesoría sí se conserva)
+    const handleCambiarFecha = (nuevaFecha) => {
+        if (nuevaFecha?.isValid() && nuevaFecha.isBefore(dayjs(), 'day') && nuevaFecha.format('YYYY-MM-DD') !== initialFormData?.inicio) {
+            if (showToast) showToast('Elige una fecha de hoy en adelante', 'error');
+            return;
+        }
+        setFormData((prev) => ({ ...prev, inicio: nuevaFecha?.isValid() ? nuevaFecha.format('YYYY-MM-DD') : '' }));
+    };
+
+    // Se quita el foco del campo antes de abrir el calendario
+    const abrirCalendario = () => {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
+        setCalendarioOpen(true);
+    };
 
     const handleApply = () => {
         if (!isModified) return;
@@ -285,9 +363,8 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
         const actualizado = {
             ...data,
             ...formData,
-            materia: buscarNombre(materiasList, 'id_materia', 'materia', formData.materiaId) ?? formData.materia,
-            horario: buscarNombre(horariosList, 'id_horario', 'horario', formData.horarioId) ?? formData.horario,
-            modalidad: buscarNombre(modalidadesList, 'id_modalidad', 'modalidad', formData.modalidadId) ?? formData.modalidad,
+            horario: buscarNombre(horariosCatalogo, 'id_horario', 'horario', formData.horarioId) ?? formData.horario,
+            modalidad: buscarNombre(modalidadesCatalogo, 'id_modalidad', 'modalidad', formData.modalidadId) ?? formData.modalidad,
             razonAsesoria: buscarNombre(razonesList, 'id_razon', 'razon', formData.razonId) ?? formData.razonAsesoria
         };
 
@@ -296,20 +373,16 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
         onClose();
     };
 
-    const parsedDate = formData.inicio && dayjs(formData.inicio).isValid()
-        ? dayjs(formData.inicio)
-        : null;
-
     return (
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
             <Dialog
                 open={Boolean(open)}
                 onClose={onClose}
                 sx={{
                     '& .MuiPaper-root': {
                         width: '550px',
-                        maxWidth: '550px',
-                        maxHeight: '90vh',
+                        maxWidth: '90vw',
+                        maxHeight: '90dvh',
                         borderRadius: '12px',
                         display: 'flex',
                         flexDirection: 'column',
@@ -330,13 +403,14 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
 
                 <DialogContent dividers>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
+                        {/* --- Solo lectura --- */}
                         <TextField
                             label="Nombre del Estudiante"
                             name="estudiante"
                             size="small"
                             fullWidth
                             value={formData.estudiante}
-                            slotProps={{ input: { readOnly: true } }}
+                            {...CAMPO_BLOQUEADO}
                         />
 
                         <TextField
@@ -345,7 +419,7 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                             size="small"
                             fullWidth
                             value={formData.asesor}
-                            slotProps={{ input: { readOnly: true } }}
+                            {...CAMPO_BLOQUEADO}
                         />
 
                         <TextField
@@ -354,7 +428,7 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                             size="small"
                             fullWidth
                             value={formData.licenciatura}
-                            slotProps={{ input: { readOnly: true } }}
+                            {...CAMPO_BLOQUEADO}
                         />
 
                         <TextField
@@ -363,30 +437,20 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                             size="small"
                             fullWidth
                             value={formData.gradoGrupo}
-                            slotProps={{ input: { readOnly: true } }}
+                            {...CAMPO_BLOQUEADO}
                         />
 
                         <TextField
-                            select
                             label="Materia"
-                            name="materiaId"
+                            name="materia"
                             size="small"
                             fullWidth
-                            value={formData.materiaId}
-                            onChange={handleChange}
-                        >
-                            {materiasList.map((item) => (
-                                <MenuItem
-                                    key={item.id_materia}
-                                    value={String(item.id_materia)}
-                                >
-                                    {item.materia}
-                                </MenuItem>
-                            ))}
-                        </TextField>
+                            value={formData.materia}
+                            {...CAMPO_BLOQUEADO}
+                        />
 
-                        <TextField
-                            select
+                        {/* --- Editable --- */}
+                        <CampoSelect
                             label="Horario"
                             name="horarioId"
                             size="small"
@@ -395,30 +459,13 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                             onChange={handleChange}
                         >
                             {horariosList.map((item) => (
-                                <MenuItem
-                                    key={item.id_horario}
-                                    value={String(item.id_horario)}
-                                >
+                                <MenuItem key={item.id_horario} sx={{ whiteSpace: 'normal' }} value={String(item.id_horario)}>
                                     {item.horario}
                                 </MenuItem>
                             ))}
-                        </TextField>
+                        </CampoSelect>
 
-                        <DatePicker
-                            label="Fecha de Inicio"
-                            value={parsedDate}
-                            format="DD/MM/YYYY"
-                            disabled
-                            slotProps={{
-                                textField: {
-                                    size: 'small',
-                                    fullWidth: true
-                                }
-                            }}
-                        />
-
-                        <TextField
-                            select
+                        <CampoSelect
                             label="Modalidad"
                             name="modalidadId"
                             size="small"
@@ -427,17 +474,13 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                             onChange={handleChange}
                         >
                             {modalidadesList.map((item) => (
-                                <MenuItem
-                                    key={item.id_modalidad}
-                                    value={String(item.id_modalidad)}
-                                >
+                                <MenuItem key={item.id_modalidad} sx={{ whiteSpace: 'normal' }} value={String(item.id_modalidad)}>
                                     {item.modalidad}
                                 </MenuItem>
                             ))}
-                        </TextField>
+                        </CampoSelect>
 
-                        <TextField
-                            select
+                        <CampoSelect
                             label="Razón de Asesoría"
                             name="razonId"
                             size="small"
@@ -446,17 +489,35 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                             onChange={handleChange}
                         >
                             {razonesList.map((item) => (
-                                <MenuItem
-                                    key={item.id_razon}
-                                    value={String(item.id_razon)}
-                                >
+                                <MenuItem key={item.id_razon} sx={{ whiteSpace: 'normal' }} value={String(item.id_razon)}>
                                     {item.razon}
                                 </MenuItem>
                             ))}
-                        </TextField>
+                        </CampoSelect>
 
-                        <TextField
-                            select
+                        {/* Al hacer clic en el campo se abre el calendario y la fecha elegida se muestra en el campo */}
+                        <DatePicker
+                            label="Fecha de Inicio"
+                            value={parsedDate}
+                            onChange={handleCambiarFecha}
+                            format="DD/MM/YYYY"
+                            disablePast
+                            open={calendarioOpen}
+                            onOpen={abrirCalendario}
+                            onClose={() => setCalendarioOpen(false)}
+                            slotProps={{
+                                textField: {
+                                    size: 'small',
+                                    fullWidth: true,
+                                    // La fecha original puede ser anterior a hoy: no se marca en rojo
+                                    error: false,
+                                    InputLabelProps: { shrink: true },
+                                    onClick: abrirCalendario
+                                }
+                            }}
+                        />
+
+                        <CampoSelect
                             label="Sesiones Tomadas"
                             name="sesionesTomadas"
                             size="small"
@@ -469,7 +530,7 @@ export function ModalInfoAsesoria({ open, onClose, data, onSave, showToast }) {
                                     {i + 1}
                                 </MenuItem>
                             ))}
-                        </TextField>
+                        </CampoSelect>
 
                         <TextField
                             label="Observaciones"
@@ -728,8 +789,6 @@ export function ModalMaterialAdicional({ open, onClose, data, onSave, showToast 
 // --- 5. MODAL CREAR ASESORÍA ---
 
 
-const IDS_MATERIAS_DEMO = [94, 95, 96];
-
 // Permite buscar al alumno por nombre, número de cuenta o correo
 const filtrarEstudiantes = createFilterOptions({
     stringify: (estudiante) => `${estudiante.nombre} ${estudiante.numeroCuenta ?? ''} ${estudiante.correo ?? ''}`
@@ -744,7 +803,15 @@ const FORMULARIO_CREAR_INICIAL = {
     inicio: null
 };
 
-export function ModalCrearAsesoria({ open, onClose, onSave, showToast, materiasAsesor }) {
+export function ModalCrearAsesoria({ open, onClose, onSave, showToast, materiasAsesor, catalogos }) {
+    // Si no se pasan catálogos por props, se toman del contexto (igual que ModalInfoAsesoria)
+    const { catalogos: catalogosContexto } = useCatalogos();
+    const catalogosActivos = catalogos ?? catalogosContexto;
+
+    // Asesor logueado: de aquí salen sus materias, horarios y modalidades
+    // TODO: ajusta los nombres (materias / horarios / modalidades) a como vengan en tu usuario
+    const { usuario } = useAuth();
+
     const [formData, setFormData] = useState(FORMULARIO_CREAR_INICIAL);
     const [estudiantes, setEstudiantes] = useState([]);
     const [cargandoEstudiantes, setCargandoEstudiantes] = useState(false);
@@ -775,22 +842,43 @@ export function ModalCrearAsesoria({ open, onClose, onSave, showToast, materiasA
         };
     }, [open]);
 
-    // Materias del asesor (de prueba mientras no se pase la prop) y catálogos desde catalogoService
-    const materiasList =
-        materiasAsesor ??
-        catalogoService.getMaterias().filter((item) => IDS_MATERIAS_DEMO.includes(item.id_materia));
-    const horariosList = catalogoService.getHorarios();
-    const modalidadesList = catalogoService.getModalidades();
-    const razonesList = catalogoService.getRazonesAsesoria();
+    // Solo las opciones del asesor (la prop materiasAsesor tiene prioridad si se manda)
+    const materiasList = materiasAsesor ?? filtrarPorAsesor(catalogosActivos?.materias || [], usuario?.materias, 'id_materia', 'materia');
+    const horariosList = filtrarPorAsesor(catalogosActivos?.horarios || [], usuario?.horarios, 'id_horario', 'horario');
+    const modalidadesList = filtrarPorAsesor(catalogosActivos?.modalidades || [], usuario?.modalidades, 'id_modalidad', 'modalidad');
+    const razonesList = catalogosActivos?.razon_asesoria || [];
+
+    // Los demás campos quedan bloqueados hasta que se elija un alumno
+    const alumnoElegido = Boolean(formData.estudiante);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    // Al elegir alumno se desbloquean los campos. Si se quita el alumno, se bloquean y se limpian de nuevo.
+    const handleCambiarEstudiante = (_, nuevoEstudiante) => {
+        if (!nuevoEstudiante) {
+            setFormData(FORMULARIO_CREAR_INICIAL);
+            setCalendarioOpen(false);
+            return;
+        }
+        setFormData((prev) => ({ ...prev, estudiante: nuevoEstudiante }));
+    };
+
+    // No se permite una fecha anterior a hoy
+    const handleCambiarFecha = (nuevaFecha) => {
+        if (nuevaFecha?.isValid() && nuevaFecha.isBefore(dayjs(), 'day')) {
+            if (showToast) showToast('Elige una fecha de hoy en adelante', 'error');
+            return;
+        }
+        setFormData((prev) => ({ ...prev, inicio: nuevaFecha }));
+    };
+
     // Se quita el foco del campo antes de abrir el calendario. Si el calendario se abre como su propio
     // diálogo, el modal de abajo queda con aria-hidden y no debe tener ningún elemento enfocado.
     const abrirCalendario = () => {
+        if (!alumnoElegido) return;
         if (document.activeElement instanceof HTMLElement) {
             document.activeElement.blur();
         }
@@ -799,12 +887,13 @@ export function ModalCrearAsesoria({ open, onClose, onSave, showToast, materiasA
 
     // El botón de crear se habilita solo cuando todos los campos están llenos
     const formularioCompleto =
-        Boolean(formData.estudiante) &&
+        alumnoElegido &&
         Boolean(formData.materiaId) &&
         Boolean(formData.horarioId) &&
         Boolean(formData.modalidadId) &&
         Boolean(formData.razonId) &&
-        Boolean(formData.inicio?.isValid());
+        Boolean(formData.inicio?.isValid()) &&
+        !formData.inicio.isBefore(dayjs(), 'day');
 
     const handleCrear = async () => {
         if (!formularioCompleto || guardando) return;
@@ -851,8 +940,8 @@ export function ModalCrearAsesoria({ open, onClose, onSave, showToast, materiasA
                 sx={{
                     '& .MuiPaper-root': {
                         width: '550px',
-                        maxWidth: '550px',
-                        maxHeight: '90vh',
+                        maxWidth: '90vw',
+                        maxHeight: '90dvh',
                         borderRadius: '12px',
                         display: 'flex',
                         flexDirection: 'column',
@@ -880,9 +969,7 @@ export function ModalCrearAsesoria({ open, onClose, onSave, showToast, materiasA
                             openOnFocus
                             options={estudiantes}
                             value={formData.estudiante}
-                            onChange={(_, nuevoEstudiante) =>
-                                setFormData((prev) => ({ ...prev, estudiante: nuevoEstudiante }))
-                            }
+                            onChange={handleCambiarEstudiante}
                             getOptionLabel={(option) => option.nombre}
                             getOptionKey={(option) => option.id}
                             isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -890,88 +977,122 @@ export function ModalCrearAsesoria({ open, onClose, onSave, showToast, materiasA
                             loading={cargandoEstudiantes}
                             loadingText="Cargando alumnos..."
                             noOptionsText="No se encontraron alumnos"
-                            renderInput={(params) => (
-                                <TextField {...params} label="Alumno" placeholder="Buscar alumno" />
-                            )}
+                            renderInput={(params) => {
+                                const inputProps = params.slotProps?.input ?? params.InputProps;
+                                return (
+                                    <TextField
+                                        {...params}
+                                        label="Alumno"
+                                        placeholder="Escribe nombre del alumno"
+                                        slotProps={{
+                                            ...params.slotProps,
+                                            input: {
+                                                ...inputProps,
+                                                startAdornment: (
+                                                    <>
+                                                        <InputAdornment position="start">
+                                                            <SearchIcon fontSize="small" />
+                                                        </InputAdornment>
+                                                        {inputProps?.startAdornment}
+                                                    </>
+                                                )
+                                            }
+                                        }}
+                                    />
+                                );
+                            }}
                         />
 
-                        <TextField
-                            select
+                        {/* Leyenda: se muestra mientras no haya alumno elegido */}
+                        {!alumnoElegido && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
+                                <InfoOutlinedIcon fontSize="small" />
+                                <Typography variant="body2">
+                                    Selecciona un alumno para habilitar el resto de los campos.
+                                </Typography>
+                            </Box>
+                        )}
+
+                        <CampoSelect
                             label="Materia"
                             name="materiaId"
                             size="small"
                             fullWidth
+                            disabled={!alumnoElegido}
                             value={formData.materiaId}
                             onChange={handleChange}
                         >
                             {materiasList.map((item) => (
-                                <MenuItem key={item.id_materia} value={String(item.id_materia)}>
+                                <MenuItem key={item.id_materia} sx={{ whiteSpace: 'normal' }} value={String(item.id_materia)}>
                                     {item.materia}
                                 </MenuItem>
                             ))}
-                        </TextField>
+                        </CampoSelect>
 
-                        <TextField
-                            select
+                        <CampoSelect
                             label="Horario"
                             name="horarioId"
                             size="small"
                             fullWidth
+                            disabled={!alumnoElegido}
                             value={formData.horarioId}
                             onChange={handleChange}
                         >
                             {horariosList.map((item) => (
-                                <MenuItem key={item.id_horario} value={String(item.id_horario)}>
+                                <MenuItem key={item.id_horario} sx={{ whiteSpace: 'normal' }} value={String(item.id_horario)}>
                                     {item.horario}
                                 </MenuItem>
                             ))}
-                        </TextField>
+                        </CampoSelect>
 
-                        <TextField
-                            select
+                        <CampoSelect
                             label="Modalidad"
                             name="modalidadId"
                             size="small"
                             fullWidth
+                            disabled={!alumnoElegido}
                             value={formData.modalidadId}
                             onChange={handleChange}
                         >
                             {modalidadesList.map((item) => (
-                                <MenuItem key={item.id_modalidad} value={String(item.id_modalidad)}>
+                                <MenuItem key={item.id_modalidad} sx={{ whiteSpace: 'normal' }} value={String(item.id_modalidad)}>
                                     {item.modalidad}
                                 </MenuItem>
                             ))}
-                        </TextField>
+                        </CampoSelect>
 
-                        <TextField
-                            select
+                        <CampoSelect
                             label="Razón de Asesoría"
                             name="razonId"
                             size="small"
                             fullWidth
+                            disabled={!alumnoElegido}
                             value={formData.razonId}
                             onChange={handleChange}
                         >
                             {razonesList.map((item) => (
-                                <MenuItem key={item.id_razon} value={String(item.id_razon)}>
+                                <MenuItem key={item.id_razon} sx={{ whiteSpace: 'normal' }} value={String(item.id_razon)}>
                                     {item.razon}
                                 </MenuItem>
                             ))}
-                        </TextField>
+                        </CampoSelect>
 
                         {/* Al hacer clic en el campo se abre el calendario y la fecha elegida se muestra en el campo */}
                         <DatePicker
                             label="Fecha de Inicio"
                             value={formData.inicio}
-                            onChange={(nuevaFecha) => setFormData((prev) => ({ ...prev, inicio: nuevaFecha }))}
+                            onChange={handleCambiarFecha}
                             format="DD/MM/YYYY"
-                            open={calendarioOpen}
+                            disablePast
+                            disabled={!alumnoElegido}
+                            open={calendarioOpen && alumnoElegido}
                             onOpen={abrirCalendario}
                             onClose={() => setCalendarioOpen(false)}
                             slotProps={{
                                 textField: {
                                     size: 'small',
                                     fullWidth: true,
+                                    InputLabelProps: { shrink: true },
                                     onClick: abrirCalendario
                                 }
                             }}

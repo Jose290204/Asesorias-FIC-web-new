@@ -31,20 +31,22 @@ export function AuthProvider({ children }) {
 
     // login recibe directo los datos que ya te regresó el endpoint /login
     const login = (usuarioData) => {
-        setUsuario(usuarioData);
-        setRol(usuarioData?.id_rol != null ? Number(usuarioData.id_rol) : null);
-    };
+    setUsuario(usuarioData);
+    setRol(usuarioData?.id_rol != null ? Number(usuarioData.id_rol) : null);
+    localStorage.setItem('_uix', 'true'); // NUEVO
+};
 
     const logout = async () => {
-        try {
-            await usuariosService.post('/logout');
-        } catch (error) {
-            console.error('Error al cerrar sesión', error);
-        } finally {
-            setUsuario(null);
-            setRol(null);
-        }
-    };
+    try {
+        await usuariosService.post('/logout');
+    } catch (error) {
+        console.error('Error al cerrar sesión', error);
+    } finally {
+        setUsuario(null);
+        setRol(null);
+        localStorage.removeItem('_uix'); // NUEVO
+    }
+};
 
     return (
         <AuthContext.Provider value={{ usuario, rol, loading, login, logout }}>

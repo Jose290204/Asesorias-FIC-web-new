@@ -4,6 +4,7 @@ import AdminLayout from './layouts/moduloTutorias/AdminLayout';
 import AsesorLayout from './layouts/moduloTutorias/AsesorLayout';
 import EstudianteLayout from './layouts/moduloTutorias/EstudianteLayout';
 
+import Loading from './components/ui/Loading';
 import SkeletonApp from './components/ui/SkeletonApp';
 
 // vistas
@@ -50,7 +51,8 @@ export default function App() {
   const { usuario, rol, loading } = useAuth();
 
   if (loading) {
-    return <SkeletonApp/>;
+    const mostrarSkeleton = localStorage.getItem('_uix');
+    return mostrarSkeleton ? <SkeletonApp /> : <Loading mensaje="Cargando..." pantallaCompleta />;
   }
 
   return (

@@ -7,14 +7,8 @@ import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
-import { useEffect, useState } from 'react';
-import { useAuth } from '../../../../context/AuthContext';
+import { useState } from 'react';
 
-import Loading from '../../../../components/ui/Loading';
-
-// Ajusta estas rutas según dónde esté ubicado este archivo en tu proyecto
-import ToastNotification from '../../../../components/ui/ToastNotification';
-import { solicitudesService } from '../../../../Services/solicitudesService';
 import {
     ModalAceptarSolicitud,
     ModalRechazarSolicitud
@@ -31,79 +25,13 @@ function formatearFechaVisible(fechaISO) {
     return `${dia}/${mes}/${anio}`;
 }
 
-export default function TarjetaSolicitudesPendientes() {
-    const { usuario } = useAuth();
-
-    const [solicitudesPendientes, setSolicitudesPendientes] = useState([]);
-    const [loading, setLoading] = useState(true);
-
+// Tarjeta presentacional: los datos y las llamadas a la API viven en la vista.
+// onAceptar(solicitud) y onRechazar(id_solicitud, motivo) regresan true si salió bien.
+export default function TarjetaSolicitudesPendientes({ solicitudes = [], onAceptar, onRechazar, showToast }) {
     // Estados para Modales
     const [selectedSolicitud, setSelectedSolicitud] = useState(null);
     const [modalAceptarOpen, setModalAceptarOpen] = useState(false);
     const [modalRechazarOpen, setModalRechazarOpen] = useState(false);
-
-    // Estado para el Toast Global
-    const [toast, setToast] = useState({
-        open: false,
-        message: '',
-        type: 'info'
-    });
-
-    const showToast = (message, type = 'info') => {
-        setToast({ open: true, message, type });
-    };
-
-    const cargarSolicitudes = async () => {
-        try {
-            setLoading(true);
-            const response = await solicitudesService.obtenerTodas({
-                id_asesor: usuario.id_usuario 
-            });
-            setSolicitudesPendientes(response.data);
-            
-        } catch (error) {
-            console.error('Error al cargar solicitudes', error);
-            showToast('No se pudieron cargar las solicitudes', 'error');
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    const rechazarSolicitudes = async (id_solicitud, razon) => {
-        try {
-            const response = await solicitudesService.rechazar(id_solicitud, razon);//hacemos la llamada al service
-            showToast(response.message, 'success'); //mostramo el toast con el mensaje exitoso
-            setModalRechazarOpen(false);//cerramos el modal de rechazar
-            cargarSolicitudes(); //hacemos otra carga de las solicitudes
-
-        } catch (error) {
-            const message = error.response?.data?.message || 'No se pudo rechazar la solicitud'
-            showToast(message, 'error'); // usa el message del error del backend, si existe
-        }
-    }
-
-    const aceptarSolicitudes = async (solicitud) => {
-        try {
-            const response = await solicitudesService.aceptar(solicitud);//hacemos la llamada al service
-            showToast(response.message, 'success'); //mostramo el toast con el mensaje exitoso
-            setModalAceptarOpen(false);//cerramos el modal de aceptar
-            cargarSolicitudes(); //hacemos otra carga de las solicitudes
-
-        } catch (error) {
-            const message = error.response?.data?.message || 'No se pudo rechazar la solicitud'
-            showToast(message, 'error'); // usa el message del error del backend, si existe
-        }
-    }
-
-    useEffect(() => {
-    if (usuario) {
-        cargarSolicitudes();
-    }
-}, [usuario]);
-
-    const handleCloseToast = () => {
-        setToast((prev) => ({ ...prev, open: false }));
-    };
 
     // Helper para desenfocar elementos activos antes de abrir el modal
     const clearFocus = (event) => {
@@ -124,33 +52,35 @@ export default function TarjetaSolicitudesPendientes() {
         setModalRechazarOpen(true);
     };
 
-    // Handlers de confirmación (aquí va la llamada a tu API cuando la tengas)
-    // Los modales ya se encargan de mostrar el toast y de cerrarse.
+    // Handlers de confirmación: llaman a la vista y cierran el modal solo si salió bien
     const handleConfirmAceptar = async () => {
-        aceptarSolicitudes(selectedSolicitud)
+        const ok = await onAceptar?.(selectedSolicitud);
+        if (ok) setModalAceptarOpen(false);
     };
 
     const handleConfirmRechazar = async (motivo) => {
-        rechazarSolicitudes(selectedSolicitud.id_solicitud, motivo);//se manda al rechazar solicitudes el id y el motivo
+        const ok = await onRechazar?.(selectedSolicitud.id_solicitud, motivo);
+        if (ok) setModalRechazarOpen(false);
     };
 
-    if (loading) {
-        return <Loading mensaje='cargando solicitudes...'/>
-    }
-
-    if (solicitudesPendientes.length === 0) {
-        return <p>No tienes solicitudes pendientes por revisar.</p>;
+    if (solicitudes.length === 0) {
+        return (
+            <p className="py-10 text-center text-sm text-gray-600">
+                No tienes solicitudes pendientes por revisar.
+            </p>
+        );
     }
 
     return (
         <>
-            <Box className="flex flex-row flex-wrap gap-7 justify-center">
-                {solicitudesPendientes.map((solicitud) => ( //Este es apra que recorra el arreglo de datos y lso vaya imprimeindo
+            <Box className="grid w-full grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-4 md:gap-5">
+                {solicitudes.map((solicitud) => ( // Recorre el arreglo de datos y los va imprimiendo
 
-                    <Card key={solicitud.id}
+                    <Card key={solicitud.id_solicitud}
                         sx={{
-                            //Si ocupas moverle a cualquier cosa de tamaño, margen color de la taerjeta es aqui
-                            width: '400px',
+                            // Si ocupas moverle a cualquier cosa de tamaño, margen o color de la tarjeta es aquí
+                            width: '100%',
+                            maxWidth: '400px',
                             background: '#FFFFFF',
                             borderLeft: '20px solid #08338F',
 
@@ -159,43 +89,39 @@ export default function TarjetaSolicitudesPendientes() {
                             flexDirection: 'column',
                             justifyContent: 'space-between',
                             boxShadow: '0px 4px 12.3px rgba(0, 0, 0, 0.20)',
-
                         }}
                     >
-                        <CardContent sx={{ padding: '24px 24px 10px 24px' }}> {/* La informacion de la tarjeta */}
+                        <CardContent sx={{ padding: '24px 24px 10px 24px' }}> {/* La información de la tarjeta */}
 
-                            {/* Contenedor principal de la img, nombre del alumno y email de alumno */}
+                            {/* Contenedor principal de la img, nombre del alumno y email del alumno */}
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', mb: 3 }}>
 
                                 <Avatar
                                     sx={{
-                                        //Estilos de la foto de usuario
+                                        // Estilos de la foto de usuario
                                         backgroundColor: '#EBD9B4',
                                         color: '#8A6D2B',
                                         width: 50,
                                         height: 50,
                                         fontSize: '24px',
-                                        fontWeight: 'bold'
+                                        fontWeight: 'bold',
+                                        flexShrink: 0
                                     }}
                                 >
-                                    {solicitud.nombre_estudiante.charAt(0)}
+                                    {solicitud.nombre_estudiante?.charAt(0)}
                                 </Avatar>
 
-                                {/* contenedor para separar nombre y email */}
-                                <Box>
-
-                                    <Typography sx={{ fontSize: '16px', fontWeight: "700", color: '#000000', lineHeight: 1.2 }}>
+                                {/* Contenedor para separar nombre y email */}
+                                <Box sx={{ minWidth: 0 }}>
+                                    <Typography sx={{ fontSize: '16px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere' }}>
                                         {solicitud.nombre_estudiante}
                                     </Typography>
-                                    <Typography sx={{ fontSize: '13px', color: '#6A6A6A' }}>
+                                    <Typography sx={{ fontSize: '13px', color: '#6A6A6A', overflowWrap: 'anywhere' }}>
                                         {solicitud.correo}
                                     </Typography>
-
                                 </Box>
 
-
                             </Box>
-
 
                             {/* Contenedor principal de los datos */}
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', mb: '5px' }}>
@@ -206,7 +132,7 @@ export default function TarjetaSolicitudesPendientes() {
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
                                     <span className="font-bold">Fecha de inicio: </span> {formatearFechaVisible(solicitud.fecha_inicio)}
                                 </Typography>
-                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
+                                <Typography sx={{ fontSize: '15px', color: '#333333' }}>
                                     <span className="font-bold">Horario: </span> {solicitud.horario}
                                 </Typography>
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
@@ -217,12 +143,12 @@ export default function TarjetaSolicitudesPendientes() {
 
                         </CardContent>
 
-                        {/* Donde se ponen los botones que se ocupen, se pueden quitar o agregar mas */}
+                        {/* Donde se ponen los botones que se ocupen, se pueden quitar o agregar más */}
                         <CardActions
                             sx={{
-                                //Para poner los botones a un lado
                                 padding: '0px 24px 20px 24px',
                                 justifyContent: 'flex-end',
+                                flexWrap: 'wrap',
                                 gap: '10px'
                             }}
                         >
@@ -246,9 +172,7 @@ export default function TarjetaSolicitudesPendientes() {
                             </Button>
                         </CardActions>
                     </Card>
-                )
-
-                )}
+                ))}
             </Box>
 
             {/* Modales */}
@@ -264,14 +188,6 @@ export default function TarjetaSolicitudesPendientes() {
                 onClose={() => setModalRechazarOpen(false)}
                 onConfirm={handleConfirmRechazar}
                 showToast={showToast}
-            />
-
-            {/* Toast Global */}
-            <ToastNotification
-                open={toast.open}
-                onClose={handleCloseToast}
-                message={toast.message}
-                type={toast.type}
             />
         </>
     );

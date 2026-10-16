@@ -1,49 +1,48 @@
-import React, { useState } from 'react';
+import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
+import { useState } from 'react';
 
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import NotesOutlinedIcon from '@mui/icons-material/NotesOutlined';
 
 // Importa tus modales desde el archivo correspondiente (ajusta la ruta si es necesario)
-import { ModalInformacion, EditarSolicitud, ModalNotaAsesor } from '../components/ModalesSolicitudesRevicion';
+import { EditarSolicitud, ModalNotaAsesor } from '../components/ModalesSolicitudesRevicion';
+import { formatearFechaSolicitud } from '../utils/fechaSolicitud';
 
-export default function TarjetaSolicitudesEnRevision({ filtroEstado, showToast}) {
+// Las solicitudes y sus cambios (editar / eliminar) los maneja la vista; la tarjeta solo las muestra.
+export default function TarjetaSolicitudesEnRevision({ solicitudes = [], onActualizar, onEliminar, showToast }) {
     // Estados para controlar qué modal se abre y con qué solicitud
-    const [modalInfoOpen, setModalInfoOpen] = useState(false);
     const [modalEditarOpen, setModalEditarOpen] = useState(false);
     const [modalNotaOpen, setModalNotaOpen] = useState(false);
+    const [modalEliminarOpen, setModalEliminarOpen] = useState(false);
     const [solicitudSeleccionada, setSolicitudSeleccionada] = useState(null);
-
-    // Datos de prueba
-    const solicitudesEnRevision = [
-        { id: 30, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Programacion", fecha: "Lunes 27/09/26", horario: "18:00 - 19:00", modalidad: "Presencial", estado: "EN REVISION", asesor: "Josue Manuel Medina Lopez", nota: "Esa fecha ya no esta disponible" },
-        { id: 31, alumno: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Programacion", fecha: "Lunes 27/09/26", horario: "18:00 - 19:00", modalidad: "Presencial", estado: "EN REVISION", asesor: "Josue Manuel Medina Lopez", nota: "Esa fecha ya no esta disponible" },
-        { id: 32, alumno: "Luis Fernando Velazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Programacion", fecha: "Lunes 27/09/26", horario: "18:00 - 19:00", modalidad: "Presencial", estado: "EN REVISION", asesor: "Josue Manuel Medina Lopez", nota: "Esa fecha ya no esta disponible" },
-        { id: 33, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Programacion", fecha: "Lunes 27/09/26", horario: "18:00 - 19:00", modalidad: "Presencial", estado: "RECHAZADA", asesor: "Josue Manuel Medina Lopez", nota: "Esa fecha ya no esta disponible" },
-        { id: 34, alumno: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Programacion", fecha: "Lunes 27/09/26", horario: "18:00 - 19:00", modalidad: "Presencial", estado: "RECHAZADA", asesor: "Josue Manuel Medina Lopez", nota: "Esa fecha ya no esta disponible" }
-    ];
-
-    // Filtrar las solicitudes según el valor seleccionado
-    const solicitudesFiltradas = solicitudesEnRevision.filter((solicitud) => {
-        if (filtroEstado === "TODO") return true;
-        return solicitud.estado === filtroEstado;
-    });
-
-    const handleOpenInfo = (solicitud) => {
-        setSolicitudSeleccionada(solicitud);
-        setModalInfoOpen(true);
-    };
 
     const handleOpenEditar = (solicitud) => {
         setSolicitudSeleccionada(solicitud);
         setModalEditarOpen(true);
+    };
+
+    const handleOpenEliminar = (solicitud) => {
+        document.activeElement?.blur();
+        setSolicitudSeleccionada(solicitud);
+        setModalEliminarOpen(true);
+    };
+
+    const handleConfirmEliminar = () => {
+        if (onEliminar) onEliminar(solicitudSeleccionada);
+        setModalEliminarOpen(false);
+        if (showToast) showToast('Solicitud eliminada correctamente', 'error');
     };
 
     const handleOpenNota = (solicitud) => {
@@ -52,16 +51,18 @@ export default function TarjetaSolicitudesEnRevision({ filtroEstado, showToast})
     };
 
     return (
-        <Box className="flex flex-row flex-wrap gap-7 justify-center">
-            {solicitudesFiltradas.length === 0 ? (
-                <Typography sx={{ py: 5, color: 'text.secondary', fontWeight: 'bold' }}>
+        <>
+        <Box className="w-full grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-4 md:gap-5">
+            {solicitudes.length === 0 ? (
+                <Typography sx={{ py: 5, color: 'text.secondary', fontWeight: 'bold', gridColumn: '1 / -1' }}>
                     No hay solicitudes con este estado.
                 </Typography>
             ) : (
-                solicitudesFiltradas.map((solicitud) => (
+                solicitudes.map((solicitud) => (
                     <Card key={solicitud.id}
                         sx={{
-                            width: '400px',
+                            width: '100%',
+                            maxWidth: '400px',
                             background: '#FFFFFF',
                             borderLeft: '20px solid #08338F',
                             borderRadius: '5px',
@@ -72,15 +73,30 @@ export default function TarjetaSolicitudesEnRevision({ filtroEstado, showToast})
                         }}
                     >
                         <CardContent sx={{ padding: '24px 24px 10px 24px' }}>
+                            {/* ESTADO */}
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1.5 }}>
+                                <Chip
+                                    label={solicitud.estado}
+                                    size="small"
+                                    sx={{
+                                        fontWeight: 700,
+                                        fontSize: '11px',
+                                        letterSpacing: '0.5px',
+                                        backgroundColor: solicitud.estado === "EN REVISION" ? '#FFF4CC' : '#FDE2E0',
+                                        color: solicitud.estado === "EN REVISION" ? '#8A6D00' : '#C62828'
+                                    }}
+                                />
+                            </Box>
+
                             {/* ALUMNO */}
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', mb: 3 }}>
                                 <Avatar
                                     sx={{
                                         backgroundColor: '#EBD9B4',
                                         color: '#8A6D2B',
-                                        width: 63,
-                                        height: 63,
-                                        fontSize: '30px',
+                                        width: 50,
+                                        height: 50,
+                                        fontSize: '24px',
                                         fontWeight: 'bold'
                                     }}
                                 >
@@ -102,42 +118,34 @@ export default function TarjetaSolicitudesEnRevision({ filtroEstado, showToast})
                                     <span className="font-bold">Materia:</span> {solicitud.materia}
                                 </Typography>
                                 <Typography sx={{ fontSize: '15px', color: '#222222' }}>
-                                    <span className="font-bold">Fecha:</span> {solicitud.fecha}
+                                    <span className="font-bold">Fecha:</span> {formatearFechaSolicitud(solicitud.fecha)}
                                 </Typography>
                                 <Typography sx={{ fontSize: '15px', color: '#222222' }}>
                                     <span className="font-bold">Modalidad:</span> {solicitud.modalidad}
                                 </Typography>
                                 <Typography sx={{ fontSize: '15px', color: '#222222' }}>
-                                    <span className="font-bold text-black">ESTADO:</span>{' '}
-                                    <span
-                                        style={{
-                                            color: solicitud.estado === "EN REVISION" ? "#E0B400" : "#F44336",
-                                            fontWeight: 'bold'
+                                    <span className="font-bold">Horario:</span> {solicitud.horario || 'N/A'}
+                                </Typography>
+                                {solicitud.notaEstudiante && (
+                                    <Typography
+                                        sx={{
+                                            fontSize: '15px',
+                                            color: '#222222',
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
+                                            wordBreak: 'break-word'
                                         }}
                                     >
-                                        {solicitud.estado}
-                                    </span>
-                                </Typography>
+                                        <span className="font-bold">Nota:</span> {solicitud.notaEstudiante}
+                                    </Typography>
+                                )}
                             </Box>
                         </CardContent>
 
                         {/* BOTONES */}
-                        <CardActions sx={{ padding: '0px 30px 24px 30px', justifyContent: 'flex-end', gap: '18px' }}>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                startIcon={<InfoOutlinedIcon />}
-                                onClick={() => handleOpenInfo(solicitud)}
-                                sx={{
-                                    color: '#FFFFFF',
-                                    borderRadius: '5px',
-                                    textTransform: 'none',
-                                    fontWeight: '600',
-                                }}
-                            >
-                                Informacion
-                            </Button>
-
+                        <CardActions sx={{ padding: '0px 24px 20px 24px', justifyContent: 'flex-end', flexWrap: 'wrap', gap: '10px' }}>
                             {solicitud.estado === "EN REVISION" && (
                                 <Button
                                     variant="contained"
@@ -172,30 +180,65 @@ export default function TarjetaSolicitudesEnRevision({ filtroEstado, showToast})
                                     Notas del asesor
                                 </Button>
                             )}
+
+                            {solicitud.estado === "EN REVISION" && (
+                                <Button
+                                    variant="contained"
+                                    size="small"
+                                    startIcon={<DeleteOutlineOutlinedIcon />}
+                                    onClick={() => handleOpenEliminar(solicitud)}
+                                    sx={{
+                                        backgroundColor: '#C42525',
+                                        color: '#FFFFFF',
+                                        borderRadius: '5px',
+                                        textTransform: 'none',
+                                        fontWeight: '600',
+                                    }}
+                                >
+                                    Eliminar
+                                </Button>
+                            )}
                         </CardActions>
                     </Card>
                 ))
             )}
+        </Box>
 
             {/* MODALES */}
-            <ModalInformacion
-                open={modalInfoOpen}
-                onClose={() => setModalInfoOpen(false)}
-                solicitud={solicitudSeleccionada}
-            />
-
             <EditarSolicitud
                 open={modalEditarOpen}
                 onClose={() => setModalEditarOpen(false)}
                 solicitud={solicitudSeleccionada}
+                onSave={onActualizar}
                 showToast={showToast}
             />
+
+            <Dialog
+                open={modalEliminarOpen}
+                onClose={() => setModalEliminarOpen(false)}
+                sx={{ '& .MuiPaper-root': { width: '450px', maxWidth: '90vw', borderRadius: '12px', p: 1 } }}
+            >
+                <DialogTitle sx={{ fontWeight: 'bold' }}>Eliminar solicitud</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1">
+                        ¿Estás seguro de que deseas eliminar esta solicitud? Esta acción no se puede deshacer.
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, gap: 1 }}>
+                    <Button variant="outlined" color="inherit" onClick={() => setModalEliminarOpen(false)}>
+                        Cancelar
+                    </Button>
+                    <Button variant="contained" color="error" onClick={handleConfirmEliminar}>
+                        Eliminar
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             <ModalNotaAsesor
                 open={modalNotaOpen}
                 onClose={() => setModalNotaOpen(false)}
                 nota={solicitudSeleccionada?.nota}
             />
-        </Box>
+        </>
     );
 }

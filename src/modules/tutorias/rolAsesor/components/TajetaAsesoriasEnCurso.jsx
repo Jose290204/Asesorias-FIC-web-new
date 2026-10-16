@@ -1,46 +1,42 @@
-import { useState } from 'react';
+import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
+import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
-import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import { useState } from 'react';
 
-// Ajusta estas rutas según dónde esté ubicado este archivo en tu proyecto
 import ToastNotification from '../../../../components/ui/ToastNotification';
+import ModalChatAsesoriaAsesor from './ModalChatAsesoriaAsesor';
 import {
-    ModalInfoAsesoria,
     ModalCompletarAsesoria,
     ModalEliminarAsesoria,
+    ModalInfoAsesoria,
     ModalMaterialAdicional
 } from './ModalesAsesoriasEnCurso';
 
-/**
- * Callbacks opcionales para que el componente padre (dueño de la lista) actualice sus datos / llame a la API:
- * - onGuardarInfo(asesoriaActualizada)
- * - onCompletar(asesoria)
- * - onEliminar(asesoria)
- * - onGuardarMaterial(idAsesoria, listaMateriales)
- */
 export default function TarjetaAsesoriasEnCurso({
     asesorias = [],
     onGuardarInfo,
     onCompletar,
     onEliminar,
-    onGuardarMaterial
+    onGuardarMaterial,
+    onEnviarMensaje,
 }) {
-    // Estados para Modales (los hooks van antes del return condicional)
     const [selectedAsesoria, setSelectedAsesoria] = useState(null);
     const [modalInfoOpen, setModalInfoOpen] = useState(false);
     const [modalCompletarOpen, setModalCompletarOpen] = useState(false);
     const [modalMaterialOpen, setModalMaterialOpen] = useState(false);
     const [modalEliminarOpen, setModalEliminarOpen] = useState(false);
+    const [modalChatOpen, setModalChatOpen] = useState(false);
 
-    // Estado para el Toast Global
     const [toast, setToast] = useState({
         open: false,
         message: '',
@@ -55,13 +51,11 @@ export default function TarjetaAsesoriasEnCurso({
         setToast((prev) => ({ ...prev, open: false }));
     };
 
-    // Helper para desenfocar elementos activos antes de abrir el modal
     const clearFocus = (event) => {
         if (event?.currentTarget) event.currentTarget.blur();
         document.activeElement?.blur();
     };
 
-    // Handlers para Abrir Modales
     const openModal = (setOpen) => (asesoria, event) => {
         clearFocus(event);
         setSelectedAsesoria(asesoria);
@@ -73,8 +67,14 @@ export default function TarjetaAsesoriasEnCurso({
     const handleOpenMaterial = openModal(setModalMaterialOpen);
     const handleOpenEliminar = openModal(setModalEliminarOpen);
 
-    // Handlers de confirmación (aquí va la llamada a tu API cuando la tengas)
-    // Los modales ya se encargan de mostrar el toast y de cerrarse.
+    const handleOpenChat = openModal(setModalChatOpen);
+
+    // Si esta función lanza un error, el chat quita el mensaje y muestra un toast de error.
+    const handleSendMessage = async (asesoria, mensaje) => {
+        console.log('Mensaje enviado en la asesoría', asesoria?.id, mensaje);
+        if (onEnviarMensaje) await onEnviarMensaje(asesoria, mensaje);
+    };
+
     const handleGuardarInfo = async (asesoriaActualizada) => {
         console.log('Información actualizada:', asesoriaActualizada);
         if (onGuardarInfo) await onGuardarInfo(asesoriaActualizada);
@@ -95,7 +95,6 @@ export default function TarjetaAsesoriasEnCurso({
         if (onGuardarMaterial) await onGuardarMaterial(selectedAsesoria?.id, listaMateriales);
     };
 
-    //mensaje si no aprecen busquedas
     if (asesorias.length === 0) {
         return (
             <Box className="w-full text-center py-10">
@@ -108,11 +107,12 @@ export default function TarjetaAsesoriasEnCurso({
 
     return (
         <>
-            <Box className="flex flex-row flex-wrap gap-7 justify-center">
+            <Box className="grid w-full grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-4 md:gap-5">
                 {asesorias.map((asesoria) => (
                     <Card key={asesoria.id}
                         sx={{
-                            width: '400px',
+                            width: '100%',
+                            maxWidth: '400px',
                             background: '#FFFFFF',
                             borderLeft: '20px solid #08338F',
                             borderRadius: '5px',
@@ -123,18 +123,44 @@ export default function TarjetaAsesoriasEnCurso({
                         }}
                     >
                         <CardContent sx={{ padding: '24px 24px 15px' }}>
-                            <Box sx={{ marginBottom: '20px' }}>
-                                <Typography sx={{ fontSize: '18px', fontWeight: "700", color: '#000000', lineHeight: 1.2 }}>
+                            <Box sx={{ marginBottom: '20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                                <Typography sx={{ fontSize: '18px', fontWeight: "700", color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', minWidth: 0 }}>
                                     {asesoria.materia}
                                 </Typography>
+
+                                {/* Acciones secundarias: Editar y Eliminar */}
+                                <Box sx={{ display: 'flex', flexShrink: 0, mr: '-8px', mt: '-6px' }}>
+                                    <Tooltip title="Editar">
+                                        <IconButton
+                                            size="small"
+                                            aria-label="Editar"
+                                            sx={{ color: '#08338F' }}
+                                            onClick={(e) => handleOpenInfo(asesoria, e)}
+                                        >
+                                            <EditOutlinedIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Eliminar">
+                                        <IconButton
+                                            size="small"
+                                            aria-label="Eliminar"
+                                            sx={{ color: '#C42525' }}
+                                            onClick={(e) => handleOpenEliminar(asesoria, e)}
+                                        >
+                                            <DeleteOutlineOutlinedIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                </Box>
                             </Box>
 
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                    <span className="font-bold">Alumno: </span> {asesoria.alumno}
+                                    
+                                    <span className="font-bold">Alumno: </span> {asesoria.estudiante}
                                 </Typography>
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                    <span className="font-bold">Inicio: </span> {asesoria.fecha}
+                                    
+                                    <span className="font-bold">Inicio: </span> {asesoria.fecha_inicio_formateada}
                                 </Typography>
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
                                     <span className="font-bold">Horario: </span> {asesoria.horario}
@@ -163,25 +189,16 @@ export default function TarjetaAsesoriasEnCurso({
                             >
                                 <Button
                                     variant="contained"
-                                    sx={{ borderRadius: '5px', textTransform: 'none' }}
+                                    sx={{ color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
                                     size="small"
-                                    startIcon={<InfoOutlinedIcon />}
-                                    onClick={(e) => handleOpenInfo(asesoria, e)}
+                                    startIcon={<ChatOutlinedIcon />}
+                                    onClick={(e) => handleOpenChat(asesoria, e)}
                                 >
-                                    Informacion
+                                    Chat
                                 </Button>
                                 <Button
                                     variant="contained"
-                                    sx={{ backgroundColor: '#2E7D32', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-                                    size="small"
-                                    startIcon={<CheckOutlinedIcon />}
-                                    onClick={(e) => handleOpenCompletar(asesoria, e)}
-                                >
-                                    Completar
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    sx={{ borderRadius: '5px', textTransform: 'none', background: '#C49E0D' }}
+                                    sx={{ backgroundColor: '#C49E0D', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
                                     size="small"
                                     startIcon={<FileDownloadOutlinedIcon />}
                                     onClick={(e) => handleOpenMaterial(asesoria, e)}
@@ -190,12 +207,12 @@ export default function TarjetaAsesoriasEnCurso({
                                 </Button>
                                 <Button
                                     variant="contained"
-                                    sx={{ backgroundColor: '#C42525', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
+                                    sx={{ gridColumn: '1 / -1', backgroundColor: '#2E7D32', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
                                     size="small"
-                                    startIcon={<DeleteOutlineOutlinedIcon />}
-                                    onClick={(e) => handleOpenEliminar(asesoria, e)}
+                                    startIcon={<CheckOutlinedIcon />}
+                                    onClick={(e) => handleOpenCompletar(asesoria, e)}
                                 >
-                                    Eliminar
+                                    Completar
                                 </Button>
                             </Box>
                         </CardActions>
@@ -203,7 +220,6 @@ export default function TarjetaAsesoriasEnCurso({
                 ))}
             </Box>
 
-            {/* Modales */}
             <ModalInfoAsesoria
                 open={modalInfoOpen}
                 onClose={() => setModalInfoOpen(false)}
@@ -234,7 +250,14 @@ export default function TarjetaAsesoriasEnCurso({
                 showToast={showToast}
             />
 
-            {/* Toast Global */}
+            <ModalChatAsesoriaAsesor
+                open={modalChatOpen}
+                onClose={() => setModalChatOpen(false)}
+                data={selectedAsesoria}
+                onSendMessage={handleSendMessage}
+                showToast={showToast}
+            />
+
             <ToastNotification
                 open={toast.open}
                 onClose={handleCloseToast}

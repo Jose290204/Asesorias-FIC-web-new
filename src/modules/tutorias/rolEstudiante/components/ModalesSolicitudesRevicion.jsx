@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box, IconButton, TextField, MenuItem } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
-import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
-import PersonIcon from '@mui/icons-material/Person';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, TextField, Typography } from '@mui/material';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import dayjs from 'dayjs';
+import 'dayjs/locale/es';
+import { useEffect, useState } from 'react';
+
+import { parsearFechaSolicitud } from '../utils/fechaSolicitud';
 
 // ==========================================
 // 1. MODAL INFORMACIÓN
@@ -75,276 +79,237 @@ export function ModalInformacion({ open, onClose, solicitud }) {
 // ==========================================
 // 2. MODAL EDITAR SOLICITUD
 // ==========================================
-export function EditarSolicitud({ open, onClose, solicitud, showToast }) {
+
+// Lista desplegable de los select: altura máxima con scroll interno
+const MENU_CON_SCROLL = {
+    slotProps: { paper: { sx: { maxHeight: 240 } } }
+};
+
+// Campos de solo lectura: no se enfocan, no muestran cursor de escritura ni se pueden seleccionar
+const CAMPO_BLOQUEADO_SX = {
+    pointerEvents: 'none',
+    '& .MuiInputBase-root': { backgroundColor: '#FAFAFA' },
+    '& .MuiInputBase-input': { cursor: 'default', caretColor: 'transparent', userSelect: 'none' }
+};
+
+// Horarios de prueba del asesor (se usan solo si la solicitud no trae los suyos).
+// Cuando haya backend, la solicitud debe traer los horarios del asesor en
+// solicitud.horariosAsesor (arreglo o texto separado por comas).
+const HORARIOS_ASESOR_DEMO = ['16:00 - 17:00', '17:00 - 18:00', '18:00 - 19:00', '19:00 - 20:00'];
+
+const aLista = (valor) => {
+    if (Array.isArray(valor)) return valor.filter(Boolean);
+    return String(valor ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+};
+
+// Fecha inicial del formulario. Si la fecha de la solicitud ya pasó devuelve null:
+// el usuario tiene que elegir una nueva.
+const fechaInicialFormulario = (valor) => {
+    const fecha = parsearFechaSolicitud(valor);
+    return fecha && !fecha.isBefore(dayjs(), 'day') ? fecha : null;
+};
+
+export function EditarSolicitud({ open, onClose, solicitud, onSave, showToast }) {
     const [formData, setFormData] = useState({
         materia: '',
         asesor: '',
-        fecha: '',
+        fecha: null,
         horario: '',
-        modalidad: ''
+        modalidad: '',
+        nota: ''
     });
-
-    const [hasChanged, setHasChanged] = useState(false);
-    const [confirmarCancelarOpen, setConfirmarCancelarOpen] = useState(false);
+    const [initialFormData, setInitialFormData] = useState(null);
+    const [calendarioOpen, setCalendarioOpen] = useState(false);
 
     useEffect(() => {
         if (solicitud) {
-            setFormData({
+            const inicial = {
                 materia: solicitud.materia || '',
                 asesor: solicitud.asesor || '',
-                fecha: solicitud.fecha || '',
-                horario: solicitud.horario || '18:00 - 19:00',
-                modalidad: solicitud.modalidad || 'Presencial'
-            });
-            setHasChanged(false);
+                fecha: fechaInicialFormulario(solicitud.fecha),
+                horario: solicitud.horario || '',
+                modalidad: solicitud.modalidad || '',
+                nota: solicitud.notaEstudiante || ''
+            };
+            setFormData(inicial);
+            setInitialFormData(inicial);
+            setCalendarioOpen(false);
         }
     }, [solicitud, open]);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-        setHasChanged(true);
+    const handleChangeHorario = (e) => {
+        setFormData((prev) => ({ ...prev, horario: e.target.value }));
     };
+
+    const handleChangeNota = (e) => {
+        setFormData((prev) => ({ ...prev, nota: e.target.value }));
+    };
+
+    const handleChangeFecha = (nuevaFecha) => {
+        // No se permiten fechas anteriores a hoy
+        if (nuevaFecha?.isValid() && nuevaFecha.isBefore(dayjs(), 'day')) {
+            if (showToast) showToast('Elija una fecha posterior', 'error');
+            return;
+        }
+        setFormData((prev) => ({ ...prev, fecha: nuevaFecha }));
+    };
+
+    // Se quita el foco del campo antes de abrir el calendario (evita el aviso de aria-hidden)
+    const abrirCalendario = () => {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
+        setCalendarioOpen(true);
+    };
+
+    // Hay cambios si cambió el horario o se eligió una fecha válida distinta a la inicial
+    const fechaCambio =
+        Boolean(formData.fecha?.isValid()) &&
+        !(initialFormData?.fecha && formData.fecha.isSame(initialFormData.fecha, 'day'));
+    const horarioCambio = formData.horario !== (initialFormData?.horario ?? '');
+    const notaCambio = formData.nota.trim() !== (initialFormData?.nota ?? '').trim();
+    const hasChanged = fechaCambio || horarioCambio || notaCambio;
 
     const handleGuardar = () => {
-        console.log("Se guardaron los cambios de la solicitud:", formData);
+        if (!hasChanged) return;
+        const actualizada = {
+            ...solicitud,
+            horario: formData.horario,
+            notaEstudiante: formData.nota.trim(),
+            ...(formData.fecha?.isValid() && { fecha: formData.fecha.format('YYYY-MM-DD') })
+        };
+        // Aquí va tu llamada a la API para actualizar la solicitud
+        if (onSave) onSave(actualizada);
         if (showToast) showToast('Se guardó el cambio correctamente', 'info');
-        if (onClose) onClose();
-    };
-
-    const confirmarEliminacion = () => {
-        setConfirmarCancelarOpen(false);
-        if (showToast) showToast('Se eliminó la solicitud', 'error');
         if (onClose) onClose();
     };
 
     if (!solicitud) return null;
 
+    // Solo los horarios de ese asesor (más el actual de la solicitud si no estuviera en la lista)
+    const horariosBase = aLista(solicitud.horariosAsesor ?? solicitud.horarios_asesor);
+    const horariosAsesor = horariosBase.length > 0 ? horariosBase : HORARIOS_ASESOR_DEMO;
+    const horariosOpciones =
+        formData.horario && !horariosAsesor.includes(formData.horario)
+            ? [formData.horario, ...horariosAsesor]
+            : horariosAsesor;
+
     return (
-        <>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
             <Dialog
                 open={Boolean(open)}
                 onClose={onClose}
                 sx={{
                     '& .MuiPaper-root': {
-                        width: '500px',
-                        maxWidth: '95vw',
-                        borderRadius: '10px',
-                        p: 1,
-                        backgroundColor: '#FFFFFF',
-                        boxShadow: '0px 10px 30px rgba(0,0,0,0.15)'
+                        width: '550px',
+                        maxWidth: '90vw',
+                        maxHeight: '90vh',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        p: 1.5
                     }
                 }}
             >
-                {/* Cabecera */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: '16px 20px 8px 20px' }}>
-                    <Box sx={{ width: 30 }} />
-                    <Typography sx={{ fontWeight: 'bold', fontSize: '1.25rem', }}>
-                        Modificar Solicitud
-                    </Typography>
-                    <IconButton onClick={onClose} sx={{ color: '#888888', '&:hover': { backgroundColor: 'transparent' } }}>
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
-                <hr style={{ border: '0', borderTop: '1px solid #EAEAEA', margin: '0 16px 16px 16px' }} />
+                <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.2rem' }}>
+                    Modificar Solicitud
+                </DialogTitle>
 
-                <DialogContent sx={{ py: 1, px: 3 }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-
-                        {/* Campo Asesor */}
-                        <Box sx={{ border: '1px solid #C4C4C4', borderRadius: '8px', p: '10px 14px', backgroundColor: '#FAFAFA', position: 'relative', mt: 1 }}>
-                            <Typography component="span" sx={{ fontSize: '12px', color: '#777777', position: 'absolute', top: '-10px', left: '12px', backgroundColor: '#FAFAFA', px: '4px' }}>
-                                Asesor
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <PersonIcon sx={{ color: '#888888', fontSize: '20px' }} />
-                                <Typography sx={{ fontSize: '15px', color: '#555555', fontWeight: 500 }}>
-                                    {formData.asesor}
-                                </Typography>
-                            </Box>
-                        </Box>
-
-                        {/* Materia (No editable con diseño de etiqueta flotante) */}
-                        <Box sx={{ border: '1px solid #C4C4C4', borderRadius: '8px', p: '10px 14px', backgroundColor: '#FAFAFA', position: 'relative' }}>
-                            <Typography component="span" sx={{ fontSize: '12px', color: '#777777', position: 'absolute', top: '-10px', left: '12px', backgroundColor: '#FAFAFA', px: '4px' }}>
-                                Materia
-                            </Typography>
-                            <Typography sx={{ fontSize: '15px', color: '#555555', fontWeight: 500 }}>
-                                {formData.materia}
-                            </Typography>
-                        </Box>
-
-                        {/* Fecha tipo calendario con diseño de etiqueta flotante */}
-                        <Box sx={{ border: '1px solid #C4C4C4', borderRadius: '8px', p: '6px 14px', backgroundColor: '#FFFFFF', position: 'relative' }}>
-                            <Typography component="span" sx={{ fontSize: '12px', color: '#777777', position: 'absolute', top: '-10px', left: '12px', backgroundColor: '#FFFFFF', px: '4px' }}>
-                                Fecha
-                            </Typography>
-                            <TextField
-                                fullWidth
-                                variant="standard"
-                                type="date"
-                                name="fecha"
-                                value={formData.fecha}
-                                onChange={handleChange}
-                                InputProps={{
-                                    disableUnderline: true,
-                                    endAdornment: <CalendarTodayOutlinedIcon sx={{ color: '#6A6A6A', fontSize: '20px', mr: 1, pointerEvents: 'none' }} />
-                                }}
-                                sx={{
-                                    mt: 0.5,
-                                    '& input': { fontSize: '15px', color: '#333' },
-                                    '& .MuiInput-root:before, & .MuiInput-root:after': { borderBottom: 'none !important' }
-                                }}
-                            />
-                        </Box>
-
-                        {/* Horario (Select sin líneas internas) */}
-                        <Box sx={{ border: '1px solid #C4C4C4', borderRadius: '8px', p: '6px 14px', backgroundColor: '#FFFFFF', position: 'relative' }}>
-                            <Typography component="span" sx={{ fontSize: '12px', color: '#777777', position: 'absolute', top: '-10px', left: '12px', backgroundColor: '#FFFFFF', px: '4px' }}>
-                                Horario
-                            </Typography>
-                            <TextField
-                                fullWidth
-                                select
-                                variant="standard"
-                                name="horario"
-                                value={formData.horario}
-                                onChange={handleChange}
-                                InputProps={{ disableUnderline: true }}
-                                sx={{
-                                    mt: 0.5,
-                                    '& .MuiSelect-select': { fontSize: '15px', color: '#333', py: 0.5, backgroundColor: 'transparent' },
-                                    '& .MuiInput-root:before, & .MuiInput-root:after': { borderBottom: 'none !important' }
-                                }}
-                            >
-                                <MenuItem value="18:00 - 19:00">18:00 - 19:00</MenuItem>
-                                <MenuItem value="19:00 - 20:00">19:00 - 20:00</MenuItem>
-                            </TextField>
-                        </Box>
-
-                        {/* Modalidad (Select sin líneas internas) */}
-                        <Box sx={{ border: '1px solid #C4C4C4', borderRadius: '8px', p: '6px 14px', backgroundColor: '#FFFFFF', position: 'relative' }}>
-                            <Typography component="span" sx={{ fontSize: '12px', color: '#777777', position: 'absolute', top: '-10px', left: '12px', backgroundColor: '#FFFFFF', px: '4px' }}>
-                                Modalidad
-                            </Typography>
-                            <TextField
-                                fullWidth
-                                select
-                                variant="standard"
-                                name="modalidad"
-                                value={formData.modalidad}
-                                onChange={handleChange}
-                                InputProps={{ disableUnderline: true }}
-                                sx={{
-                                    mt: 0.5,
-                                    '& .MuiSelect-select': { fontSize: '15px', color: '#333', py: 0.5, backgroundColor: 'transparent' },
-                                    '& .MuiInput-root:before, & .MuiInput-root:after': { borderBottom: 'none !important' }
-                                }}
-                            >
-                                <MenuItem value="Presencial">Presencial</MenuItem>
-                                <MenuItem value="En línea">En línea</MenuItem>
-                            </TextField>
-                        </Box>
-
-                        {/* Botón cancelar solicitud */}
-                        <Button
-                            variant="outlined"
+                <DialogContent dividers>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
+                        {/* Asesor (no editable) */}
+                        <TextField
+                            label="Asesor"
+                            size="small"
                             fullWidth
-                            onClick={() => setConfirmarCancelarOpen(true)}
-                            sx={{
-                                color: '#F44336',
-                                borderColor: '#F44336',
-                                borderRadius: '5px',
-                                textTransform: 'none',
-                                fontWeight: 'bold',
-                                py: 1,
-                                mt: 1,
-                                '&:hover': { backgroundColor: '#FEEPEE', borderColor: '#F44336' }
+                            value={formData.asesor}
+                            slotProps={{ input: { readOnly: true }, htmlInput: { tabIndex: -1 } }}
+                            sx={CAMPO_BLOQUEADO_SX}
+                        />
+
+                        {/* Materia (no editable) */}
+                        <TextField
+                            label="Materia"
+                            size="small"
+                            fullWidth
+                            value={formData.materia}
+                            slotProps={{ input: { readOnly: true }, htmlInput: { tabIndex: -1 } }}
+                            sx={CAMPO_BLOQUEADO_SX}
+                        />
+
+                        {/* Fecha */}
+                        <DatePicker
+                            label="Fecha"
+                            value={formData.fecha}
+                            onChange={handleChangeFecha}
+                            format="DD/MM/YYYY"
+                            open={calendarioOpen}
+                            onOpen={abrirCalendario}
+                            onClose={() => setCalendarioOpen(false)}
+                            slotProps={{
+                                textField: {
+                                    size: 'small',
+                                    fullWidth: true,
+                                    InputLabelProps: { shrink: true },
+                                    onClick: abrirCalendario
+                                }
                             }}
+                        />
+
+                        {/* Horario: solo los del asesor */}
+                        <TextField
+                            select
+                            slotProps={{ select: { MenuProps: MENU_CON_SCROLL } }}
+                            label="Horario"
+                            size="small"
+                            fullWidth
+                            value={formData.horario}
+                            onChange={handleChangeHorario}
                         >
-                            CANCELAR SOLICITUD
-                        </Button>
+                            {horariosOpciones.map((h) => (
+                                <MenuItem key={h} value={h}>{h}</MenuItem>
+                            ))}
+                        </TextField>
+
+                        {/* Modalidad (no editable) */}
+                        <TextField
+                            label="Modalidad"
+                            size="small"
+                            fullWidth
+                            value={formData.modalidad}
+                            slotProps={{ input: { readOnly: true }, htmlInput: { tabIndex: -1 } }}
+                            sx={CAMPO_BLOQUEADO_SX}
+                        />
+
+                        {/* Nota para el asesor (editable) */}
+                        <TextField
+                            label="Nota para el asesor (opcional)"
+                            placeholder="Agrega un comentario..."
+                            size="small"
+                            fullWidth
+                            multiline
+                            rows={3}
+                            value={formData.nota}
+                            onChange={handleChangeNota}
+                        />
                     </Box>
                 </DialogContent>
 
-                <hr style={{ border: '0', borderTop: '1px solid #EAEAEA', margin: '16px 16px 0 16px' }} />
-
-                {/* Botones inferiores */}
-                <DialogActions sx={{ p: '16px 24px', justifyContent: 'space-between' }}>
-                    <Button
-                        onClick={onClose}
-                        variant="outlined"
-                        sx={{
-                            color: '#333333',
-                            borderColor: '#CCCCCC',
-                            textTransform: 'none',
-                            borderRadius: '5px',
-                            px: 3,
-                            fontWeight: 'bold',
-                            '&:hover': { backgroundColor: '#F5F5F5', borderColor: '#BBBBBB' }
-                        }}
-                    >
-                        CANCELAR
+                <DialogActions sx={{ p: 2, pt: 1.5, justifyContent: 'flex-end', gap: 1 }}>
+                    <Button variant="outlined" color="inherit" onClick={onClose}>
+                        Cancelar
                     </Button>
                     <Button
                         variant="contained"
-                        disabled={!hasChanged}
+                        color="primary"
                         onClick={handleGuardar}
-                        sx={{
-                            backgroundColor: '#43B45C',
-                            '&:hover': { backgroundColor: '#132863' },
-                            textTransform: 'none',
-                            borderRadius: '5px',
-                            px: 3,
-                            fontWeight: 'bold',
-                            '&.Mui-disabled': { backgroundColor: '#E0E0E0', color: '#9E9E9E' }
-                        }}
+                        disabled={!hasChanged}
                     >
-                        CONFIRMAR
+                        Confirmar
                     </Button>
                 </DialogActions>
             </Dialog>
-
-            {/* Submodal de advertencia para cancelar solicitud */}
-            <Dialog
-                open={confirmarCancelarOpen}
-                onClose={() => setConfirmarCancelarOpen(false)}
-                sx={{
-                    '& .MuiPaper-root': {
-                        width: '380px',
-                        borderRadius: '16px',
-                        p: 2,
-                        textAlign: 'center'
-                    }
-                }}
-            >
-                <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#1C398B' }}>
-                    ¿Estás seguro de cancelar esta solicitud?
-                </DialogTitle>
-                <DialogContent>
-                    <Typography variant="body2" sx={{ color: '#666' }}>
-                        Esta acción eliminará la solicitud de manera definitiva.
-                    </Typography>
-                </DialogContent>
-                <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 2 }}>
-                    <Button
-                        variant="outlined"
-                        onClick={() => setConfirmarCancelarOpen(false)}
-                        sx={{ textTransform: 'none', borderRadius: '8px', color: '#333', borderColor: '#CCC' }}
-                    >
-                        No, volver
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="error"
-                        onClick={confirmarEliminacion}
-                        sx={{ textTransform: 'none', borderRadius: '8px' }}
-                    >
-                        Sí, eliminar
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </>
+        </LocalizationProvider>
     );
 }
 

@@ -13,9 +13,6 @@ const tarjetas = [
         titulo: "GERENTES DE DESARROLLO",
         personas: ["Jose Angel Astorga Mejia",
             "Leslie Mayram Barrera Rodriguez",
-            "Raquel del Pilar Ibarra Meza",
-            "Bhrandon Nedel Medina Hernandez",
-            "Erick Fernando Sanchez Barraza",
             "Jenifer Guadalupe Tizoc Lopez",],
     },
     {

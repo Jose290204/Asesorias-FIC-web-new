@@ -1,49 +1,55 @@
-import { useState, useEffect } from "react";
-import TarjetaSolicitarAsesorias from "../components/TarjetaSolicitarAsesorias";
-import Button from '@mui/material/Button';
-import InputBuscar from "../../../../components/ui/InputBuscar";
-import BotonFiltro from "../../../../components/ui/BotonFlitro";
-import ModalFiltros from "../../../../components/ui/ModalFiltros";
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
-import { ModalCrearSolicitud } from "../components/ModalesSolicitarAsesorias";
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Fab from '@mui/material/Fab';
+import { useCallback, useEffect, useState } from "react";
+import BotonFiltro from "../../../../components/ui/BotonFlitro";
+import InputBuscar from "../../../../components/ui/InputBuscar";
 import ToastNotification from "../../../../components/ui/ToastNotification";
-import { catalogoService } from "../../rolAdministrador/services/catalogoService"; // Asegúrate de que la ruta sea correcta
+import ModalFiltrosEstudiante from "../components/ModalFiltrosEstudiante";
+import { ModalCrearSolicitud } from "../components/ModalesSolicitarAsesorias";
+import TarjetaSolicitarAsesorias from "../components/TarjetaSolicitarAsesorias";
 
 const initialFiltros = {
-    licenciatura: "",
-    grupo: "",
-    modalidad: "",
+    materia: "",
     horario: "",
-    razon: ""
+    modalidad: ""
 };
+
+// Info del estudiante (la que llega al iniciar sesión).
+// TODO: reemplazar por el usuario real, p. ej. const { user } = useAuth();
+// y pasar user.materias / user.horarios / user.modalidades.
+const estudiante = {
+    materias: ["Programación Web", "Bases de Datos", "Estructura de Datos", "Redes de Computadoras"],
+    horarios: ["9:00 - 10:00 AM", "11:00 - 12:00 PM", "4:00 - 5:00 PM"],
+    modalidades: ["Presencial", "Virtual"]
+};
+
+// Datos de prueba. Cuando haya backend, esto viene del servicio.
+const ASESORES_PRUEBA = [
+    { id: 30, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
+    { id: 31, asesor: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
+    { id: 32, asesor: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
+    { id: 33, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
+    { id: 34, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
+    { id: 35, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
+    { id: 36, asesor: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
+    { id: 37, asesor: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
+    { id: 38, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
+    { id: 39, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", estado: "RECHAZADA", licenciatura: 'Licenciatura en informatica', grupo: "2-1" }
+];
 
 export default function SolicitarAsesoria() {
 
-    // Arreglo de datos estático
-    const asesores = [
-        { id: 30, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
-        { id: 31, asesor: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
-        { id: 32, asesor: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
-        { id: 33, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
-        { id: 34, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
-        { id: 35, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
-        { id: 36, asesor: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
-        { id: 37, asesor: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
-        { id: 38, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", horarios: ['9:00 - 10:00 AM, 11:00 - 12:00 PM'], licenciatura: 'Licenciatura en informatica', grupo: "2-1" },
-        { id: 39, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materias: ["Introducción a la programación, Base de datos, Redes"], modalidad: "Presencial / Virtual", estado: "RECHAZADA", licenciatura: 'Licenciatura en informatica', grupo: "2-1" }
-    ];
+    const [asesores, setAsesores] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
 
     const [query, setQuery] = useState("");
     const [openModalFiltros, setOpenModalFiltros] = useState(false);
+    // filtros: los ya aplicados a la lista. borrador: lo que se está eligiendo en el modal.
     const [filtros, setFiltros] = useState(initialFiltros);
-
-    // Estados para almacenar los datos de los catálogos
-    const [licenciaturas, setLicenciaturas] = useState([]);
-    const [grupos, setGrupos] = useState([]);
-    const [gruposFiltrados, setGruposFiltrados] = useState([]);
-    const [modalidades, setModalidades] = useState([]);
-    const [horarios, setHorarios] = useState([]);
-    const [razones, setRazones] = useState([]);
+    const [borrador, setBorrador] = useState(initialFiltros);
 
     // Estado del modal crear
     const [modalCrearOpen, setModalCrearOpen] = useState(false);
@@ -55,25 +61,30 @@ export default function SolicitarAsesoria() {
         type: "info"
     });
 
-    // Cargar catálogos al montar el componente
-    useEffect(() => {
-        const licData = catalogoService.getLicenciaturas();
-        const grpData = catalogoService.getGrupos();
-        const modData = catalogoService.getModalidades();
-        const horData = catalogoService.getHorarios();
-        const razData = catalogoService.getRazonesAsesoria();
-
-        setLicenciaturas(licData);
-        setGrupos(grpData);
-        setGruposFiltrados(grpData);
-        setModalidades(modData);
-        setHorarios(horData);
-        setRazones(razData);
+    const showToast = useCallback((message, type = "info") => {
+        setToast({ open: true, message, type });
     }, []);
 
-    const showToast = (message, type = "info") => {
-        setToast({ open: true, message, type });
-    };
+    // Carga la lista de asesores
+    const cargarAsesores = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(false);
+            // TODO: reemplazar por la llamada real al servicio (ej. asesoresService.obtenerAsesores())
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            setAsesores(ASESORES_PRUEBA);
+        } catch (err) {
+            console.error("Error al cargar asesores", err);
+            setError(true);
+            showToast("No se pudieron cargar los asesores", "error");
+        } finally {
+            setLoading(false);
+        }
+    }, [showToast]);
+
+    useEffect(() => {
+        cargarAsesores();
+    }, [cargarAsesores]);
 
     const handleCloseToast = () => {
         setToast((prev) => ({ ...prev, open: false }));
@@ -87,6 +98,7 @@ export default function SolicitarAsesoria() {
 
     const handleOpenModalFiltros = (event) => {
         clearFocus(event);
+        setBorrador(filtros); // el modal siempre abre con los filtros ya aplicados
         setOpenModalFiltros(true);
     };
 
@@ -99,53 +111,23 @@ export default function SolicitarAsesoria() {
         console.log("Solicitud creada:", nuevaSolicitud);
     };
 
-    // Manejo de cambios en los inputs del filtro dinámico
+    // Manejo de cambios en los inputs del filtro
     const handleChange = (e) => {
         const { name, value } = e.target;
-
-        if (name === "licenciatura") {
-            const idLic = Number(value);
-            if (idLic) {
-                const filtrados = grupos.filter((g) => g.id_licenciatura === idLic);
-                setGruposFiltrados(filtrados.length > 0 ? filtrados : grupos);
-            } else {
-                setGruposFiltrados(grupos);
-            }
-            setFiltros((prev) => ({
-                ...prev,
-                licenciatura: value,
-                grupo: ""
-            }));
-        } else {
-            setFiltros((prev) => ({
-                ...prev,
-                [name]: value
-            }));
-        }
+        setBorrador((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleFocus = (e) => {
-        e.target.size = 5;
-    };
-
-    const handleBlur = (e) => {
-        e.target.size = 1;
-    };
-
-    const handleSelectOption = (e) => {
-        handleChange(e);
-        e.target.size = 1;
-        e.target.blur();
-    };
-
+    // Aplicar: los cambios del modal pasan a la lista y se cierra
     const handleApply = () => {
-        console.log("Filtros aplicados:", filtros);
+        setFiltros(borrador);
         setOpenModalFiltros(false);
     };
 
+    // Limpiar: borra todos los filtros (aplicados y del modal) y se cierra
     const handleClear = () => {
+        setBorrador(initialFiltros);
         setFiltros(initialFiltros);
-        setGruposFiltrados(grupos);
+        setOpenModalFiltros(false);
     };
 
     // Filtrar los datos combinando búsqueda por texto y opciones del modal
@@ -160,197 +142,125 @@ export default function SolicitarAsesoria() {
         const coincideTexto = !texto || textoCompleto.includes(texto);
 
         // 2. Filtrado por opciones del modal de filtros
-        // Nota: Asegúrate de adaptar las comparaciones si tus IDs de filtros coinciden con nombres o números en los objetos
-        const coincideLicenciatura = !filtros.licenciatura || 
-            String(item.id_licenciatura || item.licenciatura).toLowerCase().includes(String(filtros.licenciatura).toLowerCase());
-        
-        const coincideGrupo = !filtros.grupo || 
-            String(item.id_grupo || item.grupo).toLowerCase().includes(String(filtros.grupo).toLowerCase());
-        
-        const coincideModalidad = !filtros.modalidad || 
-            String(item.id_modalidad || item.modalidad).toLowerCase().includes(String(filtros.modalidad).toLowerCase());
-        
-        const coincideHorario = !filtros.horario || 
-            (Array.isArray(item.horarios) ? item.horarios.join(" ") : String(item.horarios || "")).toLowerCase().includes(String(filtros.horario).toLowerCase());
-        
-        const coincideRazon = !filtros.razon || 
-            String(item.id_razon || item.razon).toLowerCase().includes(String(filtros.razon).toLowerCase());
+        const contiene = (valorItem, filtro) =>
+            !filtro || String(valorItem ?? "").toLowerCase().includes(String(filtro).toLowerCase());
 
-        return (
-            coincideTexto &&
-            coincideLicenciatura &&
-            coincideGrupo &&
-            coincideModalidad &&
-            coincideHorario &&
-            coincideRazon
+        const coincideMateria = contiene(materiasTexto, filtros.materia);
+        const coincideModalidad = contiene(modalidadTexto, filtros.modalidad);
+        const coincideHorario = contiene(
+            Array.isArray(item.horarios) ? item.horarios.join(" ") : item.horarios,
+            filtros.horario
         );
+
+        return coincideTexto && coincideMateria && coincideModalidad && coincideHorario;
     });
 
-    return (
-        <div className="h-[calc(100vh-1rem)] w-full rounded-2xl pl-17 py-10 pr-17 flex flex-col items-start justify-start gap-11 bg-gray-100 overflow-hidden">
-            <div>
-                <p className="text-2xl font-bold">Solicitar Asesoria</p>
-            </div>
+   return (
+    <div className="min-h-[calc(100dvh-4.5rem)] w-full px-4 py-6 md:px-17 md:py-10 flex flex-col items-start justify-start gap-6 md:gap-11 bg-gray-100">
+        <p className="text-2xl font-bold">Solicitar Asesoria</p>
 
-            <div className="w-full flex justify-between items-center">
-                {/* FILTRO BOTÓN */}
-                <BotonFiltro onClick={handleOpenModalFiltros} />
+        <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
+            {/* FILTRO BOTÓN */}
+            <BotonFiltro onClick={handleOpenModalFiltros} />
 
+            <div className="w-full min-w-0 sm:flex-1">
                 <InputBuscar
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Buscar Asesoría"
+                    placeholder="Buscar Asesor"
                 />
             </div>
 
-            {/* LISTADO DE TARJETAS */}
-            <div className="w-full overflow-y-auto max-h-[calc(100vh-180px)] pb-5 flex flex-row flex-wrap gap-7 justify-center">
-                {asesoresFiltrados.length === 0 ? (
-                    <p className="col-span-full py-10 text-center text-gray-500">
-                        No se encontraron asesores.
-                    </p>
-                ) : (
-                    asesoresFiltrados.map((item) => (
-                        <TarjetaSolicitarAsesorias key={item.id} asesor={item} />
-                    ))
-                )}
-            </div>
-
-            {/* Boton */}
-            <div className="w-full flex justify-end">
-                <Button
-                    variant="contained"
-                    sx={{ borderRadius: '5px', textTransform: 'none', backgroundColor: '#2E7D32' }}
-                    size="medium"
-                    startIcon={<AddOutlinedIcon />}
-                    onClick={handleOpenCrear}
-                >
-                    Crear Solicitud
-                </Button>
-            </div>
-
-            {/* Modal de Filtros Dinámicos */}
-            <ModalFiltros
-                open={openModalFiltros}
-                onClose={() => setOpenModalFiltros(false)}
-                onApply={handleApply}
-                onClear={handleClear}
+            {/* Botón normal: solo tablet y escritorio */}
+            <Button
+                variant="contained"
+                sx={{ borderRadius: '5px', textTransform: 'none', backgroundColor: '#2E7D32', display: { xs: 'none', sm: 'inline-flex' } }}
+                size="medium"
+                startIcon={<AddOutlinedIcon />}
+                onClick={handleOpenCrear}
             >
-                <div className="flex flex-col gap-4">
-                    <div>
-                        <label className="font-bold text-sm block mb-1">Licenciatura</label>
-                        <select
-                            name="licenciatura"
-                            value={filtros.licenciatura}
-                            onChange={handleSelectOption}
-                            onFocus={handleFocus}
-                            onBlur={handleBlur}
-                            className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer text-sm"
-                        >
-                            <option value="">Selecciona una licenciatura</option>
-                            {licenciaturas.map((item) => (
-                                <option key={item.id_licenciatura} value={item.id_licenciatura}>
-                                    {item.licenciatura}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="font-bold text-sm block mb-1">Grupo</label>
-                        <select
-                            name="grupo"
-                            value={filtros.grupo}
-                            onChange={handleSelectOption}
-                            onFocus={handleFocus}
-                            onBlur={handleBlur}
-                            className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer text-sm"
-                        >
-                            <option value="">Selecciona un grupo</option>
-                            {gruposFiltrados.map((item) => (
-                                <option key={item.id_grupo} value={item.id_grupo}>
-                                    {item.grupo}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="font-bold text-sm block mb-1">Modalidad</label>
-                        <select
-                            name="modalidad"
-                            value={filtros.modalidad}
-                            onChange={handleSelectOption}
-                            onFocus={handleFocus}
-                            onBlur={handleBlur}
-                            className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer text-sm"
-                        >
-                            <option value="">Selecciona modalidad</option>
-                            {modalidades.map((item) => (
-                                <option key={item.id_modalidad} value={item.id_modalidad}>
-                                    {item.modalidad}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="font-bold text-sm block mb-1">Horario</label>
-                        <select
-                            name="horario"
-                            value={filtros.horario}
-                            onChange={handleSelectOption}
-                            onFocus={handleFocus}
-                            onBlur={handleBlur}
-                            className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer text-sm"
-                        >
-                            <option value="">Selecciona un horario</option>
-                            {horarios.map((item) => (
-                                <option key={item.id_horario} value={item.id_horario}>
-                                    {item.horario}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="font-bold text-sm block mb-1">Razón</label>
-                        <select
-                            name="razon"
-                            value={filtros.razon}
-                            onChange={handleSelectOption}
-                            onFocus={handleFocus}
-                            onBlur={handleBlur}
-                            className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer text-sm"
-                        >
-                            <option value="">Selecciona una razón</option>
-                            {razones.map((item) => (
-                                <option key={item.id_razon} value={item.id_razon}>
-                                    {item.razon}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-            </ModalFiltros>
-
-            {/* Modal Crear Solicitud */}
-            <ModalCrearSolicitud
-                open={modalCrearOpen}
-                onClose={() => setModalCrearOpen(false)}
-                onSave={handleCrearSolicitud}
-                showToast={showToast}
-                asesores={asesores}
-            />
-
-            {/* Toast Global */}
-            <ToastNotification
-                open={toast.open}
-                onClose={handleCloseToast}
-                message={toast.message}
-                type={toast.type}
-            />
-
+                Crear Solicitud
+            </Button>
         </div>
-    );
+
+        {/* Contador de resultados */}
+        {!loading && !error && (
+            <p className="-mt-3 md:-mt-6 text-sm text-gray-600">
+                Mostrando <span className="font-bold">{asesoresFiltrados.length}</span> de{" "}
+                <span className="font-bold">{asesores.length}</span> asesores
+            </p>
+        )}
+
+        {/* Botón flotante: solo celular */}
+        <Fab
+            variant="extended"
+            color="success"
+            aria-label="Crear solicitud"
+            onClick={handleOpenCrear}
+            sx={{ position: 'fixed', right: 16, bottom: 16, zIndex: 10, textTransform: 'none', display: { xs: 'inline-flex', sm: 'none' } }}
+        >
+            <AddOutlinedIcon sx={{ mr: 1 }} />
+            Crear solicitud
+        </Fab>
+
+        {/* LISTADO DE TARJETAS */}
+        <div className="w-full pb-24 sm:pb-5 grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-4 md:gap-5">
+            {loading ? (
+                <div className="col-span-full min-h-[40vh] flex flex-col items-center justify-center gap-3">
+                    <CircularProgress />
+                    <p className="text-gray-500 font-semibold">Cargando asesores...</p>
+                </div>
+            ) : error ? (
+                <div className="col-span-full py-10 text-center">
+                    <p className="text-gray-500 mb-1">No se pudieron cargar los asesores.</p>
+                    <button onClick={cargarAsesores} className="text-blue-700 font-semibold underline cursor-pointer">
+                        Reintentar
+                    </button>
+                </div>
+            ) : asesoresFiltrados.length === 0 ? (
+                <p className="col-span-full py-10 text-center text-gray-500">
+                    No se encontraron asesores.
+                </p>
+            ) : (
+                asesoresFiltrados.map((item) => (
+                    <TarjetaSolicitarAsesorias
+                        key={item.id}
+                        asesor={item}
+                        onSaveSolicitud={handleCrearSolicitud}
+                        showToast={showToast}
+                    />
+                ))
+            )}
+        </div>
+
+        {/* Modal de Filtros del estudiante */}
+        <ModalFiltrosEstudiante
+            open={openModalFiltros}
+            onClose={() => setOpenModalFiltros(false)}
+            estudiante={estudiante}
+            filtros={borrador}
+            onChange={handleChange}
+            onApply={handleApply}
+            onClear={handleClear}
+        />
+
+        {/* Modal Crear Solicitud */}
+        <ModalCrearSolicitud
+            open={modalCrearOpen}
+            onClose={() => setModalCrearOpen(false)}
+            onSave={handleCrearSolicitud}
+            showToast={showToast}
+            asesores={asesores}
+        />
+
+        {/* Toast Global */}
+        <ToastNotification
+            open={toast.open}
+            onClose={handleCloseToast}
+            message={toast.message}
+            type={toast.type}
+        />
+
+    </div>
+);
 }

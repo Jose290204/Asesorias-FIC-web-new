@@ -2,7 +2,6 @@ import { ExternalLink, Menu } from 'lucide-react';
 // import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LogoBienestar from '../../../assets/dependencias/bienestar.png';
-import LidatFic from '../../../assets/dependencias/lidatfic.png';
 import LogoFicFooter from '../../../assets/dependencias/logofic.png';
 import fondoInicio from '../../../assets/fondo_inicio.jpeg';
 import LogoUas from '../../../assets/logo_uas.png';
@@ -78,12 +77,6 @@ export default function Login() {
               alt="Logo FIC"
               className="w-[50px] h-[50px] sm:w-[70px] sm:h-[70px] object-contain"
             />
-            {/* Logo 2 */}
-            <img
-              src={LidatFic}
-              alt="Logo LIDAT FIC"
-              className="w-[50px] h-[50px] sm:w-[70px] sm:h-[70px] object-contain"
-            />
             {/* Logo 3 */}
             <img
               src={LogoBienestar}
@@ -100,9 +93,6 @@ export default function Login() {
               <h3 className="font-bold mb-1.5 text-[12px] sm:text-[14px]">Desarrollado por:</h3>
               <p>Astorga Mejia Jose Angel</p>
               <p>Barrera Rodriguez Leslie Mayram</p>
-              <p>Ibarra Meza Raquel del Pilar</p>
-              <p>Medina Hernandez Bhrandon Nedel</p>
-              <p>Sanchez Barraza Erick Fernando</p>
               <p>Tizoc Lopez Jenifer Guadalupe</p>
             </div>
 
