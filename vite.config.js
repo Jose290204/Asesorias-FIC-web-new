@@ -6,12 +6,19 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    host: true, // expone el servidor en tu red (para abrirlo desde el celular)
+    host: true, // expone el servidor en la red
+    port: 5173, // debe coincidir con SANCTUM_STATEFUL_DOMAINS (localhost:5173)
+    strictPort: true, // si el 5173 está ocupado, falla en vez de saltar a otro puerto
     proxy: {
+      // Laravel espera la ruta completa (/api/v1/...), por eso ya no hay "rewrite"
       '/api': {
-        target: 'http://localhost:3000', // puerto de tu backend
+        target: 'http://localhost:8080', // Nginx del backend de Laravel
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''), // quita /api antes de reenviar
+      },
+      // La cookie CSRF de Sanctum vive fuera de /api
+      '/sanctum': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
       },
     },
   },

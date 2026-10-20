@@ -1,17 +1,19 @@
-import { Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LogoTutorias from '../../assets/Logo_tutorias.png';
 import { useAuth } from '../../context/AuthContext';
-import usuariosService from '../../Services/usuariosService';
 import ToastNotification from '../ui/ToastNotification'; // Asegúrate de ajustar esta ruta
 
 
 export default function FormularioLogin() {
-  const [user, setUser] = useState('');
-  const [nip, setNip] = useState('');
+  const [correo, setCorreo] = useState('');
+  const [password, setPassword] = useState('');
+  // true = la contraseña se ve como texto
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   // Estado unificado para controlar el Toast
   const [toast, setToast] = useState({
@@ -19,8 +21,6 @@ export default function FormularioLogin() {
     message: '',
     type: 'info'
   });
-
-  const navigate = useNavigate();
 
   // Función para cerrar el Toast
   const handleCloseToast = () => {
@@ -36,10 +36,24 @@ export default function FormularioLogin() {
     });
   };
 
+  // Convierte cualquier error de la API en un texto listo para mostrar
+  const mensajeDeError = (error) => {
+    const data = error.response?.data;
+
+    // Sin respuesta: el backend está apagado o no hay red
+    if (!data) return 'No se pudo conectar con el servidor';
+    // Errores del servidor (5xx): no se muestra el detalle técnico al usuario
+    if (error.response.status >= 500) return 'Error del servidor. Intenta de nuevo en un momento';
+    // 422: un mensaje por campo (el de credenciales viene en español)
+    if (data.errors) return Object.values(data.errors).flat().join(' ');
+    // 403 (cuenta inactiva), 429 (demasiados intentos)...: ya vienen en español
+    return data.message ?? 'Ocurrió un error inesperado';
+  };
+
   async function handleSubmit(e) {
     e.preventDefault();
 
-    if (!user || !nip) {
+    if (!correo || !password) {
       showToast('Por favor rellene los campos', 'error');
       return;
     }
@@ -47,35 +61,15 @@ export default function FormularioLogin() {
     setLoading(true);
 
     try {
-      // Llamamos a la API
-      const response = await usuariosService.post('/login', {
-        usuario: user,
-        password_hash: nip
-      });
-
-      const data = response.data;
-
-
-        login(data.usuario);
-
-        // Notificación de éxito
-        showToast('Inicio de sesión exitoso', 'success');
-        
-        setTimeout(() => {
-        navigate('/admin/asesorias');
-      }, 1000);
-      
+      // login() pide la cookie CSRF e inicia sesión. Al guardar al usuario en el
+      // contexto, App.jsx redirige solo según su rol: aquí no hay que navegar.
+      await login(correo, password);
     } catch (error) {
-      if (error.response) {
-        const mensaje = error.response.data.details || error.response.data.message || 'Credenciales incorrectas';
-        showToast(mensaje, 'error');
-      } else {
-        showToast('No se pudo conectar con el servidor', 'error');
-      }
-    } finally {
+      showToast(mensajeDeError(error), 'error');
       setLoading(false);
     }
-  } 
+    // En el éxito no se quita "loading": este formulario desaparece al cambiar la ruta.
+  }
 
   return (
     <div className="bg-white rounded-[15px] shadow-[0_0_7px_4px_rgba(158,158,158,0.3)] w-[300px] sm:w-[380px] h-[450px] sm:h-[530px] p-[25px] sm:p-[40px] flex flex-col items-center">
@@ -96,14 +90,15 @@ export default function FormularioLogin() {
 
       <form onSubmit={handleSubmit} className="w-full flex flex-col">
 
-        {/* Input No. Cuenta */}
+        {/* Input Correo institucional */}
         <div className="relative flex items-center">
-          <User className="absolute left-[15px] w-[18px] h-[18px] text-[#244B91]" />
+          <Mail className="absolute left-[15px] w-[18px] h-[18px] text-[#244B91]" />
           <input
-            type="text"
-            placeholder="No. Cuenta"
-            value={user}
-            onChange={(e) => setUser(e.target.value)}
+            type="email"
+            autoComplete="username"
+            placeholder="Correo institucional"
+            value={correo}
+            onChange={(e) => setCorreo(e.target.value)}
             className="w-full h-[45px] pl-[45px] pr-[15px] bg-[#F0F0F0] text-[14px] text-slate-700 placeholder-[#A8A7A7] rounded-[5px] border border-[#C7C6C6] focus:border-[#A5A5A5] focus:outline-none transition-colors"
           />
         </div>
@@ -111,20 +106,44 @@ export default function FormularioLogin() {
         {/* Separación exacta entre inputs */}
         <div className="h-[27px]"></div>
 
-        {/* Input NIP */}
+        {/* Input Contraseña con ojito */}
         <div className="relative flex items-center">
           <Lock className="absolute left-[15px] w-[18px] h-[18px] text-[#D4A017]" />
           <input
-            type="password"
-            placeholder="NIP"
-            value={nip}
-            onChange={(e) => setNip(e.target.value)}
-            className="w-full h-[45px] pl-[45px] pr-[15px] bg-[#F0F0F0] text-[14px] text-slate-700 placeholder-[#A8A7A7] rounded-[5px] border border-[#C7C6C6] focus:border-[#A5A5A5] focus:outline-none transition-colors"
+            // type cambia entre "text" y "password" según el ojo
+            type={mostrarPassword ? 'text' : 'password'}
+            autoComplete="current-password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            // pr-[45px] deja espacio a la derecha para que el texto no quede bajo el ojo
+            className="w-full h-[45px] pl-[45px] pr-[45px] bg-[#F0F0F0] text-[14px] text-slate-700 placeholder-[#A8A7A7] rounded-[5px] border border-[#C7C6C6] focus:border-[#A5A5A5] focus:outline-none transition-colors"
           />
+          {/* type="button" evita que el ojo envíe el formulario */}
+          <button
+            type="button"
+            onClick={() => setMostrarPassword((v) => !v)}
+            aria-label={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            className="absolute right-[10px] p-[5px] text-slate-500 hover:text-slate-700"
+          >
+            {mostrarPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
+          </button>
         </div>
 
-        {/* Separación antes del botón */}
-        <div className="h-[35px]"></div>
+        {/* Enlace a la recuperación, justo debajo de la contraseña.
+            type="button" evita que dispare el envío del formulario */}
+        <div className="flex justify-end mt-[8px]">
+          <button
+            type="button"
+            onClick={() => navigate('/recuperar-contrasena')}
+            className="text-[13px] text-[#244B91] hover:underline"
+          >
+            Olvidé mi contraseña
+          </button>
+        </div>
+
+        {/* Separación antes del botón (se redujo de 35 a 20 por el enlace de arriba) */}
+        <div className="h-[20px]"></div>
 
         {/* Botón INGRESAR */}
         <div className="flex justify-center">

@@ -9,6 +9,7 @@ import SkeletonApp from './components/ui/SkeletonApp';
 
 // vistas
 import Login from './modules/auth/view/Login';
+import RecuperarContrasena from './modules/auth/view/RecuperarContrasena';
 
 // Vistas del Dashboard admin
 import Conocenos from './modules/paginasInicio/Conocenos';
@@ -36,7 +37,7 @@ import SolicitudesEnRevision from './modules/tutorias/rolEstudiante/views/Solici
 
 // IDs `roles`
 const ROLES_ADMIN = [1, 2];
-const ROLES_ASESOR = [3, 5];
+const ROLES_ASESOR = [3];
 const ROL_ESTUDIANTE = 4;
 
 // Decide a qué ruta mandar según el rol del usuario
@@ -66,6 +67,8 @@ export default function App() {
 
         {/* Ruta pública */}
         <Route path="/conocenos" element={<Conocenos />} />
+
+        <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
 
         {/* Rutas del Administrador */}
         <Route
