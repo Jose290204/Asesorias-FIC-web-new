@@ -28,3 +28,12 @@ export const formatearFechaSolicitud = (valor) => {
     const texto = fecha.locale('es').format('dddd DD/MM/YY');
     return texto.charAt(0).toUpperCase() + texto.slice(1);
 };
+
+const MESES_CORTOS = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+
+// Formato corto para tarjetas: "27/OCT/2026" (el mismo que usa Solicitudes pendientes del asesor)
+export const formatearFechaVisible = (valor) => {
+    const fecha = parsearFechaSolicitud(valor);
+    if (!fecha) return valor || 'N/A';
+    return `${String(fecha.date()).padStart(2, '0')}/${MESES_CORTOS[fecha.month()]}/${fecha.year()}`;
+};

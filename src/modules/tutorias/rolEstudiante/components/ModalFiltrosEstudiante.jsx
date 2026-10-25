@@ -8,54 +8,31 @@ const MENU_CON_SCROLL = {
     slotProps: { paper: { sx: { maxHeight: 240 } } }
 };
 
-// Convierte ["A, B", "C"] o "A / B" en ["A", "B", "C"] sin repetidos
-const aLista = (valor) =>
-    [...new Set(
-        (Array.isArray(valor) ? valor : [valor])
-            .flatMap((v) => String(v ?? '').split(/[,/]/))
-            .map((v) => v.trim())
-            .filter(Boolean)
-    )];
-
-// Datos de prueba: solo se usan si el estudiante aún no trae sus opciones
-const ESTUDIANTE_DEMO = {
-    materias: ['Programación Web', 'Bases de Datos', 'Estructura de Datos', 'Redes de Computadoras'],
-    horarios: ['08:00 - 09:00', '10:00 - 11:00', '12:00 - 13:00', '16:00 - 17:00'],
-    modalidades: ['Presencial', 'Virtual']
-};
-
 /**
  * Modal de filtros del estudiante: materia, horario y modalidad.
  *
- * Las opciones salen SOLO de la info del estudiante (la que llega al iniciar sesión):
- *   estudiante = { materias: [...], horarios: [...], modalidades: [...] }
- * Cada lista puede ser un array o un texto separado por comas o "/".
- *
  * Props:
  *  - open, onClose
- *  - estudiante: info del estudiante con sus opciones
- *  - filtros: { materia, horario, modalidad } (valores actuales)
+ *  - opciones: { materias, horarios, modalidades }, cada lista de { valor, etiqueta }
+ *      "valor" es lo que se guarda en el filtro y se manda al backend (id o texto del enum);
+ *      "etiqueta" es lo que ve el usuario.
+ *  - filtros: { materia, horario, modalidad } (valores actuales; "" = sin filtrar)
  *  - onChange: (e) => void   (e.target.name / e.target.value)
  *  - onApply, onClear
  */
 export default function ModalFiltrosEstudiante({
     open,
     onClose,
-    estudiante,
+    opciones = { materias: [], horarios: [], modalidades: [] },
     filtros = { materia: '', horario: '', modalidad: '' },
     onChange,
     onApply,
     onClear
 }) {
-    const opcionesDe = (clave) => {
-        const propias = aLista(estudiante?.[clave]);
-        return propias.length > 0 ? propias : ESTUDIANTE_DEMO[clave];
-    };
-
     const campos = [
-        { name: 'materia', label: 'Materia', placeholder: 'Todas las materias', opciones: opcionesDe('materias') },
-        { name: 'horario', label: 'Horario', placeholder: 'Todos los horarios', opciones: opcionesDe('horarios') },
-        { name: 'modalidad', label: 'Modalidad', placeholder: 'Todas las modalidades', opciones: opcionesDe('modalidades') }
+        { name: 'materia', label: 'Materia', placeholder: 'Todas las materias', lista: opciones.materias },
+        { name: 'horario', label: 'Horario', placeholder: 'Todos los horarios', lista: opciones.horarios },
+        { name: 'modalidad', label: 'Modalidad', placeholder: 'Todas las modalidades', lista: opciones.modalidades }
     ];
 
     return (
@@ -98,9 +75,9 @@ export default function ModalFiltrosEstudiante({
                         <MenuItem value="">
                             <em>{campo.placeholder}</em>
                         </MenuItem>
-                        {campo.opciones.map((opcion) => (
-                            <MenuItem key={opcion} value={opcion}>
-                                {opcion}
+                        {campo.lista.map((opcion) => (
+                            <MenuItem key={opcion.valor} value={opcion.valor}>
+                                {opcion.etiqueta}
                             </MenuItem>
                         ))}
                     </TextField>

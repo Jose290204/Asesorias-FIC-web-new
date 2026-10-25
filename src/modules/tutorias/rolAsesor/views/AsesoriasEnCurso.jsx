@@ -8,6 +8,7 @@ import InputBuscar from "../../../../components/ui/InputBuscar";
 import ToastNotification from "../../../../components/ui/ToastNotification";
 import { ModalCrearAsesoria } from "../components/ModalesAsesoriasEnCurso";
 import TarjetaAsesoriasEnCurso from "../components/TajetaAsesoriasEnCurso";
+import { ASESORIAS_EN_CURSO_PRUEBA, USAR_DATOS_PRUEBA } from "../datosPrueba";
 
 export default function AsesoriasEnCurso() {
 
@@ -39,6 +40,14 @@ export default function AsesoriasEnCurso() {
     // Trae las asesorías reales del asesor logueado
     // silencioso = recarga sin quitar la lista (se usa después de crear)
     const cargarAsesorias = useCallback(async ({ silencioso = false } = {}) => {
+
+         if (USAR_DATOS_PRUEBA) {
+            setAsesoriasEnCurso(ASESORIAS_EN_CURSO_PRUEBA);
+            setError(false);
+            setLoading(false);
+            return;
+        }
+
         try {
             if (!silencioso) setLoading(true);
             setError(false);

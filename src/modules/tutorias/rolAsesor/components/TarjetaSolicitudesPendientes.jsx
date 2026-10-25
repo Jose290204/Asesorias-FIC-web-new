@@ -1,3 +1,4 @@
+import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import Avatar from '@mui/material/Avatar';
@@ -6,6 +7,7 @@ import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
+import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 
@@ -93,8 +95,9 @@ export default function TarjetaSolicitudesPendientes({ solicitudes = [], onAcept
                     >
                         <CardContent sx={{ padding: '24px 24px 10px 24px' }}> {/* La información de la tarjeta */}
 
-                            {/* Contenedor principal de la img, nombre del alumno y email del alumno */}
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', mb: 3 }}>
+                            {/* Encabezado: avatar arriba y altura mínima, así el contenido de abajo
+                                arranca a la misma altura en todas las tarjetas */}
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '16px', mb: 2.5, minHeight: '64px' }}>
 
                                 <Avatar
                                     sx={{
@@ -111,51 +114,89 @@ export default function TarjetaSolicitudesPendientes({ solicitudes = [], onAcept
                                     {solicitud.nombre_estudiante?.charAt(0)}
                                 </Avatar>
 
-                                {/* Contenedor para separar nombre y email */}
-                                <Box sx={{ minWidth: 0 }}>
-                                    <Typography sx={{ fontSize: '16px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere' }}>
+                                {/* Contenedor para separar nombre y email (minWidth 0 permite cortar el correo) */}
+                                <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Typography
+                                        sx={{
+                                            fontSize: '16px',
+                                            fontWeight: '700',
+                                            color: '#000000',
+                                            lineHeight: 1.2,
+                                            overflowWrap: 'anywhere',
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden'
+                                        }}
+                                        title={solicitud.nombre_estudiante}
+                                    >
                                         {solicitud.nombre_estudiante}
                                     </Typography>
-                                    <Typography sx={{ fontSize: '13px', color: '#6A6A6A', overflowWrap: 'anywhere' }}>
+                                    <Typography
+                                        noWrap
+                                        title={solicitud.correo}
+                                        sx={{ fontSize: '13px', color: '#6A6A6A', mt: '2px' }}
+                                    >
                                         {solicitud.correo}
                                     </Typography>
                                 </Box>
 
                             </Box>
 
-                            {/* Contenedor principal de los datos */}
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', mb: '5px' }}>
+                            {/* Datos que el asesor necesita para decidir */}
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', mb: '5px' }}>
 
+                                {/* Materia: el dato principal */}
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                    <span className="font-bold">Materia: </span> {solicitud.materia}
+                                    <span className="font-bold">Materia: </span>
+                                    <span style={{ color: '#08338F', fontWeight: 600 }}>{solicitud.materia}</span>
                                 </Typography>
-                                <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                    <span className="font-bold">Fecha de inicio: </span> {formatearFechaVisible(solicitud.fecha_inicio)}
-                                </Typography>
-                                <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                    <span className="font-bold">Horario: </span> {solicitud.horario}
-                                </Typography>
-                                <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                    <span className="font-bold">Modalidad: </span> {solicitud.modalidad}
-                                </Typography>
+
+                                {/* Fecha y horario juntos */}
+                                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                                    <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: '#08338F', mt: '1px', flexShrink: 0 }} />
+                                    <Typography sx={{ fontSize: '15px', color: '#333333' }}>
+                                        {formatearFechaVisible(solicitud.fecha_inicio)} · {solicitud.horario}
+                                    </Typography>
+                                </Box>
+
+                                {/* Modalidad como chip */}
+                                {solicitud.modalidad && (
+                                    <Box>
+                                        <Chip
+                                            size="small"
+                                            variant="outlined"
+                                            label={solicitud.modalidad}
+                                            sx={{ borderColor: '#08338F', color: '#08338F', fontWeight: 600 }}
+                                        />
+                                    </Box>
+                                )}
 
                             </Box>
 
                         </CardContent>
 
-                        {/* Donde se ponen los botones que se ocupen, se pueden quitar o agregar más */}
+                        {/* Botones: dos columnas iguales; Aceptar con relleno y Rechazar solo con borde */}
                         <CardActions
                             sx={{
                                 padding: '0px 24px 20px 24px',
-                                justifyContent: 'flex-end',
-                                flexWrap: 'wrap',
-                                gap: '10px'
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: '10px',
+                                // CardActions mete margen izquierdo a los botones; aquí lo anulamos por el grid
+                                '& > :not(:first-of-type)': { marginLeft: 0 }
                             }}
                         >
                             <Button
-                                variant="contained"
-                                sx={{ backgroundColor: '#C42525', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-                                size="small"
+                                variant="outlined"
+                                sx={{
+                                    minHeight: 40,
+                                    color: '#C42525',
+                                    borderColor: '#C42525',
+                                    borderRadius: '5px',
+                                    textTransform: 'none',
+                                    '&:hover': { borderColor: '#9B1C1C', backgroundColor: 'rgba(196, 37, 37, 0.08)' }
+                                }}
                                 startIcon={<CloseOutlinedIcon />}
                                 onClick={(e) => handleOpenRechazar(solicitud, e)}
                             >
@@ -163,8 +204,14 @@ export default function TarjetaSolicitudesPendientes({ solicitudes = [], onAcept
                             </Button>
                             <Button
                                 variant="contained"
-                                sx={{ backgroundColor: '#2E7D32', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-                                size="small"
+                                sx={{
+                                    minHeight: 40,
+                                    backgroundColor: '#2E7D32',
+                                    color: '#ffffff',
+                                    borderRadius: '5px',
+                                    textTransform: 'none',
+                                    '&:hover': { backgroundColor: '#1B5E20' }
+                                }}
                                 startIcon={<CheckOutlinedIcon />}
                                 onClick={(e) => handleOpenAceptar(solicitud, e)}
                             >

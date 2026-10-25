@@ -5,17 +5,20 @@ import PersonIcon from '@mui/icons-material/Person';
 import { Avatar, Button, Divider, Drawer, IconButton, ListItemIcon, Menu, MenuItem } from '@mui/material';
 import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import LogoUas from '../../assets/logo_uas.png';
 import AsesorSidebar from '../../components/navigation/moduloTutorias/AsesorSidebar';
 import { useAuth } from '../../context/AuthContext';
 import { CatalogosProvider } from '../../context/CatalogosContext';
 
 // Misma ruta que usa "Perfil" en el sidebar
 const RUTA_PERFIL = '/tutorias/asesor/perfil-asesor';
+// Pantalla de inicio del asesor (el logo lleva aquí)
+const RUTA_INICIO = '/tutorias/asesor/solicitudes-pendientes';
 
 export default function AsesorLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { logout, user } = useAuth();
+  const { logout, usuario } = useAuth();
 
   // El drawer está abierto solo mientras estés en la ruta donde se abrió
   const [openPath, setOpenPath] = useState(null);
@@ -27,12 +30,11 @@ export default function AsesorLayout() {
   const userMenuOpen = Boolean(anchorEl);
   const closeUserMenu = () => setAnchorEl(null);
 
-  // TODO: ajusta los campos a como venga el usuario en tu AuthContext
-  const nombreUsuario = user?.nombre ?? user?.name ?? user?.nombreCompleto ?? 'Asesor';
+  // El nombre sale de la sesión (/auth/me)
+  const nombreUsuario = usuario?.nombre ?? 'Asesor';
 
   const handleLogout = () => {
     logout();
-    navigate('/', { replace: true });
   };
 
   const handleVerPerfil = () => {
@@ -65,7 +67,14 @@ export default function AsesorLayout() {
         >
           <MenuIcon />
         </IconButton>
-        <span className="font-semibold">Asesorías FIC</span>
+        <Button
+          color="inherit"
+          onClick={() => navigate(RUTA_INICIO)}
+          sx={{ textTransform: 'none', gap: 1, px: 1, minWidth: 0 }}
+        >
+          <img src={LogoUas} alt="Logo UAS" className="h-8 w-auto object-contain" />
+          <span className="font-semibold">Asesorías FIC</span>
+        </Button>
 
         {/* Empuja el usuario a la derecha */}
         <div className="flex-1" />
@@ -107,7 +116,7 @@ export default function AsesorLayout() {
         </Menu>
       </header>
 
-      <main className="min-w-0 flex-1">
+      <main className="min-w-0 flex-1 bg-gray-100">
         <Outlet />
       </main>
     </div>

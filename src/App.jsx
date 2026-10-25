@@ -1,10 +1,10 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import fondoInicio from './assets/fondo_inicio.jpeg';
 import { useAuth } from './context/AuthContext';
 import AdminLayout from './layouts/moduloTutorias/AdminLayout';
 import AsesorLayout from './layouts/moduloTutorias/AsesorLayout';
 import EstudianteLayout from './layouts/moduloTutorias/EstudianteLayout';
 
-import Loading from './components/ui/Loading';
 import SkeletonApp from './components/ui/SkeletonApp';
 
 // vistas
@@ -24,6 +24,7 @@ import Solicitudes from './modules/tutorias/rolAdministrador/views/Solicitudes';
 
 // Vistas de asesor
 import AsesoriasEnCurso from './modules/tutorias/rolAsesor/views/AsesoriasEnCurso';
+import DisponibilidadAsesor from './modules/tutorias/rolAsesor/views/DisponibilidadAsesor';
 import HistorialAsesorias from './modules/tutorias/rolAsesor/views/HistorialAsesorias';
 import PerfilAsesor from './modules/tutorias/rolAsesor/views/PerfilAsesor';
 import SolicitudesPendientes from './modules/tutorias/rolAsesor/views/SolicitudesPendientes';
@@ -35,25 +36,27 @@ import PerfilEstudiante from './modules/tutorias/rolEstudiante/views/PerfilEstud
 import SolicitarAsesoria from './modules/tutorias/rolEstudiante/views/SolicitarAsesoria';
 import SolicitudesEnRevision from './modules/tutorias/rolEstudiante/views/SolicitudesEnRevision';
 
+const precargaFondoLogin = new Image();
+precargaFondoLogin.src = fondoInicio;
 // IDs `roles`
 const ROLES_ADMIN = [1, 2];
 const ROLES_ASESOR = [3];
 const ROL_ESTUDIANTE = 4;
 
-// Decide a qué ruta mandar según el rol del usuario
+// Decide a qué pantalla mandar según el rol. Va directo a la vista final:
+// si apuntara al layout, se haría una segunda redirección (la del "index") y se vería un destello.
 function getRutaPorRol(rol) {
-  if (ROLES_ADMIN.includes(rol)) return '/admin';
-  if (ROLES_ASESOR.includes(rol)) return '/tutorias/asesor';
-  if (rol === ROL_ESTUDIANTE) return '/tutorias/estudiante';
+  if (ROLES_ADMIN.includes(rol)) return '/admin/asesorias';
+  if (ROLES_ASESOR.includes(rol)) return '/tutorias/asesor/solicitudes-pendientes';
+  if (rol === ROL_ESTUDIANTE) return '/tutorias/estudiante/solicitar-asesorias';
   return '/';
 }
 
 export default function App() {
   const { usuario, rol, loading } = useAuth();
 
-  if (loading) {
-    const mostrarSkeleton = localStorage.getItem('_uix');
-    return mostrarSkeleton ? <SkeletonApp /> : <Loading mensaje="Cargando..." pantallaCompleta />;
+ if (loading && localStorage.getItem('_uix')) {
+    return <SkeletonApp />;
   }
 
   return (
@@ -101,6 +104,7 @@ export default function App() {
         >
           <Route index element={<Navigate to="/tutorias/asesor/solicitudes-pendientes" replace />} />
           <Route path="solicitudes-pendientes" element={<SolicitudesPendientes />} />
+          <Route path="disponibilidad" element={<DisponibilidadAsesor />} />
           <Route path="asesorias-en-curso" element={<AsesoriasEnCurso />} />
           <Route path="historial-de-asesorias" element={<HistorialAsesorias />} />
           <Route path="perfil-asesor" element={<PerfilAsesor />} />

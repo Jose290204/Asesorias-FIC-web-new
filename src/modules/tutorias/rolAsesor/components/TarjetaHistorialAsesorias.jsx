@@ -171,21 +171,27 @@ export default function TarjetaHistorialAsesorias({ historial = [], onActualizar
                             </Box>
 
                         </CardContent>
-
-                        {/* Donde se ponen los botones que se ocupen, se pueden quitar o agregar mas */}
+                        {/* Botones: dos columnas iguales; Chat con relleno y Material solo con borde */}
                         <CardActions
                             sx={{
-                                //Para poner los botones a un lado
                                 padding: '0px 24px 20px 24px',
-                                justifyContent: 'flex-end',
-                                flexWrap: 'wrap',
-                                gap: '10px'
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: '10px',
+                                // CardActions mete margen izquierdo a los botones; aquí lo anulamos por el grid
+                                '& > :not(:first-of-type)': { marginLeft: 0 }
                             }}
                         >
                             <Button
-                                variant="contained"
-                                sx={{ backgroundColor: '#C49E0D', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-                                size="small"
+                                variant="outlined"
+                                sx={{
+                                    minHeight: 40,
+                                    color: '#8A6D2B',
+                                    borderColor: '#C49E0D',
+                                    borderRadius: '5px',
+                                    textTransform: 'none',
+                                    '&:hover': { borderColor: '#8A6D2B', backgroundColor: 'rgba(196, 158, 13, 0.08)' }
+                                }}
                                 startIcon={<FileDownloadOutlinedIcon />}
                                 onClick={(e) => handleOpenMaterial(solicitud, e)}
                             >
@@ -193,8 +199,7 @@ export default function TarjetaHistorialAsesorias({ historial = [], onActualizar
                             </Button>
                             <Button
                                 variant="contained"
-                                sx={{ color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-                                size="small"
+                                sx={{ minHeight: 40, color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
                                 startIcon={<ChatOutlinedIcon />}
                                 onClick={(e) => handleOpenChat(solicitud, e)}
                             >

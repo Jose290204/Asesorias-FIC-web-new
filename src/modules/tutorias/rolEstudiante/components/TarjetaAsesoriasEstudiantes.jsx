@@ -1,3 +1,4 @@
+import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import Avatar from '@mui/material/Avatar';
@@ -6,12 +7,14 @@ import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
+import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import ModalChatAsesoriaEstudiante from '../components/ModalChatAsesoriaEstudiante';
 import ModalMaterialEstudiante from '../components/ModalMaterialEstudiante';
+import { formatearFechaVisible } from '../utils/fechaSolicitud';
 
 // Las asesorías las carga la vista; la tarjeta solo las muestra.
 export default function TarjetaAsesoriasEstudiantes({ asesorias = [] }) {
@@ -89,8 +92,9 @@ export default function TarjetaAsesoriasEstudiantes({ asesorias = [] }) {
                             boxShadow: '0px 4px 12.3px rgba(0, 0, 0, 0.20)',
                         }}
                     >
-                        <CardContent sx={{ padding: '24px 24px 10px 24px' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', mb: 3 }}>
+                        <CardContent sx={{ padding: '24px 24px 16px 24px' }}>
+                            {/* Encabezado con altura fija: así todas las tarjetas quedan alineadas aunque el nombre ocupe 1 o 2 líneas */}
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '16px', mb: 2, minHeight: '72px' }}>
                                 <Avatar
                                     sx={{
                                         backgroundColor: '#EBD9B4',
@@ -98,59 +102,101 @@ export default function TarjetaAsesoriasEstudiantes({ asesorias = [] }) {
                                         width: 50,
                                         height: 50,
                                         fontSize: '24px',
-                                        fontWeight: 'bold'
+                                        fontWeight: 'bold',
+                                        flexShrink: 0
                                     }}
                                 >
                                     {asesoria.asesor ? asesoria.asesor.charAt(0) : "A"}
                                 </Avatar>
 
-                                <Box>
+                                <Box sx={{ minWidth: 0 }}>
                                     <Typography sx={{ fontSize: '11px', fontWeight: 700, color: '#08338F', textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1.2 }}>
                                         Asesor
                                     </Typography>
-                                    <Typography sx={{ fontSize: '16px', fontWeight: "700", color: '#000000', lineHeight: 1.2 }}>
+                                    <Typography
+                                        title={asesoria.asesor}
+                                        sx={{
+                                            fontSize: '16px',
+                                            fontWeight: '700',
+                                            color: '#000000',
+                                            lineHeight: 1.2,
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden'
+                                        }}
+                                    >
                                         {asesoria.asesor}
                                     </Typography>
-                                    <Typography sx={{ fontSize: '13px', color: '#6A6A6A' }}>
+                                    <Typography noWrap sx={{ fontSize: '13px', color: '#6A6A6A' }}>
                                         {asesoria.email}
                                     </Typography>
                                 </Box>
                             </Box>
 
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', mb: '5px' }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', mb: '5px' }}>
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
                                     <span className="font-bold">Materia: </span> {asesoria.materia}
                                 </Typography>
-                                <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                    <span className="font-bold">Horario: </span> {asesoria.horario || "N/A"}
-                                </Typography>
-                                <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                    <span className="font-bold">Modalidad: </span> {asesoria.modalidad || "N/A"}
-                                </Typography>
+
+                                {/* Fecha de inicio y horario */}
+                                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                                    <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: '#08338F', mt: '1px', flexShrink: 0 }} />
+                                    <Typography sx={{ fontSize: '15px', color: '#333333' }}>
+                                        {formatearFechaVisible(asesoria.fechaInicio ?? asesoria.fecha)}
+                                        {asesoria.horario && ` · ${asesoria.horario}`}
+                                    </Typography>
+                                </Box>
+
+                                {/* Chips: modalidad y estado */}
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    {asesoria.modalidad && (
+                                        <Chip
+                                            size="small"
+                                            variant="outlined"
+                                            label={asesoria.modalidad}
+                                            sx={{ borderColor: '#08338F', color: '#08338F', fontWeight: 600 }}
+                                        />
+                                    )}
+                                    <Chip
+                                        size="small"
+                                        variant="outlined"
+                                        label={asesoria.estado || 'En curso'}
+                                        sx={{ borderColor: '#2E7D32', color: '#2E7D32', fontWeight: 600 }}
+                                    />
+                                </Box>
                             </Box>
                         </CardContent>
 
+                                                {/* Botones: dos columnas iguales; Chat con relleno y Material solo con borde */}
                         <CardActions
                             sx={{
                                 padding: '0px 24px 20px 24px',
-                                justifyContent: 'flex-end',
-                                flexWrap: 'wrap',
-                                gap: '10px'
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: '10px',
+                                // CardActions mete margen izquierdo a los botones; aquí lo anulamos por el grid
+                                '& > :not(:first-of-type)': { marginLeft: 0 }
                             }}
                         >
                             <Button
-                                variant="contained"
-                                sx={{ backgroundColor: '#C49E0D', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-                                size="small"
+                                variant="outlined"
+                                sx={{
+                                    minHeight: 40,
+                                    color: '#8A6D2B',
+                                    borderColor: '#C49E0D',
+                                    borderRadius: '5px',
+                                    textTransform: 'none',
+                                    '&:hover': { borderColor: '#8A6D2B', backgroundColor: 'rgba(196, 158, 13, 0.08)' }
+                                }}
                                 startIcon={<FileDownloadOutlinedIcon />}
                                 onClick={(e) => handleOpenMaterial(asesoria, e)}
                             >
-                                Material adicional
+                                Material
                             </Button>
                             <Button
                                 variant="contained"
-                                sx={{ color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-                                size="small"
+                                sx={{ minHeight: 40, color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
                                 startIcon={<ChatOutlinedIcon />}
                                 onClick={(e) => handleOpenChat(asesoria, e)}
                             >

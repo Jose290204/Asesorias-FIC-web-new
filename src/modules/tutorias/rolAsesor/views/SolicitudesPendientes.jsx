@@ -3,6 +3,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 
+import { SOLICITUDES_PRUEBA, USAR_DATOS_PRUEBA } from '../datosPrueba';
+
 // Ajusta estas rutas según dónde esté ubicado este archivo en tu proyecto
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import { solicitudesService } from '../../../../Services/solicitudesService';
@@ -29,6 +31,14 @@ export default function SolicitudesPendientes() {
 
     // silencioso = recarga sin quitar la lista (se usa después de aceptar/rechazar)
     const cargarSolicitudes = useCallback(async ({ silencioso = false } = {}) => {
+
+        if (USAR_DATOS_PRUEBA) {
+            setSolicitudes(SOLICITUDES_PRUEBA);
+            setError(false);
+            setLoading(false);
+            return;
+        }
+        
         if (!id_asesor) return;
 
         try {

@@ -3,13 +3,17 @@ import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
+import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 
@@ -36,6 +40,9 @@ export default function TarjetaAsesoriasEnCurso({
     const [modalMaterialOpen, setModalMaterialOpen] = useState(false);
     const [modalEliminarOpen, setModalEliminarOpen] = useState(false);
     const [modalChatOpen, setModalChatOpen] = useState(false);
+
+    // Menú ⋮ de la tarjeta (Completar / Editar / Eliminar)
+    const [menuAnchor, setMenuAnchor] = useState(null);
 
     const [toast, setToast] = useState({
         open: false,
@@ -68,6 +75,20 @@ export default function TarjetaAsesoriasEnCurso({
     const handleOpenEliminar = openModal(setModalEliminarOpen);
 
     const handleOpenChat = openModal(setModalChatOpen);
+
+    // Abre el menú ⋮ guardando de qué tarjeta vino
+    const handleOpenMenu = (asesoria, event) => {
+        setSelectedAsesoria(asesoria);
+        setMenuAnchor(event.currentTarget);
+    };
+
+    const closeMenu = () => setMenuAnchor(null);
+
+    // Cierra el menú y abre el modal que corresponda
+    const handleMenuAccion = (abrirModal) => (event) => {
+        closeMenu();
+        abrirModal(selectedAsesoria, event);
+    };
 
     // Si esta función lanza un error, el chat quita el mensaje y muestra un toast de error.
     const handleSendMessage = async (asesoria, mensaje) => {
@@ -128,38 +149,22 @@ export default function TarjetaAsesoriasEnCurso({
                                     {asesoria.materia}
                                 </Typography>
 
-                                {/* Acciones secundarias: Editar y Eliminar */}
-                                <Box sx={{ display: 'flex', flexShrink: 0, mr: '-8px', mt: '-6px' }}>
-                                    <Tooltip title="Editar">
-                                        <IconButton
-                                            size="small"
-                                            aria-label="Editar"
-                                            sx={{ color: '#08338F' }}
-                                            onClick={(e) => handleOpenInfo(asesoria, e)}
-                                        >
-                                            <EditOutlinedIcon fontSize="small" />
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Eliminar">
-                                        <IconButton
-                                            size="small"
-                                            aria-label="Eliminar"
-                                            sx={{ color: '#C42525' }}
-                                            onClick={(e) => handleOpenEliminar(asesoria, e)}
-                                        >
-                                            <DeleteOutlineOutlinedIcon fontSize="small" />
-                                        </IconButton>
-                                    </Tooltip>
-                                </Box>
+                                {/* Un solo botón ⋮ con las acciones poco frecuentes */}
+                                <IconButton
+                                    aria-label="Más acciones"
+                                    aria-haspopup="true"
+                                    onClick={(e) => handleOpenMenu(asesoria, e)}
+                                    sx={{ flexShrink: 0, mr: '-12px', mt: '-10px', color: '#555555' }}
+                                >
+                                    <MoreVertIcon />
+                                </IconButton>
                             </Box>
 
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                    
                                     <span className="font-bold">Alumno: </span> {asesoria.estudiante}
                                 </Typography>
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                                    
                                     <span className="font-bold">Inicio: </span> {asesoria.fecha_inicio_formateada}
                                 </Typography>
                                 <Typography sx={{ fontSize: '15px', color: '#333333' }}>
@@ -171,54 +176,68 @@ export default function TarjetaAsesoriasEnCurso({
                             </Box>
                         </CardContent>
 
+                         {/* Botones: dos columnas iguales; Chat con relleno y Material solo con borde */}
                         <CardActions
                             sx={{
                                 padding: '0px 24px 20px 24px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                width: '100%'
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: '10px',
+                                // CardActions mete margen izquierdo a los botones; aquí lo anulamos por el grid
+                                '& > :not(:first-of-type)': { marginLeft: 0 }
                             }}
                         >
-                            <Box
+                            <Button
+                                variant="outlined"
                                 sx={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(2, 1fr)',
-                                    gap: '10px',
-                                    width: '100%'
+                                    minHeight: 40,
+                                    color: '#8A6D2B',
+                                    borderColor: '#C49E0D',
+                                    borderRadius: '5px',
+                                    textTransform: 'none',
+                                    '&:hover': { borderColor: '#8A6D2B', backgroundColor: 'rgba(196, 158, 13, 0.08)' }
                                 }}
+                                startIcon={<FileDownloadOutlinedIcon />}
+                                onClick={(e) => handleOpenMaterial(asesoria, e)}
                             >
-                                <Button
-                                    variant="contained"
-                                    sx={{ color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-                                    size="small"
-                                    startIcon={<ChatOutlinedIcon />}
-                                    onClick={(e) => handleOpenChat(asesoria, e)}
-                                >
-                                    Chat
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    sx={{ backgroundColor: '#C49E0D', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-                                    size="small"
-                                    startIcon={<FileDownloadOutlinedIcon />}
-                                    onClick={(e) => handleOpenMaterial(asesoria, e)}
-                                >
-                                    Material
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    sx={{ gridColumn: '1 / -1', backgroundColor: '#2E7D32', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-                                    size="small"
-                                    startIcon={<CheckOutlinedIcon />}
-                                    onClick={(e) => handleOpenCompletar(asesoria, e)}
-                                >
-                                    Completar
-                                </Button>
-                            </Box>
+                                Material
+                            </Button>
+                            <Button
+                                variant="contained"
+                                sx={{ minHeight: 40, color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
+                                startIcon={<ChatOutlinedIcon />}
+                                onClick={(e) => handleOpenChat(asesoria, e)}
+                            >
+                                Chat
+                            </Button>
                         </CardActions>
                     </Card>
                 ))}
             </Box>
+
+            {/* Menú ⋮ compartido por todas las tarjetas */}
+            <Menu
+                disableScrollLock
+                anchorEl={menuAnchor}
+                open={Boolean(menuAnchor)}
+                onClose={closeMenu}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+                <MenuItem onClick={handleMenuAccion(handleOpenCompletar)} sx={{ minHeight: 44 }}>
+                    <ListItemIcon><CheckOutlinedIcon fontSize="small" sx={{ color: '#2E7D32' }} /></ListItemIcon>
+                    Completar asesoría
+                </MenuItem>
+                <MenuItem onClick={handleMenuAccion(handleOpenInfo)} sx={{ minHeight: 44 }}>
+                    <ListItemIcon><EditOutlinedIcon fontSize="small" sx={{ color: '#08338F' }} /></ListItemIcon>
+                    Editar información
+                </MenuItem>
+                <Divider />
+                <MenuItem onClick={handleMenuAccion(handleOpenEliminar)} sx={{ minHeight: 44, color: '#C42525' }}>
+                    <ListItemIcon><DeleteOutlineOutlinedIcon fontSize="small" sx={{ color: '#C42525' }} /></ListItemIcon>
+                    Eliminar asesoría
+                </MenuItem>
+            </Menu>
 
             <ModalInfoAsesoria
                 open={modalInfoOpen}

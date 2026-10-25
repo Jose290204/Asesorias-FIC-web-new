@@ -1,15 +1,18 @@
-import { useState, useEffect } from "react";
+import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
+import Button from '@mui/material/Button';
+import Fab from '@mui/material/Fab';
+import { useCallback, useEffect, useState } from "react";
 import BotonFiltro from "../../../../components/ui/BotonFlitro";
-import TablaAsesorias from "../components/TablaAsesorias";
 import InputBuscar from "../../../../components/ui/InputBuscar";
-import ModalFiltros from "../../../../components/ui/ModalFiltros";
-import {asesoriasService} from "../services/asesoriasService1" 
-import ModalCargaExcel from "../components/ModalCargaExel";
+import ModalFiltrosAdmin from "../components/ModalFiltrosAdmin";
+import TablaAsesorias from "../components/TablaAsesorias";
+import { asesoriasService } from "../services/asesoriasService1";
 import { catalogoService } from "../services/catalogoService";
 
 // Ajusta esta ruta si tu archivo de modales está en otra carpeta
-import { ModalCrearAsesoria } from "../components/ModalesAsesorias";
 import ToastNotification from "../../../../components/ui/ToastNotification";
+import { ModalCrearAsesoria } from "../components/ModalesAsesorias";
+import { ASESORIAS_ADMIN_PRUEBA, USAR_DATOS_PRUEBA_ADMIN } from "../datosPrueba";
 
 const initialFiltros = {
   licenciatura: "",
@@ -23,7 +26,6 @@ export default function Asesorias() {
   const [asesorias, setAsesorias] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [openModalFiltros, setopenModalFiltros] = useState(false);
-  const [modalExcelOpen, setModalExcelOpen] = useState(false);
   const [modalCrearOpen, setModalCrearOpen] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [filtros, setFiltros] = useState(initialFiltros);
@@ -43,9 +45,31 @@ export default function Asesorias() {
   const [horarios, setHorarios] = useState([]);
   const [razones, setRazones] = useState([]);
 
-  // Carga de catálogo e información al montar el componente
+  // Carga las asesorías: con datos de prueba si el interruptor está activo
+  const cargarAsesorias = useCallback(async () => {
+    if (USAR_DATOS_PRUEBA_ADMIN) {
+      setAsesorias(ASESORIAS_ADMIN_PRUEBA);
+      setCargando(false);
+      return;
+    }
+
+    try {
+      const data = await asesoriasService.getAsesoriasEnCurso();
+      setAsesorias(data || []);
+    } catch (error) {
+      console.error("Error al obtener las asesorías:", error);
+    } finally {
+      setCargando(false);
+    }
+  }, []);
+
+  // Quita una asesoría de la lista (solo se usa con datos de prueba)
+  const quitarAsesoria = (id) => {
+    setAsesorias((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  // Carga de catálogos e información al montar el componente
   useEffect(() => {
-    // Cargar catálogos desde el servicio
     const licData = catalogoService.getLicenciaturas();
     const grpData = catalogoService.getGrupos();
     const modData = catalogoService.getModalidades();
@@ -59,18 +83,8 @@ export default function Asesorias() {
     setHorarios(horData);
     setRazones(razData);
 
-    // Cargar asesorías usando el nuevo método del servicio
-    asesoriasService.getAsesoriasEnCurso()
-      .then((data) => {
-        setAsesorias(data || []);
-      })
-      .catch((error) => {
-        console.error("Error al obtener las asesorías:", error);
-      })
-      .finally(() => {
-        setCargando(false);
-      });
-  }, []);
+    cargarAsesorias();
+  }, [cargarAsesorias]);
 
   const showToast = (message, type = "info") => {
     setToast({ open: true, message, type });
@@ -87,20 +101,10 @@ export default function Asesorias() {
     setopenModalFiltros(true);
   };
 
-  const handleOpenModalExcel = (e) => {
-    if (e?.currentTarget) e.currentTarget.blur();
-    document.activeElement?.blur();
-    setModalExcelOpen(true);
-  };
-
   const handleOpenModalCrear = (e) => {
     if (e?.currentTarget) e.currentTarget.blur();
     document.activeElement?.blur();
     setModalCrearOpen(true);
-  };
-
-  const handleExcelData = (datosCargados) => {
-    console.log("Datos cargados desde Excel:", datosCargados);
   };
 
   // Aquí va tu llamada a la API para crear la asesoría (y de ahí tomar el id real)
@@ -139,18 +143,13 @@ export default function Asesorias() {
     }
   };
 
-  const handleFocus = (e) => {
-    e.target.size = 5;
-  };
-
-  const handleBlur = (e) => {
-    e.target.size = 1;
-  };
-
-  const handleSelectOption = (e) => {
-    handleChange(e);
-    e.target.size = 1;
-    e.target.blur();
+  // Listas para el modal de filtros: cada opción es { valor, etiqueta }
+  const opcionesFiltros = {
+    licenciaturas: licenciaturas.map((i) => ({ valor: i.id_licenciatura, etiqueta: i.licenciatura })),
+    grupos: gruposFiltrados.map((i) => ({ valor: i.id_grupo, etiqueta: i.grupo })),
+    modalidades: modalidades.map((i) => ({ valor: i.id_modalidad, etiqueta: i.modalidad })),
+    horarios: horarios.map((i) => ({ valor: i.id_horario, etiqueta: i.horario })),
+    razones: razones.map((i) => ({ valor: i.id_razon, etiqueta: i.razon }))
   };
 
   const handleApply = () => {
@@ -180,155 +179,73 @@ export default function Asesorias() {
   });
 
   return (
-    <div className="h-[calc(100vh-1rem)] w-full rounded-2xl pl-17 py-10 pr-17 flex flex-col items-start justify-start gap-11 bg-gray-100 overflow-hidden">
-      <div>
-        <p className="text-2xl font-bold">Asesorías</p>
-      </div>
+    <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-[#F4F7FC] px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
+      <p className="text-2xl font-bold">Asesorías</p>
 
-      <div className="flex gap-8 items-center w-full">
+      {/* Barra de herramientas: en celular el filtro va arriba y el buscador abajo (igual que las otras vistas) */}
+      <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
         <BotonFiltro onClick={handleOpenModalFiltros} />
 
-        <InputBuscar
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-        />
+        <div className="w-full min-w-0 sm:flex-1">
+          <InputBuscar
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Buscar por materia, estudiante o asesor..."
+          />
+        </div>
 
-        <button
-          onClick={handleOpenModalExcel}
-          className="bg-[#2e7d32] hover:bg-[#1b5e20] text-sm text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
-        >
-          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1.8 14.8l-1.4 1.4L12 15.8l-2.4 2.4-1.4-1.4 2.4-2.4-2.4-2.4 1.4-1.4 2.4 2.4 2.4-2.4 1.4 1.4-2.4 2.4 2.4 2.4zM13 9V3.5L18.5 9H13z" />
-          </svg>
-          Cargar Asesorias
-        </button>
-
-        <button
+        <Button
+          variant="contained"
+          sx={{
+            borderRadius: '5px',
+            textTransform: 'none',
+            backgroundColor: '#2E7D32',
+            flexShrink: 0,
+            // Botón normal: solo tablet y escritorio
+            display: { xs: 'none', sm: 'inline-flex' }
+          }}
+          size="medium"
+          startIcon={<AddOutlinedIcon />}
           onClick={handleOpenModalCrear}
-          className="bg-[#2e7d32] hover:bg-[#1b5e20]  text-sm text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
         >
-          <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-          </svg>
           Crear Asesoria
-        </button>
+        </Button>
       </div>
 
-      {cargando ? (
-        <p className="text-gray-500 font-medium">Cargando asesorías...</p>
-      ) : (
-        <TablaAsesorias rows={filasFiltradas} />
-      )}
+      {/* Botón flotante: solo celular */}
+      <Fab
+        variant="extended"
+        color="success"
+        aria-label="Crear asesoría"
+        onClick={handleOpenModalCrear}
+        sx={{ position: 'fixed', right: 16, bottom: 16, zIndex: 10, textTransform: 'none', display: { xs: 'inline-flex', sm: 'none' } }}
+      >
+        <AddOutlinedIcon sx={{ mr: 1 }} />
+        Crear asesoría
+      </Fab>
 
-      {/* Modal de Filtros Dinámicos */}
-      <ModalFiltros
+      {/* Contenido: en celular se deja espacio abajo para que el botón flotante no tape la paginación */}
+      <div className="w-full pb-24 sm:pb-5">
+        {cargando ? (
+          <p className="text-gray-500 font-medium">Cargando asesorías...</p>
+        ) : (
+          <TablaAsesorias
+            rows={filasFiltradas}
+            onRefresh={cargarAsesorias}
+            onRemove={quitarAsesoria}
+          />
+        )}
+      </div>
+
+      {/* Modal de Filtros (mismo estilo que el del estudiante) */}
+      <ModalFiltrosAdmin
         open={openModalFiltros}
         onClose={() => setopenModalFiltros(false)}
+        opciones={opcionesFiltros}
+        filtros={filtros}
+        onChange={handleChange}
         onApply={handleApply}
         onClear={handleClear}
-      >
-        <div className="flex flex-col gap-4">
-          <div>
-            <label className="font-bold text-sm block mb-1">Licenciatura</label>
-            <select
-              name="licenciatura"
-              value={filtros.licenciatura}
-              onChange={handleSelectOption}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer text-sm"
-            >
-              <option value="">Selecciona una licenciatura</option>
-              {licenciaturas.map((item) => (
-                <option key={item.id_licenciatura} value={item.id_licenciatura}>
-                  {item.licenciatura}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="font-bold text-sm block mb-1">Grupo</label>
-            <select
-              name="grupo"
-              value={filtros.grupo}
-              onChange={handleSelectOption}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer text-sm"
-            >
-              <option value="">Selecciona un grupo</option>
-              {gruposFiltrados.map((item) => (
-                <option key={item.id_grupo} value={item.id_grupo}>
-                  {item.grupo}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="font-bold text-sm block mb-1">Modalidad</label>
-            <select
-              name="modalidad"
-              value={filtros.modalidad}
-              onChange={handleSelectOption}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer text-sm"
-            >
-              <option value="">Selecciona modalidad</option>
-              {modalidades.map((item) => (
-                <option key={item.id_modalidad} value={item.id_modalidad}>
-                  {item.modalidad}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="font-bold text-sm block mb-1">Horario</label>
-            <select
-              name="horario"
-              value={filtros.horario}
-              onChange={handleSelectOption}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer text-sm"
-            >
-              <option value="">Selecciona un horario</option>
-              {horarios.map((item) => (
-                <option key={item.id_horario} value={item.id_horario}>
-                  {item.horario}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="font-bold text-sm block mb-1">Razón</label>
-            <select
-              name="razon"
-              value={filtros.razon}
-              onChange={handleSelectOption}
-              onFocus={handleFocus}
-              onBlur={handleBlur}
-              className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer text-sm"
-            >
-              <option value="">Selecciona una razón</option>
-              {razones.map((item) => (
-                <option key={item.id_razon} value={item.id_razon}>
-                  {item.razon}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </ModalFiltros>
-
-      <ModalCargaExcel
-        open={modalExcelOpen}
-        onClose={() => setModalExcelOpen(false)}
-        onDataLoaded={handleExcelData}
       />
 
       {/* Modal de Crear Asesoría */}

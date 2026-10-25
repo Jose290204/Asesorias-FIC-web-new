@@ -1,18 +1,18 @@
-import { useState } from 'react';
+import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import Avatar from '@mui/material/Avatar';
+import { useState } from 'react';
 
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import SendIcon from '@mui/icons-material/Send';
 
 import { ModalInformacion, ModalSolicitar } from './ModalesSolicitarAsesorias';
 
-export default function TarjetaSolicitarAsesorias({ asesor, onSaveSolicitud, showToast }) {
+export default function TarjetaSolicitarAsesorias({ asesor, onSaveSolicitud, showToast, razones = [] }) {
     const [openInfo, setOpenInfo] = useState(false);
     const [openSolicitar, setOpenSolicitar] = useState(false);
 
@@ -80,17 +80,20 @@ export default function TarjetaSolicitarAsesorias({ asesor, onSaveSolicitud, sho
                     </Box>
                 </CardContent>
 
+                {/* Botones: dos columnas iguales; Solicitar con relleno e Información solo con borde */}
                 <CardActions
                     sx={{
                         padding: '0px 24px 20px 24px',
-                        justifyContent: 'flex-end',
-                        gap: '10px'
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '10px',
+                        // CardActions mete margen izquierdo a los botones; aquí lo anulamos por el grid
+                        '& > :not(:first-of-type)': { marginLeft: 0 }
                     }}
                 >
                     <Button
-                        variant="contained"
-                        sx={{ color: '#ffffff', borderRadius: '5px', textTransform: 'none',}}
-                        size="small"
+                        variant="outlined"
+                        sx={{ minHeight: 40, borderRadius: '5px', textTransform: 'none' }}
                         startIcon={<InfoOutlinedIcon />}
                         onClick={() => abrirModal(setOpenInfo)}
                     >
@@ -98,8 +101,14 @@ export default function TarjetaSolicitarAsesorias({ asesor, onSaveSolicitud, sho
                     </Button>
                     <Button
                         variant="contained"
-                        sx={{ backgroundColor: '#2E7D32', color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-                        size="small"
+                        sx={{
+                            minHeight: 40,
+                            backgroundColor: '#2E7D32',
+                            color: '#ffffff',
+                            borderRadius: '5px',
+                            textTransform: 'none',
+                            '&:hover': { backgroundColor: '#1B5E20' }
+                        }}
                         startIcon={<SendIcon />}
                         onClick={() => abrirModal(setOpenSolicitar)}
                     >
@@ -120,6 +129,7 @@ export default function TarjetaSolicitarAsesorias({ asesor, onSaveSolicitud, sho
                 asesor={asesor}
                 onSave={onSaveSolicitud}
                 showToast={showToast}
+                razones={razones}
             />
         </>
     );
