@@ -1,6 +1,7 @@
 import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
 import Box from '@mui/material/Box';
@@ -18,20 +19,20 @@ import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import ToastNotification from '../../../../components/ui/ToastNotification';
-import { formatearFechaVisible } from '../../rolEstudiante/utils/fechaSolicitud';
-import {
-    ModalConfirmarAsesoria,
-    ModalEliminarAsesoria,
-    ModalInfoAsesoria,
-    ModalMaterialAdicional
-} from '../components/ModalesAsesorias';
-import { USAR_DATOS_PRUEBA_ADMIN } from '../datosPrueba';
-import { asesoriasService } from '../services/asesoriasService1';
-import ModalChatAsesoriaAdmin from './ModalChatAsesoriaAdmin';
-import TarjetaAsesoriaAdmin from './TarjetaAsesoriaAdmin';
+
+import ModalMaterialAdicional from '../../../../../components/modales/ModalMaterialAdicional';
+import ToastNotification from '../../../../../components/ui/ToastNotification';
+import { formatearFechaVisible } from '../../../rolEstudiante/utils/fechaSolicitud';
+import TarjetaAsesoriaAdmin from '../../components/asesorias/TarjetaAsesoriaAdmin';
+import { USAR_DATOS_PRUEBA_ADMIN } from '../../datosPrueba';
+import { asesoriasService } from '../../services/asesoriasService';
+import ModalChatAsesoriaAdmin from './modales/ModalChatAsesoriaAdmin';
+import ModalConfirmarAsesoria from './modales/ModalConfirmarAsesoria';
+import ModalEliminarAsesoria from './modales/ModalEliminarAsesoria';
+import ModalInfoAsesoria from './modales/ModalInfoAsesoria';
+import ModalSesionesAsesoria from './modales/ModalSesionesAsesoria';
 
 // Estilo del encabezado de la tabla: azul sólido, letras chicas, mayúsculas y en negritas
 const ESTILO_ENCABEZADO = {
@@ -66,6 +67,9 @@ export default function TablaAsesorias({ rows = [], onRefresh, onRemove }) {
     const [modalEliminarOpen, setModalEliminarOpen] = useState(false);
     const [modalMaterialOpen, setModalMaterialOpen] = useState(false);
     const [modalChatOpen, setModalChatOpen] = useState(false);
+    const [modalSesionesOpen, setModalSesionesOpen] = useState(false);
+    // Sesiones ya guardadas por asesoría { [id]: [...] } (mientras no exista el endpoint)
+    const [sesionesGuardadas, setSesionesGuardadas] = useState({});
 
     // Estados para la Paginación
     const [page, setPage] = useState(0);
@@ -119,6 +123,12 @@ export default function TablaAsesorias({ rows = [], onRefresh, onRemove }) {
         setModalChatOpen(true);
     };
 
+    const handleOpenSesiones = (row, event) => {
+        clearFocus(event);
+        setSelectedRow(row);
+        setModalSesionesOpen(true);
+    };
+
     const handleOpenAprobar = (row, event) => {
         clearFocus(event);
         setSelectedRow(row);
@@ -170,6 +180,18 @@ export default function TablaAsesorias({ rows = [], onRefresh, onRemove }) {
         onRefresh?.();
     };
 
+    const handleSaveSesiones = (sesiones) => {
+        // TODO (fase 1.6): await asesoriasService.guardarSesiones(selectedRow.id, sesiones); onRefresh?.();
+        setSesionesGuardadas((prev) => ({ ...prev, [selectedRow.id]: sesiones }));
+        showToast('Sesiones guardadas con éxito', 'success');
+    };
+
+    // Debe ser el mismo objeto entre renders (useMemo), porque el modal se reinicia cuando "data" cambia
+    const datosSesiones = useMemo(
+        () => selectedRow && { ...selectedRow, sesiones: sesionesGuardadas[selectedRow.id] ?? selectedRow.sesiones },
+        [selectedRow, sesionesGuardadas]
+    );
+
     const visibleRows = rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
     // Paginación compartida; en móvil se oculta el selector de filas por página
@@ -212,6 +234,7 @@ export default function TablaAsesorias({ rows = [], onRefresh, onRemove }) {
                                     key={row.id ? `${row.id}-${index}` : index}
                                     row={row}
                                     onInfo={handleOpenInfo}
+                                    onSesiones={handleOpenSesiones}
                                     onMaterial={handleOpenMaterial}
                                     onChat={handleOpenChat}
                                     onCompletar={handleOpenAprobar}
@@ -247,7 +270,7 @@ export default function TablaAsesorias({ rows = [], onRefresh, onRemove }) {
                                     <TableCell align="left">Asesor</TableCell>
                                     <TableCell align="center">Inicio</TableCell>
                                     <TableCell align="center">Horario</TableCell>
-                                    <TableCell sx={{ width: '220px' }} align="center">Acciones</TableCell>
+                                    <TableCell sx={{ width: '260px' }} align="center">Acciones</TableCell>
                                 </TableRow>
                             </TableHead>
 
@@ -319,6 +342,16 @@ export default function TablaAsesorias({ rows = [], onRefresh, onRemove }) {
                                                             </IconButton>
                                                         </Tooltip>
 
+                                                        <Tooltip title="Sesiones">
+                                                            <IconButton
+                                                                size="small"
+                                                                sx={estiloAccion('#6A1B9A', 'rgba(106, 27, 154, 0.10)')}
+                                                                onClick={(e) => handleOpenSesiones(row, e)}
+                                                            >
+                                                                <EventNoteOutlinedIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+
                                                         <Tooltip title="Material adicional">
                                                             <IconButton
                                                                 size="small"
@@ -378,6 +411,14 @@ export default function TablaAsesorias({ rows = [], onRefresh, onRemove }) {
                 onClose={() => setModalInfoOpen(false)}
                 data={selectedRow}
                 onSave={handleSaveInfo}
+                showToast={showToast}
+            />
+
+            <ModalSesionesAsesoria
+                open={modalSesionesOpen}
+                onClose={() => setModalSesionesOpen(false)}
+                data={datosSesiones}
+                onSave={handleSaveSesiones}
                 showToast={showToast}
             />
 

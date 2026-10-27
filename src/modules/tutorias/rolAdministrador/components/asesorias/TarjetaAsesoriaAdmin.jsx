@@ -3,6 +3,7 @@ import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Box from '@mui/material/Box';
@@ -19,12 +20,10 @@ import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 
-import { formatearFechaVisible } from '../../rolEstudiante/utils/fechaSolicitud';
+import { formatearFechaVisible } from '../../../rolEstudiante/utils/fechaSolicitud';
 
 // Versión móvil de una fila de la tabla de asesorías.
-// Mismo diseño que la tarjeta "en curso" del asesor: menú ⋮ + Material (con borde) + Chat (relleno).
-// Solo muestra; las acciones las maneja quien la usa (TablaAsesorias).
-export default function TarjetaAsesoriaAdmin({ row, onInfo, onMaterial, onChat, onCompletar, onEliminar }) {
+export default function TarjetaAsesoriaAdmin({ row, onInfo, onMaterial, onChat, onCompletar, onEliminar, onSesiones }) {
     // Menú ⋮ de la tarjeta (Información / Completar / Eliminar)
     const [menuAnchor, setMenuAnchor] = useState(null);
     const closeMenu = () => setMenuAnchor(null);
@@ -151,6 +150,10 @@ export default function TarjetaAsesoriaAdmin({ row, onInfo, onMaterial, onChat, 
                 <MenuItem onClick={handleMenuAccion(onCompletar)} sx={{ minHeight: 44 }}>
                     <ListItemIcon><CheckOutlinedIcon fontSize="small" sx={{ color: '#2E7D32' }} /></ListItemIcon>
                     Completar asesoría
+                </MenuItem>
+                <MenuItem onClick={handleMenuAccion(onSesiones)} sx={{ minHeight: 44 }}>
+                    <ListItemIcon><EventNoteOutlinedIcon fontSize="small" sx={{ color: '#6A1B9A' }} /></ListItemIcon>
+                    Sesiones
                 </MenuItem>
                 <MenuItem onClick={handleMenuAccion(onInfo)} sx={{ minHeight: 44 }}>
                     <ListItemIcon><EditOutlinedIcon fontSize="small" sx={{ color: '#08338F' }} /></ListItemIcon>

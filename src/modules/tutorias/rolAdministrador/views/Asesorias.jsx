@@ -1,17 +1,18 @@
 import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
 import Fab from '@mui/material/Fab';
 import { useCallback, useEffect, useState } from "react";
 import BotonFiltro from "../../../../components/ui/BotonFlitro";
 import InputBuscar from "../../../../components/ui/InputBuscar";
-import ModalFiltrosAdmin from "../components/ModalFiltrosAdmin";
-import TablaAsesorias from "../components/TablaAsesorias";
+import ModalFiltrosAdmin from "../components/asesorias/modales/ModalFiltrosAdmin";
+import TablaAsesorias from "../components/asesorias/TablaAsesorias";
 import { asesoriasService } from "../services/asesoriasService1";
 import { catalogoService } from "../services/catalogoService";
 
 // Ajusta esta ruta si tu archivo de modales está en otra carpeta
 import ToastNotification from "../../../../components/ui/ToastNotification";
-import { ModalCrearAsesoria } from "../components/ModalesAsesorias";
+import ModalCrearAsesoria from "../components/asesorias/modales/ModalCrearAsesoria";
 import { ASESORIAS_ADMIN_PRUEBA, USAR_DATOS_PRUEBA_ADMIN } from "../datosPrueba";
 
 const initialFiltros = {
@@ -225,9 +226,12 @@ export default function Asesorias() {
       </Fab>
 
       {/* Contenido: en celular se deja espacio abajo para que el botón flotante no tape la paginación */}
-      <div className="w-full pb-24 sm:pb-5">
+      <div className="w-full flex flex-1 flex-col pb-24 sm:pb-5">
         {cargando ? (
-          <p className="text-gray-500 font-medium">Cargando asesorías...</p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 pb-20">
+              <CircularProgress sx={{ color: '#244B91' }} />
+              <p className="text-sm text-gray-600">Cargando asesorías...</p>
+          </div>
         ) : (
           <TablaAsesorias
             rows={filasFiltradas}
