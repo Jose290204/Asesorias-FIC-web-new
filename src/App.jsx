@@ -19,8 +19,11 @@ import Asesorias from './modules/tutorias/rolAdministrador/views/Asesorias';
 import Catalogos from './modules/tutorias/rolAdministrador/views/Catalogos';
 import Estudiantes from './modules/tutorias/rolAdministrador/views/Estudiantes';
 import PerfilAdministrador from './modules/tutorias/rolAdministrador/views/PerfilAdministrador';
+import ReportePorAsesor from './modules/tutorias/rolAdministrador/views/ReportePorAsesor';
+import ReportePorMateria from './modules/tutorias/rolAdministrador/views/ReportePorMateria';
 import Reportes from './modules/tutorias/rolAdministrador/views/Reportes';
 import Solicitudes from './modules/tutorias/rolAdministrador/views/Solicitudes';
+import UsuariosEnLinea from './modules/tutorias/rolAdministrador/views/UsuariosEnLinea';
 
 // Vistas de asesor
 import AsesoriasEnCurso from './modules/tutorias/rolAsesor/views/AsesoriasEnCurso';
@@ -85,12 +88,18 @@ export default function App() {
           <Route index element={<Navigate to="/admin/asesorias" replace />} />
           <Route path="asesorias" element={<Asesorias />} />
           <Route path="solicitudes" element={<Solicitudes />} />
-          <Route path="reportes" element={<Reportes />} />
+         <Route path="reportes" element={<Navigate to="/admin/reportes/asesor" replace />} />
+          <Route path="reportes/materia" element={<ReportePorMateria />} />
+          <Route path="reportes/asesor" element={<ReportePorAsesor/>} />
+          <Route path="reportes/estudiante" element={<Reportes tipo="estudiante" />} />
+          <Route path="reportes/grupo" element={<Reportes tipo="grupo" />} />
+          <Route path="reportes/licenciatura" element={<Reportes tipo="licenciatura" />} />
           <Route path="estudiantes" element={<Estudiantes />} />
           <Route path="asesores-disciplinares" element={<AsesoresDisciplinares />} />
           <Route path="asesores-par" element={<AsesoresPar />} />
           <Route path="catalogos" element={<Catalogos />} />
           <Route path="perfil-administrador" element={<PerfilAdministrador />} />
+          <Route path="usuarios-en-linea" element={<UsuariosEnLinea />} />
         </Route>
 
         {/* Rutas de Asesor (disciplinar y par comparten layout) */}

@@ -1,13 +1,26 @@
+// rolAdministrador/views/Reportes.jsx
+// Una sola vista para todos los reportes: el parámetro `tipo` viene de la ruta (ver App.jsx).
 
-export default function Reportes() {
+const REPORTES = {
+    materia: { titulo: 'Reporte por materia', descripcion: 'Asesorías y solicitudes agrupadas por materia.' },
+    asesor: { titulo: 'Reporte por asesor', descripcion: 'Asesorías atendidas por cada asesor.' },
+    estudiante: { titulo: 'Reporte por estudiante', descripcion: 'Asesorías recibidas por cada estudiante.' },
+    grupo: { titulo: 'Reporte por grupo', descripcion: 'Asesorías solicitadas por grupo.' },
+    licenciatura: { titulo: 'Reporte por licenciatura', descripcion: 'Asesorías agrupadas por licenciatura.' }
+};
+
+export default function Reportes({ tipo }) {
+    const reporte = REPORTES[tipo] || { titulo: 'Reportes', descripcion: '' };
+
     return (
-
-        <div className="h-[calc(100vh-1rem)] w-full rounded-2xl pl-17 py-10 pr-17 flex flex-col items-start justify-start gap-11 bg-gray-100 overflow-hidden">
-            <div>
-                <p className="text-2xl font-bold">Reportes</p>
+        <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-[#F4F7FC] px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
+            <div className="flex flex-col gap-1">
+                <p className="text-2xl font-bold">{reporte.titulo}</p>
+                {reporte.descripcion && <p className="text-sm text-gray-600">{reporte.descripcion}</p>}
             </div>
 
-            <p className="text-gray-500">Sin reportes</p>
+            {/* TODO: filtros (periodo, licenciatura), tabla del reporte y exportación cuando existan los endpoints */}
+            <p className="text-gray-500">Sin datos todavía</p>
         </div>
-    )
+    );
 }
