@@ -1,40 +1,56 @@
-import { useState, useEffect } from "react";
-import BotonFiltro from "../../../../components/ui/BotonFlitro";
-import TablaAsesoresPar from "../components/TablaAsesoresPar";
+import PersonAddAlt1OutlinedIcon from "@mui/icons-material/PersonAddAlt1Outlined";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Fab from "@mui/material/Fab";
+import { useEffect, useState } from "react";
 import InputBuscar from "../../../../components/ui/InputBuscar";
-import ModalFiltros from "../../../../components/ui/ModalFiltros";
-import { ModalAgregarAsesorPar } from "../components/ModalesAsesorPar";
-import ToastNotification from "../../../../components/ui/ToastNotification"; // Importación de la notificación Toast
+import ToastNotification from "../../../../components/ui/ToastNotification";
+import ModalAsignarAsesorPar from "../components/asesoresPar/modales/ModalAsignarAsesorPar";
+import TablaAsesoresPar from "../components/asesoresPar/TablaAsesoresPar";
 import { getAsesoresPar } from "../services/asesoresParService";
-import AddIcon from '@mui/icons-material/Add';
 
-const initialFiltros = {
-    licenciatura: "",
-    grupo: "",
-    modalidad: "",
-    horario: "",
-    razon: ""
-};
+// Color de los botones de asignar
+const AZUL = "#2e7d32";
+const AZUL_OSCURO = "#1b5e20";
+
+// Unifica la forma de cada asesor sin importar si viene del mock o del backend.
+// Un asesor par es un estudiante con rol de asesor: sus datos personales son los del estudiante.
+// TODO: quitar esta adaptación cuando el servicio entregue directamente estos campos
+const normalizarAsesorPar = (item) => ({
+    ...item,
+    nombre: item.nombre ?? item.estudiante ?? "",
+    correo: item.correo ?? "",
+    telefono: item.telefono ?? "",
+    numeroCuenta: item.numeroCuenta ?? "",
+    licenciatura: item.licenciatura ?? "",
+    grupo: item.grupo ?? "",
+    promedio: item.promedio ?? "",
+    estado: item.estado ?? "ACTIVO",
+    materias: item.materias ?? (item.materia ? [item.materia] : []),
+    horarios: item.horarios ?? (item.horario ? [item.horario] : [])
+});
 
 export default function AsesoresPar() {
     const [asesores, setAsesores] = useState([]);
     const [cargando, setCargando] = useState(true);
-    const [openModalFiltros, setOpenModalFiltros] = useState(false);
-    const [modalAgregarOpen, setModalAgregarOpen] = useState(false);
     const [busqueda, setBusqueda] = useState("");
-    const [filtros, setFiltros] = useState(initialFiltros);
+    const [modalAsignarOpen, setModalAsignarOpen] = useState(false);
 
-    // Estado para el Toast
-    const [toast, setToast] = useState({
-        open: false,
-        message: "",
-        type: "success"
-    });
+    // Estado para el toast global de la vista
+    const [toast, setToast] = useState({ open: false, message: "", type: "info" });
+
+    const showToast = (message, type = "info") => {
+        setToast({ open: true, message, type });
+    };
+
+    const handleCloseToast = () => {
+        setToast((prev) => ({ ...prev, open: false }));
+    };
 
     useEffect(() => {
         getAsesoresPar()
             .then((data) => {
-                setAsesores(data);
+                setAsesores(data.map(normalizarAsesorPar));
             })
             .catch((error) => {
                 console.error("Error al obtener los asesores par:", error);
@@ -44,179 +60,142 @@ export default function AsesoresPar() {
             });
     }, []);
 
-    const handleAsesorAgregado = (nuevoAsesor) => {
-        console.log("Asesor agregado correctamente:", nuevoAsesor);
-
-        // Mostrar Toast de éxito
-        setToast({
-            open: true,
-            message: "Se agregó el usuario como Asesor Par correctamente.",
-            type: "success"
+    // Cambia el rol del estudiante elegido a Asesor Par y lo agrega a la lista
+    const handleAsignarAsesor = async (estudiante) => {
+        // TODO: llamar al backend para cambiar el rol del estudiante a Asesor Par (id_rol 5)
+        setAsesores((prev) => {
+            const nuevoId = prev.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1;
+            return [
+                {
+                    ...normalizarAsesorPar({}),
+                    id: nuevoId,
+                    idEstudiante: estudiante.id,
+                    nombre: estudiante.nombre,
+                    correo: estudiante.correo,
+                    numeroCuenta: estudiante.numeroCuenta,
+                    licenciatura: estudiante.licenciatura,
+                    grupo: estudiante.grupo,
+                    estado: "ACTIVO"
+                },
+                ...prev
+            ];
         });
-
-        // Opcional: Si deseas recargar la lista de asesores tras agregar uno nuevo:
-        // getAsesoresPar().then((data) => setAsesores(data));
     };
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFiltros((prev) => ({
-            ...prev,
-            [name]: value
-        }));
+    // Actualiza en la lista el asesor editado desde el modal de información
+    const actualizarAsesor = (asesorActualizado) => {
+        setAsesores((prev) =>
+            prev.map((item) => (item.id === asesorActualizado.id ? { ...item, ...asesorActualizado } : item))
+        );
     };
 
-    const handleApply = () => {
-        console.log("Filtros seleccionados:", filtros);
-        setOpenModalFiltros(false);
+    // Quita el rol de asesor par: el estudiante sigue existiendo, solo sale de esta lista
+    const quitarAsesor = (id) => {
+        setAsesores((prev) => prev.filter((item) => item.id !== id));
     };
 
-    const handleClear = () => {
-        setFiltros(initialFiltros);
+    // Quita el foco del elemento activo antes de abrir un modal
+    const handleOpenModalAsignar = (event) => {
+        if (event?.currentTarget) event.currentTarget.blur();
+        document.activeElement?.blur();
+        setModalAsignarOpen(true);
     };
 
+    // Filtro por búsqueda en tiempo real (nombre, correo o número de cuenta)
     const filasFiltradas = asesores.filter((row) => {
         const texto = busqueda.toLowerCase().trim();
         if (!texto) return true;
 
-        const materia = (row.materia || "").toLowerCase();
-        const estudiante = (row.estudiante || "").toLowerCase();
-        const asesor = (row.asesor || "").toLowerCase();
-
         return (
-            materia.includes(texto) ||
-            estudiante.includes(texto) ||
-            asesor.includes(texto)
+            (row.nombre || "").toLowerCase().includes(texto) ||
+            (row.correo || "").toLowerCase().includes(texto) ||
+            (row.numeroCuenta || "").toLowerCase().includes(texto)
         );
     });
 
     return (
-        <div className="h-[calc(100vh-1rem)] w-full rounded-2xl pl-17 py-10 pr-17 flex flex-col items-start justify-start gap-11 bg-gray-100 overflow-hidden">
-            <div>
-                <p className="text-2xl font-bold">Asesores Par</p>
-            </div>
+        <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-[#F4F7FC] px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
+            <p className="text-2xl font-bold">Asesores Par</p>
 
-            <div className="flex gap-8 items-center w-full">
-                <InputBuscar
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
-                />
-                <button 
-                    onClick={() => setModalAgregarOpen(true)}
-                    className="bg-[#2e7d32] hover:bg-[#1b5e20] text-sm text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
-                >
-                    <AddIcon/>
-                    Agregar Asesor
-                </button>
-            </div>
-
-            {cargando ? (
-                <p className="text-gray-500 font-medium">Cargando asesores par...</p>
-            ) : (
-                <TablaAsesoresPar rows={filasFiltradas} />
-            )}
-
-            {/* Modal de Filtros */}
-            <ModalFiltros
-                open={openModalFiltros}
-                onClose={() => setOpenModalFiltros(false)}
-                onApply={handleApply}
-                onClear={handleClear}
-            >
-                <div className="flex flex-col gap-4">
-                    <div>
-                        <label className="font-bold text-sm block mb-1">Licenciatura</label>
-                        <select
-                            name="licenciatura"
-                            value={filtros.licenciatura}
-                            onChange={handleChange}
-                            className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer"
-                        >
-                            <option value="">Selecciona una opción</option>
-                            <option value="Ingeniería Informática">Ingeniería Informática</option>
-                            <option value="Ingeniería en Sistemas">Ingeniería en Sistemas</option>
-                            <option value="Licenciatura en Software">Licenciatura en Software</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="font-bold text-sm block mb-1">Grupo</label>
-                        <select
-                            name="grupo"
-                            value={filtros.grupo}
-                            onChange={handleChange}
-                            className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer"
-                        >
-                            <option value="">Selecciona un grupo</option>
-                            <option value="1-1">1-1</option>
-                            <option value="2-1">2-1</option>
-                            <option value="3-1">3-1</option>
-                            <option value="4-1">4-1</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="font-bold text-sm block mb-1">Modalidad</label>
-                        <select
-                            name="modalidad"
-                            value={filtros.modalidad}
-                            onChange={handleChange}
-                            className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer"
-                        >
-                            <option value="">Selecciona modalidad</option>
-                            <option value="Presencial">Presencial</option>
-                            <option value="Virtual">Virtual</option>
-                            <option value="Híbrida">Híbrida</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="font-bold text-sm block mb-1">Horario</label>
-                        <select
-                            name="horario"
-                            value={filtros.horario}
-                            onChange={handleChange}
-                            className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer"
-                        >
-                            <option value="">Selecciona un horario</option>
-                            <option value="8:00 - 9:00 AM">8:00 - 9:00 AM</option>
-                            <option value="9:00 - 10:00 AM">9:00 - 10:00 AM</option>
-                            <option value="10:00 - 11:00 AM">10:00 - 11:00 AM</option>
-                            <option value="11:00 - 12:00 PM">11:00 - 12:00 PM</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="font-bold text-sm block mb-1">Razón</label>
-                        <select
-                            name="razon"
-                            value={filtros.razon}
-                            onChange={handleChange}
-                            className="w-full border border-gray-400 rounded-lg p-2 outline-none bg-white cursor-pointer"
-                        >
-                            <option value="">Selecciona una razón</option>
-                            <option value="Reforzamiento de temas">Reforzamiento de temas</option>
-                            <option value="Regularización">Regularización</option>
-                            <option value="Preparación de examen">Preparación de examen</option>
-                            <option value="Dudas en proyecto">Dudas en proyecto</option>
-                        </select>
-                    </div>
+            {/* Barra de herramientas: buscador y botón de asignar (en celular el botón pasa a ser flotante) */}
+            <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
+                <div className="w-full min-w-0 sm:flex-1">
+                    <InputBuscar
+                        value={busqueda}
+                        onChange={(e) => setBusqueda(e.target.value)}
+                        placeholder="Buscar por nombre, correo o número de cuenta..."
+                    />
                 </div>
-            </ModalFiltros>
 
-            {/* Modal para Agregar Asesor Par */}
-            <ModalAgregarAsesorPar
-                open={modalAgregarOpen}
-                onClose={() => setModalAgregarOpen(false)}
-                onAsesorAgregado={handleAsesorAgregado}
+                {/* Botón normal: solo tablet y escritorio */}
+                <Button
+                    variant="contained"
+                    size="medium"
+                    startIcon={<PersonAddAlt1OutlinedIcon />}
+                    onClick={handleOpenModalAsignar}
+                    sx={{
+                        borderRadius: "5px",
+                        textTransform: "none",
+                        backgroundColor: AZUL,
+                        "&:hover": { backgroundColor: AZUL_OSCURO },
+                        flexShrink: 0,
+                        display: { xs: "none", sm: "inline-flex" }
+                    }}
+                >
+                    Asignar Asesor Par
+                </Button>
+            </div>
+
+            {/* Botón flotante: solo celular */}
+            <Fab
+                variant="extended"
+                aria-label="Asignar asesor par"
+                onClick={handleOpenModalAsignar}
+                sx={{
+                    position: "fixed",
+                    right: 16,
+                    bottom: 16,
+                    zIndex: 10,
+                    textTransform: "none",
+                    color: "#ffffff",
+                    backgroundColor: AZUL,
+                    "&:hover": { backgroundColor: AZUL_OSCURO },
+                    display: { xs: "inline-flex", sm: "none" }
+                }}
+            >
+                <PersonAddAlt1OutlinedIcon sx={{ mr: 1 }} />
+                Asignar asesor
+            </Fab>
+
+            <ModalAsignarAsesorPar
+                open={modalAsignarOpen}
+                onClose={() => setModalAsignarOpen(false)}
+                asesoresActuales={asesores}
+                onAsignar={handleAsignarAsesor}
+                showToast={showToast}
             />
 
-            {/* Notificación Toast */}
+            {/* Contenido: en celular se deja espacio abajo para que el botón flotante no tape la paginación */}
+            <div className="w-full flex flex-1 flex-col pb-24 sm:pb-5">
+                {cargando ? (
+                    <div className="flex flex-1 flex-col items-center justify-center gap-3 pb-20">
+                        <CircularProgress sx={{ color: '#244B91' }} />
+                        <p className="text-sm text-gray-600">Cargando asesores par...</p>
+                    </div>
+                ) : (
+                    <TablaAsesoresPar
+                        rows={filasFiltradas}
+                        onUpdate={actualizarAsesor}
+                        onRemove={quitarAsesor}
+                    />
+                )}
+            </div>
+
             <ToastNotification
                 open={toast.open}
+                onClose={handleCloseToast}
                 message={toast.message}
                 type={toast.type}
-                onClose={() => setToast((prev) => ({ ...prev, open: false }))}
             />
         </div>
     );

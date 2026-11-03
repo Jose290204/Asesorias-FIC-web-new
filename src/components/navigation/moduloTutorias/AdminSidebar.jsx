@@ -1,15 +1,54 @@
-import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import logoFic from '../../../assets/fic_logo.png';
 import logoUas from '../../../assets/logo_uas.png';
 
+// Ruta base del grupo desplegable de reportes
+const RUTA_REPORTES = '/admin/reportes';
+
+// Opciones que salen al desplegar "Reportes"
+const SUBMENU_REPORTES = [
+   { path: `${RUTA_REPORTES}/asesor`, label: 'Por asesor' },
+  { path: `${RUTA_REPORTES}/materia`, label: 'Por materia' },
+  { path: `${RUTA_REPORTES}/estudiante`, label: 'Por estudiante' },
+  { path: `${RUTA_REPORTES}/grupo`, label: 'Por grupo' },
+  { path: `${RUTA_REPORTES}/licenciatura`, label: 'Por licenciatura' }
+];
+
 export default function AdminSidebar({ mobile = false }) {
+  const { pathname } = useLocation();
 
   const [collapsedState, setCollapsed] = useState(false);
   // En el drawer móvil el menú siempre va expandido
   const collapsed = mobile ? false : collapsedState;
 
-  const navItems = [
+  // El grupo de reportes empieza abierto si ya se está dentro de alguno de sus reportes
+  const enReportes = pathname.startsWith(RUTA_REPORTES);
+  const [reportesAbierto, setReportesAbierto] = useState(enReportes);
+
+  // Al entrar a un reporte (por ejemplo con un enlace directo) el grupo se abre solo
+  useEffect(() => {
+    if (enReportes) setReportesAbierto(true);
+  }, [enReportes]);
+
+  // Con el menú colapsado solo se ven íconos: al tocar Reportes se expande el menú para mostrar las opciones
+  const handleToggleReportes = () => {
+    if (collapsed) {
+      setCollapsed(false);
+      setReportesAbierto(true);
+      return;
+    }
+    setReportesAbierto((prev) => !prev);
+  };
+
+  const iconoReportes = (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  );
+
+  // Elementos del menú sin submenú
+  const navItemsAntes = [
     {
       path: '/admin/asesorias',
       label: 'Asesorías',
@@ -27,16 +66,10 @@ export default function AdminSidebar({ mobile = false }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
       )
-    },
-    {
-      path: '/admin/reportes',
-      label: 'Reportes',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      )
-    },
+    }
+  ];
+
+  const navItemsDespues = [
     {
       path: '/admin/asesores-disciplinares',
       label: 'Asesores Disciplinares',
@@ -66,15 +99,33 @@ export default function AdminSidebar({ mobile = false }) {
       )
     },
     {
-      path: '/admin/catalogos',
-      label: 'Catálogos',
+      path: '/admin/usuarios-en-linea',
+      label: 'Usuarios en línea',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072m7.072 0a5 5 0 010 7.072M12 12h.01" />
         </svg>
       )
     }
   ];
+
+  // Enlace normal del menú
+  const renderItem = (item) => (
+    <NavLink
+      key={item.path}
+      to={item.path}
+      replace
+      className={({ isActive }) =>
+        `w-full flex items-center gap-3 px-3 py-3 rounded-[5px] font-medium text-sm transition-all duration-200 ${isActive
+          ? 'bg-white text-[#122a88] shadow-md font-semibold'
+          : 'text-blue-100 hover:bg-blue-900/50 hover:text-white'
+        }`
+      }
+    >
+      <span className="shrink-0">{item.icon}</span>
+      {!collapsed && <span className="truncate">{item.label}</span>}
+    </NavLink>
+  );
 
   return (
     <aside
@@ -111,22 +162,58 @@ export default function AdminSidebar({ mobile = false }) {
         </div>
 
         <nav className="mt-2 px-3 space-y-1.5">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              replace
-              className={({ isActive }) =>
-                `w-full flex items-center gap-3 px-3 py-3 rounded-[5px] font-medium text-sm transition-all duration-200 ${isActive
-                  ? 'bg-white text-[#122a88] shadow-md font-semibold'
-                  : 'text-blue-100 hover:bg-blue-900/50 hover:text-white'
-                }`
-              }
+          {navItemsAntes.map(renderItem)}
+
+          {/* Reportes: botón con flechita que despliega los reportes */}
+          <div>
+            <button
+              type="button"
+              onClick={handleToggleReportes}
+              aria-expanded={reportesAbierto}
+              title={collapsed ? 'Reportes' : undefined}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-[5px] font-medium text-sm transition-all duration-200 cursor-pointer ${enReportes
+                ? 'bg-blue-900/50 text-white font-semibold'
+                : 'text-blue-100 hover:bg-blue-900/50 hover:text-white'
+                }`}
             >
-              <span className="shrink-0">{item.icon}</span>
-              {!collapsed && <span className="truncate">{item.label}</span>}
-            </NavLink>
-          ))}
+              <span className="shrink-0">{iconoReportes}</span>
+              {!collapsed && (
+                <>
+                  <span className="truncate flex-1 text-left">Reportes</span>
+                  <svg
+                    className={`w-4 h-4 shrink-0 transition-transform duration-200 ${reportesAbierto ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </>
+              )}
+            </button>
+
+            {!collapsed && reportesAbierto && (
+              <div className="mt-1 ml-5 pl-3 border-l border-blue-300/40 space-y-1">
+                {SUBMENU_REPORTES.map((sub) => (
+                  <NavLink
+                    key={sub.path}
+                    to={sub.path}
+                    replace
+                    className={({ isActive }) =>
+                      `w-full flex items-center px-3 py-2 rounded-[5px] text-sm transition-all duration-200 ${isActive
+                        ? 'bg-white text-[#122a88] shadow-md font-semibold'
+                        : 'text-blue-100 hover:bg-blue-900/50 hover:text-white'
+                      }`
+                    }
+                  >
+                    <span className="truncate">{sub.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {navItemsDespues.map(renderItem)}
         </nav>
       </div>
     </aside>
