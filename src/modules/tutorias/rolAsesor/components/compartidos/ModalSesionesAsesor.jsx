@@ -23,9 +23,9 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import { useEffect, useState } from 'react';
 
-import { useCatalogos } from '../../../../context/CatalogosContext';
-import { mensajesDeError } from '../../../../Services/errores';
-import { eliminarSesion, registrarSesion, traerSesiones } from '../../../../Services/sesionesAsesorService';
+import { useCatalogos } from '../../../../../context/CatalogosContext';
+import { mensajesDeError } from '../../../../../Services/errores';
+import { eliminarSesion, registrarSesion, traerSesiones } from '../../../../../Services/sesionesAsesorService';
 import CampoSelect from './CampoSelect';
 
 const FORMULARIO_INICIAL = { fecha: null, horarioId: '', tema: '', notas: '' };

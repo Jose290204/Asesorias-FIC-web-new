@@ -14,8 +14,8 @@ import {
     traerAsesorias
 } from "../../../../Services/asesoriasAsesorService";
 import { mensajesDeError } from "../../../../Services/errores";
-import { ModalCrearAsesoria } from "../components/ModalesAsesoriasEnCurso";
-import TarjetaAsesoriasEnCurso from "../components/TajetaAsesoriasEnCurso";
+import ModalCrearAsesoria from "../components/asesorias/modales/ModalCrearAsesoria";
+import TablaAsesoriasEnCurso from "../components/asesorias/TablaAsesoriasEnCurso";
 import { ASESORIAS_EN_CURSO_PRUEBA, USAR_DATOS_PRUEBA } from "../datosPrueba";
 
 export default function AsesoriasEnCurso() {
@@ -216,7 +216,7 @@ export default function AsesoriasEnCurso() {
                     </p>
                 ) : (
                     <>
-                        <TarjetaAsesoriasEnCurso
+                        <TablaAsesoriasEnCurso
                             asesorias={asesoriasEnCurso}
                             onGuardarInfo={handleGuardarInfo}
                             onCompletar={handleCompletar}

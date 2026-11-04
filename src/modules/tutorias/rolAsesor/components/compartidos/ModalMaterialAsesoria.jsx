@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 
-import { mensajesDeError } from '../../../../Services/errores';
+import { mensajesDeError } from '../../../../../Services/errores';
 import {
     descargarMaterial,
     eliminarMaterial,
@@ -30,7 +30,7 @@ import {
     MATERIAL_MAX_MB,
     subirMaterial,
     traerMaterial
-} from '../../../../Services/materialAsesorService';
+} from '../../../../../Services/materialAsesorService';
 
 const getFileIcon = (tipo) => {
     if (tipo?.includes('pdf')) return <PictureAsPdfIcon color="error" />;

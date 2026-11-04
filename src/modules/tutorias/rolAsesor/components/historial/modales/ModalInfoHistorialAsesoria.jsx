@@ -12,28 +12,14 @@ import {
 import dayjs from 'dayjs';
 import { useState } from 'react';
 
-import ModalSesionesAsesor from './ModalSesionesAsesor';
-
-// Campos que se muestran pero no se pueden modificar: fondo gris, sin cursor al hacer clic
-const CAMPO_BLOQUEADO = {
-    sx: {
-        '& .MuiOutlinedInput-root': {
-            backgroundColor: '#F3F4F6',
-            cursor: 'not-allowed',
-            '& fieldset': { borderColor: '#E0E0E0' },
-            '&:hover fieldset': { borderColor: '#E0E0E0' }
-        },
-        '& .MuiInputBase-input': { pointerEvents: 'none', caretColor: 'transparent', color: '#6B7280' },
-        '& .MuiInputLabel-root': { color: '#6B7280' }
-    },
-    slotProps: { input: { readOnly: true }, htmlInput: { tabIndex: -1 } }
-};
+import { CAMPO_BLOQUEADO } from '../../compartidos/estilosModales';
+import ModalSesionesAsesor from '../../compartidos/ModalSesionesAsesor';
 
 const ETIQUETA_ESTATUS = { completada: 'Completada', cancelada: 'Cancelada', en_curso: 'En curso' };
 
 // Una asesoría del historial ya está cerrada (completada o cancelada) y la API no deja editarla,
 // así que este modal es solo de consulta. Desde aquí se pueden ver sus sesiones.
-export function ModalInfoHistorialAsesoria({ open, onClose, data, showToast }) {
+export default function ModalInfoHistorialAsesoria({ open, onClose, data, showToast }) {
     const [sesionesOpen, setSesionesOpen] = useState(false);
 
     if (!data) return null;

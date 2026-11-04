@@ -7,7 +7,7 @@ import InputBuscar from '../../../../components/ui/InputBuscar';
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import { traerAsesorias } from '../../../../Services/asesoriasAsesorService';
 import { mensajesDeError } from '../../../../Services/errores';
-import TarjetaHistorialAsesorias from "../components/TarjetaHistorialAsesorias";
+import TablaHistorialAsesorias from '../components/historial/TablaHistorialAsesorias';
 
 export default function HistorialAsesorias() {
     const [historial, setHistorial] = useState([]);
@@ -106,7 +106,7 @@ export default function HistorialAsesorias() {
                     </div>
                 ) : (
                     <>
-                        <TarjetaHistorialAsesorias historial={historial} />
+                        <TablaHistorialAsesorias historial={historial} />
 
                         {/* Paginación: solo aparece si hay más de una página */}
                         {meta && meta.last_page > 1 && (

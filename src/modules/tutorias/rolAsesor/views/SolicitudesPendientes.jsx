@@ -13,7 +13,7 @@ import {
     rechazarSolicitud,
     traerSolicitudesPendientes,
 } from '../../../../Services/solicitudesAsesorService';
-import TarjetaSolicitudesPendientes from '../components/TarjetaSolicitudesPendientes';
+import TablaSolicitudesPendientes from '../components/solicitudes/TablaSolicitudesPendientes';
 
 export default function SolicitudesPendientes() {
     const [solicitudes, setSolicitudes] = useState([]);
@@ -134,11 +134,10 @@ export default function SolicitudesPendientes() {
                     </div>
                 ) : (
                     <>
-                        <TarjetaSolicitudesPendientes
+                        <TablaSolicitudesPendientes
                             solicitudes={solicitudes}
                             onAceptar={handleAceptar}
                             onRechazar={handleRechazar}
-                            showToast={showToast}
                         />
 
                         {/* Paginación: solo aparece si hay más de una página */}

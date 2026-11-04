@@ -1,21 +1,6 @@
 import CheckIcon from '@mui/icons-material/Check';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import {
-    Box,
-    Button,
-    Checkbox,
-    Chip,
-    CircularProgress,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    TextField,
-    Typography
-} from '@mui/material';
+import { Box, Button, Chip, CircularProgress, Typography } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 
 import ToastNotification from '../../../../components/ui/ToastNotification';
@@ -26,6 +11,8 @@ import {
     traerMaterias
 } from '../../../../Services/asesoriasAsesorService';
 import { mensajesDeError } from '../../../../Services/errores';
+import ModalMaterias from '../components/disponibilidad/ModalMaterias';
+import TarjetaSeccion from '../components/disponibilidad/TarjetaSeccion';
 
 // Respaldo por si el catálogo de días aún no llega (los valores son los mismos que usa la API, sin acento)
 const DIAS_RESPALDO = [
@@ -47,105 +34,6 @@ const aEstadoPantalla = (datos) => ({
     horarios: datos.horarios.flatMap((grupo) => grupo.horarios.map((h) => ({ dia: grupo.dia, horarioId: h.id }))),
     modalidades: datos.modalidades.map((m) => m.valor),
 });
-
-// --- DIÁLOGO: ELEGIR VARIAS MATERIAS A LA VEZ ---
-function DialogMaterias({ open, onClose, catalogo, seleccionadas, onConfirm }) {
-    const [busqueda, setBusqueda] = useState('');
-    const [ids, setIds] = useState([]);
-
-    // Al abrir, parte de lo que ya estaba seleccionado
-    useEffect(() => {
-        if (open) {
-            setIds(seleccionadas.map((m) => m.id));
-            setBusqueda('');
-        }
-    }, [open, seleccionadas]);
-
-    const toggle = (id) =>
-        setIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-
-    const filtradas = catalogo.filter((m) =>
-        String(m.nombre).toLowerCase().includes(busqueda.toLowerCase().trim())
-    );
-
-    const handleConfirm = () => {
-        onConfirm(catalogo.filter((m) => ids.includes(m.id)).map((m) => ({ id: m.id, nombre: m.nombre })));
-        onClose();
-    };
-
-    return (
-        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth disableRestoreFocus>
-            <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-                Materias que asesoras
-            </DialogTitle>
-            <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, py: 2 }}>
-                <TextField
-                    size="small"
-                    placeholder="Buscar materia..."
-                    fullWidth
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
-                />
-                <Box sx={{ maxHeight: '320px', overflowY: 'auto' }}>
-                    {filtradas.length === 0 ? (
-                        <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
-                            No se encontraron resultados.
-                        </Typography>
-                    ) : (
-                        filtradas.map((m) => (
-                            <ListItemButton
-                                key={m.id}
-                                dense
-                                onClick={() => toggle(m.id)}
-                                sx={{ borderRadius: '6px' }}
-                            >
-                                <ListItemIcon sx={{ minWidth: 36 }}>
-                                    <Checkbox
-                                        edge="start"
-                                        size="small"
-                                        checked={ids.includes(m.id)}
-                                        tabIndex={-1}
-                                        disableRipple
-                                        sx={{ color: '#9e9e9e', '&.Mui-checked': { color: '#2e7d32' } }}
-                                    />
-                                </ListItemIcon>
-                                <ListItemText primary={m.nombre} slotProps={{ primary: { sx: { fontSize: '14px' } } }} />
-                            </ListItemButton>
-                        ))
-                    )}
-                </Box>
-            </DialogContent>
-            <DialogActions sx={{ px: 3, py: 1.5 }}>
-                <Button onClick={onClose} sx={{ textTransform: 'none', color: '#555' }}>
-                    Cancelar
-                </Button>
-                <Button
-                    variant="contained"
-                    onClick={handleConfirm}
-                    sx={{ textTransform: 'none', backgroundColor: '#2e7d32', '&:hover': { backgroundColor: '#1b5e20' } }}
-                >
-                    Listo ({ids.length})
-                </Button>
-            </DialogActions>
-        </Dialog>
-    );
-}
-
-// --- TARJETA CON TÍTULO Y SUBTÍTULO ---
-function SeccionTarjeta({ titulo, subtitulo, accion, children }) {
-    return (
-        <div className="w-full max-w-xl bg-white border border-gray-200 rounded-[10px] shadow-sm p-5 md:p-6 flex flex-col gap-4">
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <p className="text-base font-bold text-gray-900">{titulo}</p>
-                    {subtitulo && <p className="mt-0.5 text-sm text-gray-600">{subtitulo}</p>}
-                </div>
-                {accion}
-            </div>
-            {children}
-        </div>
-    );
-}
 
 // --- PÁGINA ---
 export default function DisponibilidadAsesor() {
@@ -334,7 +222,7 @@ export default function DisponibilidadAsesor() {
                 ) : (
                     <>
                         {/* MATERIAS */}
-                        <SeccionTarjeta
+                        <TarjetaSeccion
                             titulo="Materias que asesoras"
                             subtitulo="Los alumnos solo podrán pedirte asesoría de estas materias."
                             accion={
@@ -378,10 +266,10 @@ export default function DisponibilidadAsesor() {
                                     ))}
                                 </Box>
                             )}
-                        </SeccionTarjeta>
+                        </TarjetaSeccion>
 
                         {/* MODALIDADES */}
-                        <SeccionTarjeta
+                        <TarjetaSeccion
                             titulo="Modalidades"
                             subtitulo="Toca una modalidad para activarla o desactivarla."
                         >
@@ -409,10 +297,10 @@ export default function DisponibilidadAsesor() {
                                     );
                                 })}
                             </Box>
-                        </SeccionTarjeta>
+                        </TarjetaSeccion>
 
                         {/* HORARIOS POR DÍA */}
-                        <SeccionTarjeta
+                        <TarjetaSeccion
                             titulo="Horarios disponibles"
                             subtitulo="Toca un horario para activarlo o desactivarlo en cada día."
                         >
@@ -469,7 +357,7 @@ export default function DisponibilidadAsesor() {
                                     );
                                 })}
                             </div>
-                        </SeccionTarjeta>
+                        </TarjetaSeccion>
                     </>
                 )}
             </div>
@@ -506,7 +394,7 @@ export default function DisponibilidadAsesor() {
                 </div>
             )}
 
-            <DialogMaterias
+            <ModalMaterias
                 open={dialogMateriasOpen}
                 onClose={() => setDialogMateriasOpen(false)}
                 catalogo={catalogoMaterias}
