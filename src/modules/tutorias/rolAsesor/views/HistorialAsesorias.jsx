@@ -1,28 +1,26 @@
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import Pagination from '@mui/material/Pagination';
 import { useCallback, useEffect, useState } from 'react';
 
+import InputBuscar from '../../../../components/ui/InputBuscar';
 import ToastNotification from '../../../../components/ui/ToastNotification';
+import { traerAsesorias } from '../../../../Services/asesoriasAsesorService';
+import { mensajesDeError } from '../../../../Services/errores';
 import TarjetaHistorialAsesorias from "../components/TarjetaHistorialAsesorias";
-
-// Datos de prueba. Cuando haya backend, esto viene del servicio.
-const HISTORIAL_PRUEBA = [
-    { id: 12, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", material_adicional: [{ id_material: 1, nombre_archivo: "Guia_de_ejercicios.pdf", mime_type: "application/pdf", url_archivo: "#" }] },
-    { id: 13, alumno: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 14, alumno: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 15, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 16, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 17, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 18, alumno: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 19, alumno: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 20, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" },
-    { id: 21, alumno: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial" }
-];
 
 export default function HistorialAsesorias() {
     const [historial, setHistorial] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
+
+    // Lo que se escribe en el buscador, y el texto que ya se mandó a la API (con una pausa al escribir)
+    const [busqueda, setBusqueda] = useState('');
+    const [buscar, setBuscar] = useState('');
+
+    // La API pagina de 10 en 10: "meta" trae la última página y el total
+    const [pagina, setPagina] = useState(1);
+    const [meta, setMeta] = useState(null);
 
     // Toast global de la vista (también lo usan los modales de la tarjeta)
     const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
@@ -35,38 +33,38 @@ export default function HistorialAsesorias() {
         setToast((prev) => ({ ...prev, open: false }));
     };
 
-    // Carga el historial
+    // Al dejar de escribir 400 ms se busca en la API y se vuelve a la página 1
+    useEffect(() => {
+        const temporizador = setTimeout(() => {
+            setBuscar(busqueda.trim());
+            setPagina(1);
+        }, 400);
+
+        return () => clearTimeout(temporizador);
+    }, [busqueda]);
+
+    // El historial son las asesorías ya cerradas: completadas y canceladas
     const cargarHistorial = useCallback(async () => {
         try {
             setLoading(true);
             setError(false);
-            // TODO: reemplazar por la llamada real al servicio (ej. asesoriasService.obtenerHistorialAsesor())
-            await new Promise((resolve) => setTimeout(resolve, 300));
-            setHistorial(HISTORIAL_PRUEBA);
+            const { asesorias, meta: metaNueva } = await traerAsesorias({ estatus: 'historial', buscar, page: pagina });
+            setHistorial(asesorias);
+            setMeta(metaNueva);
         } catch (err) {
             console.error('Error al cargar el historial', err);
             setError(true);
-            showToast('No se pudo cargar el historial', 'error');
+            showToast(mensajesDeError(err)[0], 'error');
         } finally {
             setLoading(false);
         }
-    }, [showToast]);
+    }, [buscar, pagina, showToast]);
 
     useEffect(() => {
         cargarHistorial();
     }, [cargarHistorial]);
 
-    // La tarjeta avisa cuando se edita una asesoría desde su modal de información
-    const handleActualizar = (asesoriaActualizada) => {
-        console.log('Información actualizada:', asesoriaActualizada);
-        setHistorial((prev) =>
-            prev.map((item) =>
-                item.id === asesoriaActualizada.id ? { ...item, ...asesoriaActualizada } : item
-            )
-        );
-    };
-
-    const total = historial.length;
+    const total = meta?.total ?? historial.length;
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-gray-100 px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
@@ -77,6 +75,14 @@ export default function HistorialAsesorias() {
                         {total} {total === 1 ? 'resultado' : 'resultados'}
                     </p>
                 )}
+            </div>
+
+            <div className="w-full">
+                <InputBuscar
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                    placeholder="Buscar por materia o alumno..."
+                />
             </div>
 
             {/* Contenido: el título queda visible y el estado va al centro del área */}
@@ -99,10 +105,20 @@ export default function HistorialAsesorias() {
                         </Button>
                     </div>
                 ) : (
-                    <TarjetaHistorialAsesorias
-                        historial={historial}
-                        onActualizar={handleActualizar}
-                    />
+                    <>
+                        <TarjetaHistorialAsesorias historial={historial} />
+
+                        {/* Paginación: solo aparece si hay más de una página */}
+                        {meta && meta.last_page > 1 && (
+                            <div className="mt-6 flex w-full justify-center">
+                                <Pagination
+                                    count={meta.last_page}
+                                    page={pagina}
+                                    onChange={(_, nueva) => setPagina(nueva)}
+                                />
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 

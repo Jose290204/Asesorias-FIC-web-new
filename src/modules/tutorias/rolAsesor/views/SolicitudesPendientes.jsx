@@ -1,22 +1,28 @@
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import Pagination from '@mui/material/Pagination';
 import { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '../../../../context/AuthContext';
 
 import { SOLICITUDES_PRUEBA, USAR_DATOS_PRUEBA } from '../datosPrueba';
 
 // Ajusta estas rutas según dónde esté ubicado este archivo en tu proyecto
 import ToastNotification from '../../../../components/ui/ToastNotification';
-import { solicitudesService } from '../../../../Services/solicitudesService';
-import TarjetaSolicitudesPendientes from "../components/TarjetaSolicitudesPendientes";
+import { mensajesDeError } from '../../../../Services/errores';
+import {
+    aceptarSolicitud,
+    rechazarSolicitud,
+    traerSolicitudesPendientes,
+} from '../../../../Services/solicitudesAsesorService';
+import TarjetaSolicitudesPendientes from '../components/TarjetaSolicitudesPendientes';
 
 export default function SolicitudesPendientes() {
-    const { usuario } = useAuth();
-    const id_asesor = usuario?.id_usuario;
-
     const [solicitudes, setSolicitudes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
+
+    // La API pagina de 10 en 10: "meta" trae la última página y el total
+    const [pagina, setPagina] = useState(1);
+    const [meta, setMeta] = useState(null);
 
     // Toast global de la vista (también lo usan los modales de la tarjeta)
     const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
@@ -38,55 +44,63 @@ export default function SolicitudesPendientes() {
             setLoading(false);
             return;
         }
-        
-        if (!id_asesor) return;
 
         try {
             if (!silencioso) setLoading(true);
             setError(false);
-            const response = await solicitudesService.obtenerTodas({ id_asesor });
-            setSolicitudes(response.data);
+
+            const { solicitudes: lista, meta: metaNueva } = await traerSolicitudesPendientes({ page: pagina });
+
+            // Si se atendió la última solicitud de esta página, la página queda vacía:
+            // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)
+            if (lista.length === 0 && pagina > 1) {
+                setPagina(pagina - 1);
+                return;
+            }
+
+            setSolicitudes(lista);
+            setMeta(metaNueva);
         } catch (err) {
             console.error('Error al cargar solicitudes', err);
             if (!silencioso) setError(true);
-            showToast('No se pudieron cargar las solicitudes', 'error');
+            showToast(mensajesDeError(err)[0], 'error');
         } finally {
             setLoading(false);
         }
-    }, [id_asesor, showToast]);
+    }, [pagina, showToast]);
 
     useEffect(() => {
         cargarSolicitudes();
     }, [cargarSolicitudes]);
 
     // Regresan true si salió bien (la tarjeta cierra el modal) y false si falló
-    const handleRechazar = async (id_solicitud, razon) => {
+    const handleRechazar = async (id_solicitud, motivo) => {
         try {
-            const response = await solicitudesService.rechazar(id_solicitud, razon);
-            showToast(response.message, 'success');
+            await rechazarSolicitud(id_solicitud, motivo);
+            showToast('Solicitud rechazada correctamente', 'success');
             cargarSolicitudes({ silencioso: true });
             return true;
         } catch (err) {
-            const message = err.response?.data?.message || 'No se pudo rechazar la solicitud';
-            showToast(message, 'error');
+            showToast(mensajesDeError(err)[0], 'error');
             return false;
         }
     };
 
     const handleAceptar = async (solicitud) => {
         try {
-            const response = await solicitudesService.aceptar(solicitud);
-            showToast(response.message, 'success');
+            await aceptarSolicitud(solicitud.id_solicitud);
+            showToast('Solicitud aceptada con éxito', 'success');
+            // Al aceptar, otras solicitudes del mismo cupo se rechazan solas: se recarga la lista
             cargarSolicitudes({ silencioso: true });
             return true;
         } catch (err) {
-            const message = err.response?.data?.message || 'No se pudo aceptar la solicitud';
-            showToast(message, 'error');
+            // Aquí caen, por ejemplo, 409 horario_ocupado y 409 solicitud_no_pendiente
+            showToast(mensajesDeError(err)[0], 'error');
             return false;
         }
     };
 
-    const total = solicitudes.length;
+    const total = meta?.total ?? solicitudes.length;
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-gray-100 px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
@@ -119,12 +133,25 @@ export default function SolicitudesPendientes() {
                         </Button>
                     </div>
                 ) : (
-                    <TarjetaSolicitudesPendientes
-                        solicitudes={solicitudes}
-                        onAceptar={handleAceptar}
-                        onRechazar={handleRechazar}
-                        showToast={showToast}
-                    />
+                    <>
+                        <TarjetaSolicitudesPendientes
+                            solicitudes={solicitudes}
+                            onAceptar={handleAceptar}
+                            onRechazar={handleRechazar}
+                            showToast={showToast}
+                        />
+
+                        {/* Paginación: solo aparece si hay más de una página */}
+                        {meta && meta.last_page > 1 && (
+                            <div className="mt-6 flex w-full justify-center">
+                                <Pagination
+                                    count={meta.last_page}
+                                    page={pagina}
+                                    onChange={(_, nueva) => setPagina(nueva)}
+                                />
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 

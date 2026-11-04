@@ -5,7 +5,7 @@ import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import { Avatar, Chip } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
-import { asesoresService } from '../../../../Services/asesoresService';
+import { traerPerfilAsesor } from '../../../../Services/perfilAsesorService';
 import { PERFIL_ASESOR_PRUEBA, USAR_DATOS_PRUEBA } from '../datosPrueba';
 
 // Una fila de datos: ícono, etiqueta chica y valor
@@ -45,7 +45,7 @@ export default function PerfilAsesor() {
             return;
         }
 
-        asesoresService.traerPerfilAsesor()
+        traerPerfilAsesor()
             .then(setPerfil)
             .catch((err) => {
                 // Si la ruta aún no existe, se muestran los datos de la sesión
@@ -115,7 +115,7 @@ export default function PerfilAsesor() {
                         <div className="grid grid-cols-3 divide-x divide-gray-200 border-t border-gray-200">
                             <Estadistica valor={estadisticas.completadas} etiqueta="Completadas" />
                             <Estadistica valor={estadisticas.en_curso} etiqueta="En curso" />
-                            <Estadistica valor={estadisticas.solicitudes_pendientes} etiqueta="Pendientes" />
+                            <Estadistica valor={estadisticas.pendientes_por_responder} etiqueta="Pendientes" />
                         </div>
                     )}
                 </div>

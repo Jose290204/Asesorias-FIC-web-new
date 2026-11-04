@@ -1,5 +1,5 @@
 // Interruptor: true = muestra datos falsos, false = usa el backend real
-export const USAR_DATOS_PRUEBA = true;
+export const USAR_DATOS_PRUEBA = false;
 
 // ---------------------------------------------------------------------------
 // SOLICITUDES PENDIENTES (forma que usa TarjetaSolicitudesPendientes)

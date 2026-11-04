@@ -19,21 +19,34 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 
 import ToastNotification from '../../../../components/ui/ToastNotification';
-import { asesoresService } from '../../../../Services/asesoresService';
-import { catalogosService } from '../../../../Services/catalogosService';
-import { CATALOGOS_PRUEBA, DISPONIBILIDAD_PRUEBA, USAR_DATOS_PRUEBA } from '../datosPrueba';
+import { useCatalogos } from '../../../../context/CatalogosContext';
+import {
+    guardarDisponibilidad,
+    traerDisponibilidad,
+    traerMaterias
+} from '../../../../Services/asesoriasAsesorService';
+import { mensajesDeError } from '../../../../Services/errores';
 
-// Mismos números que el enum de días del backend (ajusta si tu enum es distinto)
-const DIAS = [
-    { id: 1, nombre: 'Lunes' },
-    { id: 2, nombre: 'Martes' },
-    { id: 3, nombre: 'Miércoles' },
-    { id: 4, nombre: 'Jueves' },
-    { id: 5, nombre: 'Viernes' },
+// Respaldo por si el catálogo de días aún no llega (los valores son los mismos que usa la API, sin acento)
+const DIAS_RESPALDO = [
+    { valor: 'lunes', etiqueta: 'Lunes' },
+    { valor: 'martes', etiqueta: 'Martes' },
+    { valor: 'miercoles', etiqueta: 'Miércoles' },
+    { valor: 'jueves', etiqueta: 'Jueves' },
+    { valor: 'viernes', etiqueta: 'Viernes' },
 ];
 
 // Clave única de un horario seleccionado: "día-idHorario"
-const clave = (h) => `${h.dia}-${h.id_horario}`;
+const clave = (h) => `${h.dia}-${h.horarioId}`;
+
+// La API entrega lo guardado así: materias [{id, nombre, ...}], horarios agrupados por día
+// [{ dia, etiqueta, horarios: [{ id, etiqueta }] }] y modalidades [{ valor, etiqueta }].
+// Aquí se aplana a lo que maneja la pantalla.
+const aEstadoPantalla = (datos) => ({
+    materias: datos.materias.map((m) => ({ id: m.id, nombre: m.nombre })),
+    horarios: datos.horarios.flatMap((grupo) => grupo.horarios.map((h) => ({ dia: grupo.dia, horarioId: h.id }))),
+    modalidades: datos.modalidades.map((m) => m.valor),
+});
 
 // --- DIÁLOGO: ELEGIR VARIAS MATERIAS A LA VEZ ---
 function DialogMaterias({ open, onClose, catalogo, seleccionadas, onConfirm }) {
@@ -43,7 +56,7 @@ function DialogMaterias({ open, onClose, catalogo, seleccionadas, onConfirm }) {
     // Al abrir, parte de lo que ya estaba seleccionado
     useEffect(() => {
         if (open) {
-            setIds(seleccionadas.map((m) => m.id_materia));
+            setIds(seleccionadas.map((m) => m.id));
             setBusqueda('');
         }
     }, [open, seleccionadas]);
@@ -52,11 +65,11 @@ function DialogMaterias({ open, onClose, catalogo, seleccionadas, onConfirm }) {
         setIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
     const filtradas = catalogo.filter((m) =>
-        String(m.materia).toLowerCase().includes(busqueda.toLowerCase().trim())
+        String(m.nombre).toLowerCase().includes(busqueda.toLowerCase().trim())
     );
 
     const handleConfirm = () => {
-        onConfirm(catalogo.filter((m) => ids.includes(m.id_materia)));
+        onConfirm(catalogo.filter((m) => ids.includes(m.id)).map((m) => ({ id: m.id, nombre: m.nombre })));
         onClose();
     };
 
@@ -81,22 +94,22 @@ function DialogMaterias({ open, onClose, catalogo, seleccionadas, onConfirm }) {
                     ) : (
                         filtradas.map((m) => (
                             <ListItemButton
-                                key={m.id_materia}
+                                key={m.id}
                                 dense
-                                onClick={() => toggle(m.id_materia)}
+                                onClick={() => toggle(m.id)}
                                 sx={{ borderRadius: '6px' }}
                             >
                                 <ListItemIcon sx={{ minWidth: 36 }}>
                                     <Checkbox
                                         edge="start"
                                         size="small"
-                                        checked={ids.includes(m.id_materia)}
+                                        checked={ids.includes(m.id)}
                                         tabIndex={-1}
                                         disableRipple
                                         sx={{ color: '#9e9e9e', '&.Mui-checked': { color: '#2e7d32' } }}
                                     />
                                 </ListItemIcon>
-                                <ListItemText primary={m.materia} slotProps={{ primary: { sx: { fontSize: '14px' } } }} />
+                                <ListItemText primary={m.nombre} slotProps={{ primary: { sx: { fontSize: '14px' } } }} />
                             </ListItemButton>
                         ))
                     )}
@@ -136,19 +149,22 @@ function SeccionTarjeta({ titulo, subtitulo, accion, children }) {
 
 // --- PÁGINA ---
 export default function DisponibilidadAsesor() {
+    // Catálogos que ya carga el layout del asesor: horarios, modalidades y días
+    const { catalogos } = useCatalogos();
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
     // lo que el asesor está editando
-    const [materias, setMaterias] = useState([]);     // [{ id_materia, materia }]
-    const [horarios, setHorarios] = useState([]);     // [{ dia, id_horario }]
+    const [materias, setMaterias] = useState([]);       // [{ id, nombre }]
+    const [horarios, setHorarios] = useState([]);       // [{ dia: 'lunes', horarioId }]
+    const [modalidades, setModalidades] = useState([]); // ['presencial', 'virtual']
 
     // lo que está guardado en el back (para saber si hay cambios y poder descartar)
-    const [guardado, setGuardado] = useState({ materias: [], horarios: [] });
+    const [guardado, setGuardado] = useState({ materias: [], horarios: [], modalidades: [] });
 
-    // catálogos (opciones disponibles)
+    // todas las materias de la facultad (opciones del diálogo)
     const [catalogoMaterias, setCatalogoMaterias] = useState([]);
-    const [catalogoHorarios, setCatalogoHorarios] = useState([]);
 
     const [dialogMateriasOpen, setDialogMateriasOpen] = useState(false);
     const [guardando, setGuardando] = useState(false);
@@ -163,81 +179,84 @@ export default function DisponibilidadAsesor() {
         setToast((prev) => ({ ...prev, open: false }));
     };
 
-    const cargarDisponibilidad = useCallback(async () => {
-        if (USAR_DATOS_PRUEBA) {
-            setMaterias(DISPONIBILIDAD_PRUEBA.materias);
-            setHorarios(DISPONIBILIDAD_PRUEBA.horarios);
-            setGuardado({ materias: DISPONIBILIDAD_PRUEBA.materias, horarios: DISPONIBILIDAD_PRUEBA.horarios });
-            setLoading(false);
-            return;
-        }
+    const aplicarEstado = (estado) => {
+        setMaterias(estado.materias);
+        setHorarios(estado.horarios);
+        setModalidades(estado.modalidades);
+        setGuardado(estado);
+    };
 
+    const cargarDisponibilidad = useCallback(async () => {
         try {
             setLoading(true);
             setError(false);
-            const datos = await asesoresService.obtenerDisponibilidad();
+            const datos = await traerDisponibilidad();
+            const estado = aEstadoPantalla(datos);
 
-            setMaterias(datos.materias);
-            setHorarios(datos.horarios);
-            setGuardado({ materias: datos.materias, horarios: datos.horarios });
+            setMaterias(estado.materias);
+            setHorarios(estado.horarios);
+            setModalidades(estado.modalidades);
+            setGuardado(estado);
         } catch (err) {
             console.error('Error al cargar la disponibilidad', err);
             setError(true);
-            showToast('No se pudo cargar la disponibilidad', 'error');
+            showToast(mensajesDeError(err)[0], 'error');
         } finally {
             setLoading(false);
         }
     }, [showToast]);
 
-    const cargarCatalogos = useCallback(async () => {
-        if (USAR_DATOS_PRUEBA) {
-            setCatalogoMaterias(CATALOGOS_PRUEBA.materias);
-            setCatalogoHorarios(CATALOGOS_PRUEBA.horarios);
-            return;
-        }
-
+    const cargarMaterias = useCallback(async () => {
         try {
-            const datos = await catalogosService.obtenerCatalogos();
-            setCatalogoMaterias(datos.materias);
-            setCatalogoHorarios(datos.horarios);
+            setCatalogoMaterias(await traerMaterias());
         } catch (err) {
-            console.error('Error al cargar catálogos', err);
-            showToast('No se pudieron cargar los catálogos', 'error');
+            console.error('Error al cargar las materias', err);
+            showToast('No se pudieron cargar las materias', 'error');
         }
     }, [showToast]);
 
     useEffect(() => {
         cargarDisponibilidad();
-        cargarCatalogos();
-    }, [cargarDisponibilidad, cargarCatalogos]);
+        cargarMaterias();
+    }, [cargarDisponibilidad, cargarMaterias]);
 
-    // ¿Hay cambios? Se comparan ids (sin importar el orden)
-    const firmaMaterias = (lista) => lista.map((m) => m.id_materia).sort((a, b) => a - b).join(',');
+    // ¿Hay cambios? Se comparan ids y valores (sin importar el orden)
+    const firmaMaterias = (lista) => lista.map((m) => m.id).sort((a, b) => a - b).join(',');
     const firmaHorarios = (lista) => lista.map(clave).sort().join(',');
+    const firmaModalidades = (lista) => [...lista].sort().join(',');
 
     const hasChanges =
         firmaMaterias(materias) !== firmaMaterias(guardado.materias) ||
-        firmaHorarios(horarios) !== firmaHorarios(guardado.horarios);
+        firmaHorarios(horarios) !== firmaHorarios(guardado.horarios) ||
+        firmaModalidades(modalidades) !== firmaModalidades(guardado.modalidades);
 
     // --- Materias ---
     const handleQuitarMateria = (id) =>
-        setMaterias((prev) => prev.filter((m) => m.id_materia !== id));
+        setMaterias((prev) => prev.filter((m) => m.id !== id));
+
+    // --- Modalidades (tocar para activar/desactivar) ---
+    const toggleModalidad = (valor) =>
+        setModalidades((prev) => (prev.includes(valor) ? prev.filter((v) => v !== valor) : [...prev, valor]));
 
     // --- Horarios (tocar para activar/desactivar) ---
     const seleccionados = new Set(horarios.map(clave));
 
-    const toggleHorario = (dia, id_horario) => {
-        const k = `${dia}-${id_horario}`;
+    const toggleHorario = (dia, horarioId) => {
+        const k = `${dia}-${horarioId}`;
         setHorarios((prev) =>
             seleccionados.has(k)
                 ? prev.filter((h) => clave(h) !== k)
-                : [...prev, { dia, id_horario }]
+                : [...prev, { dia, horarioId }]
         );
     };
 
+    const slots = [...(catalogos?.horarios ?? [])].sort((a, b) => a.id - b.id);
+    const dias = catalogos?.dias ?? DIAS_RESPALDO;
+    const opcionesModalidad = catalogos?.modalidades ?? [];
+
     // "Todos / Ninguno" de un día
     const toggleDia = (dia) => {
-        const delDia = catalogoHorarios.map((h) => ({ dia, id_horario: h.id_horario }));
+        const delDia = slots.map((s) => ({ dia, horarioId: s.id }));
         const todos = delDia.every((h) => seleccionados.has(clave(h)));
 
         setHorarios((prev) => {
@@ -249,6 +268,7 @@ export default function DisponibilidadAsesor() {
     const handleDescartar = () => {
         setMaterias(guardado.materias);
         setHorarios(guardado.horarios);
+        setModalidades(guardado.modalidades);
     };
 
     const handleApply = async () => {
@@ -258,28 +278,28 @@ export default function DisponibilidadAsesor() {
             document.activeElement.blur();
         }
 
-        // Modo prueba: no hay backend, solo simula que se guardó
-        if (USAR_DATOS_PRUEBA) {
-            setGuardado({ materias, horarios });
-            showToast('Cambios aplicados (modo prueba)', 'success');
-            return;
-        }
+        // La API exige al menos una materia, un horario y una modalidad (así todo asesor guardado es contactable)
+        if (materias.length === 0) return showToast('Elige al menos una materia', 'error');
+        if (horarios.length === 0) return showToast('Elige al menos un horario', 'error');
+        if (modalidades.length === 0) return showToast('Elige al menos una modalidad', 'error');
 
         try {
             setGuardando(true);
-            await asesoresService.actualizarDisponibilidad(materias, horarios);
+            // El PUT recibe los horarios planos y responde con el estado nuevo: no hace falta otro GET
+            const respuesta = await guardarDisponibilidad({
+                materias: materias.map((m) => m.id),
+                horarios: horarios.map((h) => ({ dia: h.dia, horario_id: h.horarioId })),
+                modalidades,
+            });
 
-            setGuardado({ materias, horarios });
+            aplicarEstado(aEstadoPantalla(respuesta));
             showToast('Cambios aplicados correctamente', 'success');
         } catch (err) {
-            const mensaje = err.response?.data?.message || 'Error al guardar los cambios';
-            showToast(mensaje, 'error');
+            showToast(mensajesDeError(err)[0], 'error');
         } finally {
             setGuardando(false);
         }
     };
-
-    const slots = [...catalogoHorarios].sort((a, b) => a.id_horario - b.id_horario);
 
     return (
         <div className={`min-h-[calc(100dvh-3.5rem)] w-full bg-gray-100 px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8 ${hasChanges ? 'pb-28' : ''}`}>
@@ -343,9 +363,9 @@ export default function DisponibilidadAsesor() {
                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                     {materias.map((m) => (
                                         <Chip
-                                            key={m.id_materia}
-                                            label={m.materia}
-                                            onDelete={() => handleQuitarMateria(m.id_materia)}
+                                            key={m.id}
+                                            label={m.nombre}
+                                            onDelete={() => handleQuitarMateria(m.id)}
                                             sx={{
                                                 height: 'auto',
                                                 py: 0.5,
@@ -360,21 +380,52 @@ export default function DisponibilidadAsesor() {
                             )}
                         </SeccionTarjeta>
 
+                        {/* MODALIDADES */}
+                        <SeccionTarjeta
+                            titulo="Modalidades"
+                            subtitulo="Toca una modalidad para activarla o desactivarla."
+                        >
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                                {opcionesModalidad.map((m) => {
+                                    const activa = modalidades.includes(m.valor);
+                                    return (
+                                        <Chip
+                                            key={m.valor}
+                                            label={m.etiqueta}
+                                            clickable
+                                            onClick={() => toggleModalidad(m.valor)}
+                                            icon={activa ? <CheckIcon sx={{ fontSize: 16 }} /> : undefined}
+                                            variant={activa ? 'filled' : 'outlined'}
+                                            sx={{
+                                                height: 36,
+                                                fontWeight: 600,
+                                                borderColor: activa ? '#2e7d32' : '#BDBDBD',
+                                                backgroundColor: activa ? '#2e7d32' : 'transparent',
+                                                color: activa ? '#ffffff' : '#555555',
+                                                '& .MuiChip-icon': { color: '#ffffff' },
+                                                '&:hover': { backgroundColor: activa ? '#1b5e20' : 'rgba(0,0,0,0.04)' }
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </Box>
+                        </SeccionTarjeta>
+
                         {/* HORARIOS POR DÍA */}
                         <SeccionTarjeta
                             titulo="Horarios disponibles"
                             subtitulo="Toca un horario para activarlo o desactivarlo en cada día."
                         >
                             <div className="flex flex-col gap-5">
-                                {DIAS.map((dia) => {
-                                    const activosDelDia = slots.filter((s) => seleccionados.has(`${dia.id}-${s.id_horario}`)).length;
+                                {dias.map((dia) => {
+                                    const activosDelDia = slots.filter((s) => seleccionados.has(`${dia.valor}-${s.id}`)).length;
                                     const todos = slots.length > 0 && activosDelDia === slots.length;
 
                                     return (
-                                        <div key={dia.id} className="flex flex-col gap-2">
+                                        <div key={dia.valor} className="flex flex-col gap-2">
                                             <div className="flex items-center justify-between">
                                                 <p className="text-sm font-bold text-gray-800">
-                                                    {dia.nombre}
+                                                    {dia.etiqueta}
                                                     {activosDelDia > 0 && (
                                                         <span className="ml-2 text-xs font-medium text-gray-500">
                                                             {activosDelDia} {activosDelDia === 1 ? 'horario' : 'horarios'}
@@ -383,7 +434,7 @@ export default function DisponibilidadAsesor() {
                                                 </p>
                                                 <Button
                                                     size="small"
-                                                    onClick={() => toggleDia(dia.id)}
+                                                    onClick={() => toggleDia(dia.valor)}
                                                     sx={{ textTransform: 'none', minWidth: 0, color: '#244B91', fontSize: '12px' }}
                                                 >
                                                     {todos ? 'Ninguno' : 'Todos'}
@@ -392,13 +443,13 @@ export default function DisponibilidadAsesor() {
 
                                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                                 {slots.map((s) => {
-                                                    const activo = seleccionados.has(`${dia.id}-${s.id_horario}`);
+                                                    const activo = seleccionados.has(`${dia.valor}-${s.id}`);
                                                     return (
                                                         <Chip
-                                                            key={s.id_horario}
-                                                            label={s.horario}
+                                                            key={s.id}
+                                                            label={s.etiqueta}
                                                             clickable
-                                                            onClick={() => toggleHorario(dia.id, s.id_horario)}
+                                                            onClick={() => toggleHorario(dia.valor, s.id)}
                                                             icon={activo ? <CheckIcon sx={{ fontSize: 16 }} /> : undefined}
                                                             variant={activo ? 'filled' : 'outlined'}
                                                             sx={{

@@ -4,6 +4,8 @@ import api from './api';
 export const catalogosService = {
     obtenerCatalogos: async () => {
         const response = await api.get('/catalogos');
-        return response.data.data;
+        // GET /catalogos responde { horarios, modalidades, razones, dias } sin envoltorio "data";
+        // se acepta también la forma envuelta por si el backend la cambia
+        return response.data?.data ?? response.data;
     }
 };

@@ -8,15 +8,10 @@ import Typography from '@mui/material/Typography';
 import TextField from '@mui/material/TextField';
 
 // --- 1. MODAL ACEPTAR SOLICITUD ---
-export function ModalAceptarSolicitud({ open, onClose, onConfirm, showToast }) {
+export function ModalAceptarSolicitud({ open, onClose, onConfirm }) {
+    // La vista ya muestra el toast (éxito o error) y la tarjeta cierra el modal solo si salió bien
     const handleConfirm = async () => {
-        try {
-            if (onConfirm) await onConfirm();
-            if (showToast) showToast('Solicitud aceptada con éxito', 'success');
-            if (onClose) onClose();
-        } catch (error) {
-            if (showToast) showToast('Ocurrió un error al aceptar la solicitud', 'error');
-        }
+        if (onConfirm) await onConfirm();
     };
 
     return (
@@ -52,18 +47,13 @@ export function ModalAceptarSolicitud({ open, onClose, onConfirm, showToast }) {
 }
 
 // --- 2. MODAL RECHAZAR SOLICITUD ---
-export function ModalRechazarSolicitud({ open, onClose, onConfirm, showToast }) {
+export function ModalRechazarSolicitud({ open, onClose, onConfirm }) {
     const [motivo, setMotivo] = useState('');
 
+    // La vista ya muestra el toast; el motivo se limpia solo si el rechazo salió bien
     const handleConfirm = async () => {
-        try {
-            if (onConfirm) await onConfirm(motivo); // Se envía el motivo capturado
-            if (showToast) showToast('Asesoría rechazada correctamente', 'error');
-            setMotivo(''); // Limpiar el input
-            if (onClose) onClose();
-        } catch (error) {
-            if (showToast) showToast('Ocurrió un error al rechazar la solicitud', 'error');
-        }
+        const ok = await onConfirm?.(motivo);
+        if (ok) setMotivo('');
     };
 
     const handleClose = () => {
@@ -97,6 +87,7 @@ export function ModalRechazarSolicitud({ open, onClose, onConfirm, showToast }) 
                     value={motivo}
                     onChange={(e) => setMotivo(e.target.value)}
                     multiline
+                    inputProps={{ maxLength: 500 }}
                     rows={3}
                     fullWidth
                     variant="outlined"

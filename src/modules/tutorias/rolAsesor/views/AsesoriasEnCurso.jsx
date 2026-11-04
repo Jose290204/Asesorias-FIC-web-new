@@ -2,19 +2,32 @@ import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Fab from '@mui/material/Fab';
+import Pagination from '@mui/material/Pagination';
 import { useCallback, useEffect, useState } from "react";
-import { asesoriasService } from "../../../../Services/asesoriasService";
 import InputBuscar from "../../../../components/ui/InputBuscar";
 import ToastNotification from "../../../../components/ui/ToastNotification";
+import {
+    cancelarAsesoria,
+    completarAsesoria,
+    crearAsesoria,
+    editarAsesoria,
+    traerAsesorias
+} from "../../../../Services/asesoriasAsesorService";
+import { mensajesDeError } from "../../../../Services/errores";
 import { ModalCrearAsesoria } from "../components/ModalesAsesoriasEnCurso";
 import TarjetaAsesoriasEnCurso from "../components/TajetaAsesoriasEnCurso";
 import { ASESORIAS_EN_CURSO_PRUEBA, USAR_DATOS_PRUEBA } from "../datosPrueba";
 
 export default function AsesoriasEnCurso() {
 
+    // Lo que se escribe en el buscador, y el texto que ya se mandó a la API (con una pausa al escribir)
     const [busqueda, setBusqueda] = useState("");
+    const [buscar, setBuscar] = useState("");
 
-    // se llena con datos reales en el useEffect de abajo
+    // La API pagina de 10 en 10: "meta" trae la última página y el total
+    const [pagina, setPagina] = useState(1);
+    const [meta, setMeta] = useState(null);
+
     const [asesoriasEnCurso, setAsesoriasEnCurso] = useState([]);
 
     // estado de carga y de error, mientras llega la respuesta del backend
@@ -37,11 +50,21 @@ export default function AsesoriasEnCurso() {
         setToast((prev) => ({ ...prev, open: false }));
     };
 
-    // Trae las asesorías reales del asesor logueado
-    // silencioso = recarga sin quitar la lista (se usa después de crear)
+    // Al dejar de escribir 400 ms se busca en la API y se vuelve a la página 1
+    useEffect(() => {
+        const temporizador = setTimeout(() => {
+            setBuscar(busqueda.trim());
+            setPagina(1);
+        }, 400);
+
+        return () => clearTimeout(temporizador);
+    }, [busqueda]);
+
+    // Trae las asesorías en curso del asesor logueado
+    // silencioso = recarga sin quitar la lista (se usa después de crear, editar, completar o cancelar)
     const cargarAsesorias = useCallback(async ({ silencioso = false } = {}) => {
 
-         if (USAR_DATOS_PRUEBA) {
+        if (USAR_DATOS_PRUEBA) {
             setAsesoriasEnCurso(ASESORIAS_EN_CURSO_PRUEBA);
             setError(false);
             setLoading(false);
@@ -51,16 +74,26 @@ export default function AsesoriasEnCurso() {
         try {
             if (!silencioso) setLoading(true);
             setError(false);
-            const filas = await asesoriasService.obtenerAsesoriasAsesor();
-            setAsesoriasEnCurso(filas);
+
+            const { asesorias, meta: metaNueva } = await traerAsesorias({ estatus: 'en_curso', buscar, page: pagina });
+
+            // Si se atendió la última asesoría de esta página, la página queda vacía:
+            // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)
+            if (asesorias.length === 0 && pagina > 1) {
+                setPagina(pagina - 1);
+                return;
+            }
+
+            setAsesoriasEnCurso(asesorias);
+            setMeta(metaNueva);
         } catch (err) {
             console.error('Error al cargar asesorías', err);
             if (!silencioso) setError(true);
-            showToast('No se pudieron cargar las asesorías', 'error');
+            showToast(mensajesDeError(err)[0], 'error');
         } finally {
             setLoading(false);
         }
-    }, [showToast]);
+    }, [buscar, pagina, showToast]);
 
     useEffect(() => {
         cargarAsesorias();
@@ -76,22 +109,37 @@ export default function AsesoriasEnCurso() {
         setModalCrearOpen(true);
     };
 
-    // Tras crear, recarga la lista completa desde el backend para tener datos reales
-    const handleCrearAsesoria = async (nuevaAsesoria) => {
-        console.log('Asesoría creada:', nuevaAsesoria);
-        await cargarAsesorias({ silencioso: true });
+    // Las acciones regresan true si salió bien (el modal se cierra) y false si falló (el modal sigue abierto).
+    // Aquí caen los errores de la API, por ejemplo 409 horario_ocupado o 422 fuera_de_ciclo.
+    const ejecutar = async (accion, mensajeExito) => {
+        try {
+            await accion();
+            showToast(mensajeExito, 'success');
+            cargarAsesorias({ silencioso: true });
+            return true;
+        } catch (err) {
+            showToast(mensajesDeError(err)[0], 'error');
+            return false;
+        }
     };
 
-    // filtro de asesorias
-    const asesoriasFiltradas = asesoriasEnCurso.filter((asesoria) => {
-        const textoBusqueda = busqueda.toLowerCase();
-        return (
-            asesoria.materia.toLowerCase().includes(textoBusqueda) ||
-            asesoria.estudiante.toLowerCase().includes(textoBusqueda)
-        );
-    });
+    const handleCrearAsesoria = (datos) =>
+        ejecutar(() => crearAsesoria(datos), 'Asesoría creada correctamente');
 
-    const total = asesoriasEnCurso.length;
+    // Solo viaja lo que cambió (el modal arma "cambios")
+    const handleGuardarInfo = (id, cambios) =>
+        ejecutar(() => editarAsesoria(id, cambios), 'Cambios aplicados correctamente');
+
+    const handleCompletar = (asesoria) =>
+        ejecutar(() => completarAsesoria(asesoria.id), 'Asesoría completada con éxito');
+
+    const handleCancelar = (asesoria, motivo) =>
+        ejecutar(() => cancelarAsesoria(asesoria.id, motivo), 'Asesoría cancelada correctamente');
+
+    // Registrar o borrar una sesión cambia el conteo que muestra la lista
+    const handleSesionesCambio = () => cargarAsesorias({ silencioso: true });
+
+    const total = meta?.total ?? asesoriasEnCurso.length;
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-gray-100 px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
@@ -139,7 +187,7 @@ export default function AsesoriasEnCurso() {
             {/* Leyenda de resultados */}
             {!loading && !error && (
                 <p className="-mt-3 text-sm text-gray-600 md:-mt-4">
-                    Mostrando {asesoriasFiltradas.length} de {total} {total === 1 ? 'asesoría' : 'asesorías'}
+                    {total} {total === 1 ? 'asesoría' : 'asesorías'}{buscar ? ' encontradas' : ' en curso'}
                 </p>
             )}
 
@@ -162,12 +210,31 @@ export default function AsesoriasEnCurso() {
                             Reintentar
                         </Button>
                     </div>
-                ) : total === 0 ? (
+                ) : total === 0 && !buscar ? (
                     <p className="py-10 text-center text-sm text-gray-600">
                         No tienes asesorías en curso.
                     </p>
                 ) : (
-                    <TarjetaAsesoriasEnCurso asesorias={asesoriasFiltradas} />
+                    <>
+                        <TarjetaAsesoriasEnCurso
+                            asesorias={asesoriasEnCurso}
+                            onGuardarInfo={handleGuardarInfo}
+                            onCompletar={handleCompletar}
+                            onCancelar={handleCancelar}
+                            onSesionesCambio={handleSesionesCambio}
+                        />
+
+                        {/* Paginación: solo aparece si hay más de una página */}
+                        {meta && meta.last_page > 1 && (
+                            <div className="mt-6 flex w-full justify-center">
+                                <Pagination
+                                    count={meta.last_page}
+                                    page={pagina}
+                                    onChange={(_, nueva) => setPagina(nueva)}
+                                />
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
@@ -175,7 +242,6 @@ export default function AsesoriasEnCurso() {
                 open={modalCrearOpen}
                 onClose={() => setModalCrearOpen(false)}
                 onSave={handleCrearAsesoria}
-                showToast={showToast}
             />
 
             <ToastNotification
