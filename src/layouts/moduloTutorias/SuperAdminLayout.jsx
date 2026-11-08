@@ -1,0 +1,128 @@
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
+import PersonIcon from '@mui/icons-material/Person';
+import { Avatar, Button, Divider, Drawer, IconButton, ListItemIcon, Menu, MenuItem } from '@mui/material';
+import { useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import LogoUas from '../../assets/logo_uas.png';
+import BarraContexto from '../../components/navigation/moduloTutorias/BarraContexto';
+import SuperAdminSidebar from '../../components/navigation/moduloTutorias/SuperAdminSidebar';
+import { useAuth } from '../../context/AuthContext';
+
+const RUTA_PERFIL = '/superadmin/perfil';
+const RUTA_INICIO = '/superadmin/facultades';
+
+// Panel principal del super admin. Misma estructura que los demás roles:
+// escritorio = menú lateral fijo + franja superior; celular = cabecera + cajón.
+// El super admin solo ve el panel de una facultad cuando "entra" a ella desde Facultades.
+export default function SuperAdminLayout() {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const { logout, usuario } = useAuth();
+
+  // El drawer está abierto solo mientras estés en la ruta donde se abrió
+  const [openPath, setOpenPath] = useState(null);
+  const open = openPath === pathname;
+  const closeDrawer = () => setOpenPath(null);
+
+  // Menú del usuario (arriba a la derecha, solo en celular)
+  const [anchorEl, setAnchorEl] = useState(null);
+  const userMenuOpen = Boolean(anchorEl);
+  const closeUserMenu = () => setAnchorEl(null);
+
+  const nombreUsuario = usuario?.nombre ?? '';
+
+  const handleVerPerfil = () => {
+    closeUserMenu();
+    navigate(RUTA_PERFIL, { replace: true });
+  };
+
+  const handleLogoutDesdeMenu = () => {
+    closeUserMenu();
+    logout();
+  };
+
+  return (
+    <div className="flex min-h-dvh bg-[#244B91]">
+      <Drawer
+        open={open}
+        onClose={closeDrawer}
+        sx={{ display: { lg: 'none' } }}
+        slotProps={{ paper: { sx: { bgcolor: 'transparent', boxShadow: 'none' } } }}
+      >
+        <SuperAdminSidebar />
+      </Drawer>
+
+      {/* Escritorio (lg en adelante): el menú siempre visible, pegado a la izquierda */}
+      <div className="sticky top-0 hidden h-dvh shrink-0 self-start lg:block">
+        <SuperAdminSidebar escritorio />
+      </div>
+
+      {/* Columna derecha: franja superior (escritorio) o cabecera (celular) + contenido */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <BarraContexto />
+
+        <header className="lg:hidden sticky top-0 z-10 flex items-center gap-2 bg-[#244B91] px-3 py-2 text-white">
+          <IconButton
+            color="inherit"
+            onClick={() => setOpenPath(pathname)}
+            aria-label="Abrir menú"
+            sx={{ display: { lg: 'none' } }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Button
+            color="inherit"
+            onClick={() => navigate(RUTA_INICIO)}
+            sx={{ textTransform: 'none', gap: 1, px: 1, minWidth: 0 }}
+          >
+            <img src={LogoUas} alt="Logo UAS" className="h-8 w-auto object-contain" />
+            <span className="font-semibold">Asesorías UAS</span>
+          </Button>
+
+          <div className="flex-1" />
+
+          <Button
+            color="inherit"
+            onClick={(e) => setAnchorEl(e.currentTarget)}
+            aria-label="Menú de usuario"
+            aria-haspopup="true"
+            aria-expanded={userMenuOpen ? 'true' : undefined}
+            sx={{ textTransform: 'none', gap: 1, minWidth: 0, px: 1, mr: { xs: 0.5, sm: 2, md: 4 } }}
+          >
+            <Avatar sx={{ width: 32, height: 32, bgcolor: '#EBD9B4', color: '#8A6D2B', fontSize: 16, fontWeight: 'bold' }}>
+              {nombreUsuario ? nombreUsuario.charAt(0).toUpperCase() : ''}
+            </Avatar>
+            <span className="hidden max-w-48 truncate text-sm font-medium sm:inline">{nombreUsuario}</span>
+            <KeyboardArrowDownIcon fontSize="small" />
+          </Button>
+
+          <Menu
+            disableScrollLock
+            anchorEl={anchorEl}
+            open={userMenuOpen}
+            onClose={closeUserMenu}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            slotProps={{ paper: { sx: { mt: 0.5, minWidth: 180 } } }}
+          >
+            <MenuItem onClick={handleVerPerfil}>
+              <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
+              Ver perfil
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleLogoutDesdeMenu} sx={{ color: 'error.main' }}>
+              <ListItemIcon sx={{ color: 'inherit' }}><LogoutIcon fontSize="small" /></ListItemIcon>
+              Cerrar sesión
+            </MenuItem>
+          </Menu>
+        </header>
+
+        <main className="min-w-0 flex-1 bg-gray-100">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}

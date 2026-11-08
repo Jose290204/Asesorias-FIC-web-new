@@ -7,6 +7,8 @@ import { useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import LogoUas from '../../assets/logo_uas.png';
 import AdminSidebar from '../../components/navigation/moduloTutorias/AdminSidebar';
+import BarraFacultadActiva from '../../components/navigation/moduloTutorias/BarraFacultadActiva';
+import BarraContexto from '../../components/navigation/moduloTutorias/BarraContexto';
 import { useAuth } from '../../context/AuthContext';
 
 const RUTA_PERFIL = '/admin/perfil-administrador';
@@ -40,27 +42,41 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col bg-[#244B91]">
+    <div className="flex min-h-dvh bg-[#244B91]">
       <Drawer
         open={open}
         onClose={closeDrawer}
+        sx={{ display: { lg: 'none' } }}
         PaperProps={{ sx: { bgcolor: 'transparent', boxShadow: 'none' } }}
       >
-        <AdminSidebar mobile />
+        <AdminSidebar />
       </Drawer>
 
-      <header className="sticky top-0 z-10 flex items-center gap-2 bg-[#244B91] px-3 py-2 text-white">
+      {/* Escritorio (lg en adelante): el menú siempre visible, pegado a la izquierda */}
+      <div className="sticky top-0 hidden h-dvh shrink-0 self-start lg:block">
+        <AdminSidebar escritorio />
+      </div>
+
+      {/* Columna derecha: cabecera + contenido */}
+      <div className="flex min-w-0 flex-1 flex-col">
+
+      {/* La barra de facultad activa solo se ve si quien entra es el super admin */}
+      <div className="sticky top-0 z-10">
+      <BarraFacultadActiva />
+      <BarraContexto />
+      <header className="lg:hidden flex items-center gap-2 bg-[#244B91] px-3 py-2 text-white">
         <IconButton
           color="inherit"
           onClick={() => setOpenPath(pathname)}
           aria-label="Abrir menú"
+          sx={{ display: { lg: 'none' } }}
         >
           <MenuIcon />
         </IconButton>
         <Button
           color="inherit"
           onClick={() => navigate(RUTA_INICIO)}
-          sx={{ textTransform: 'none', gap: 1, px: 1, minWidth: 0 }}
+          sx={{ textTransform: 'none', gap: 1, px: 1, minWidth: 0, display: { xs: 'inline-flex', lg: 'none' } }}
         >
           <img src={LogoUas} alt="Logo UAS" className="h-8 w-auto object-contain" />
           <span className="font-semibold">Asesorías FIC</span>
@@ -104,10 +120,12 @@ export default function AdminLayout() {
           </MenuItem>
         </Menu>
       </header>
+      </div>
 
       <main className="min-w-0 flex-1 bg-gray-100">
         <Outlet />
       </main>
+      </div>
     </div>
   );
 }

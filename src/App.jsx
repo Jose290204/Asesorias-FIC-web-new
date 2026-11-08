@@ -6,10 +6,18 @@ import AsesorLayout from './layouts/moduloTutorias/AsesorLayout';
 import EstudianteLayout from './layouts/moduloTutorias/EstudianteLayout';
 
 import SkeletonApp from './components/ui/SkeletonApp';
+import { ROL } from './constants/roles';
+import { useFacultadActiva } from './context/FacultadActivaContext';
+import SuperAdminLayout from './layouts/moduloTutorias/SuperAdminLayout';
 
 // vistas
 import Login from './modules/auth/view/Login';
 import RecuperarContrasena from './modules/auth/view/RecuperarContrasena';
+
+// Vistas del super admin
+import Administradores from './modules/superAdmin/views/Administradores';
+import Bitacora from './modules/superAdmin/views/Bitacora';
+import Facultades from './modules/superAdmin/views/Facultades';
 
 // Vistas del Dashboard admin
 import Conocenos from './modules/paginasInicio/Conocenos';
@@ -42,14 +50,14 @@ import SolicitudesEnRevision from './modules/tutorias/rolEstudiante/views/Solici
 const precargaFondoLogin = new Image();
 precargaFondoLogin.src = fondoInicio;
 // IDs `roles`
-const ROLES_ADMIN = [1, 2];
 const ROLES_ASESOR = [3];
 const ROL_ESTUDIANTE = 4;
 
 // Decide a qué pantalla mandar según el rol. Va directo a la vista final:
 // si apuntara al layout, se haría una segunda redirección (la del "index") y se vería un destello.
 function getRutaPorRol(rol) {
-  if (ROLES_ADMIN.includes(rol)) return '/admin/asesorias';
+  if (rol === ROL.SUPER_ADMIN) return '/superadmin/facultades';
+  if (rol === ROL.ADMIN) return '/admin/asesorias';
   if (ROLES_ASESOR.includes(rol)) return '/tutorias/asesor/solicitudes-pendientes';
   if (rol === ROL_ESTUDIANTE) return '/tutorias/estudiante/solicitar-asesorias';
   return '/';
@@ -57,6 +65,10 @@ function getRutaPorRol(rol) {
 
 export default function App() {
   const { usuario, rol, loading } = useAuth();
+  const { facultadActiva } = useFacultadActiva();
+
+  // Al panel de una facultad entra el admin de esa facultad, o el super admin si ya eligió una
+  const puedeVerPanelAdmin = rol === ROL.ADMIN || (rol === ROL.SUPER_ADMIN && Boolean(facultadActiva));
 
  if (loading && localStorage.getItem('_uix')) {
     return <SkeletonApp />;
@@ -76,13 +88,32 @@ export default function App() {
 
         <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
 
-        {/* Rutas del Administrador */}
+        {/* Panel principal del Super administrador */}
+        <Route
+          path="/superadmin"
+          element={
+            usuario && rol === ROL.SUPER_ADMIN
+              ? <SuperAdminLayout />
+              : <Navigate to="/" replace />
+          }
+        >
+          <Route index element={<Navigate to="/superadmin/facultades" replace />} />
+          <Route path="facultades" element={<Facultades />} />
+          <Route path="administradores" element={<Administradores />} />
+          <Route path="bitacora" element={<Bitacora />} />
+          <Route path="perfil" element={<PerfilAdministrador />} />
+        </Route>
+
+        {/* Rutas del Administrador (también las usa el super admin dentro de una facultad) */}
         <Route
           path="/admin"
           element={
-            usuario && ROLES_ADMIN.includes(rol)
-              ? <AdminLayout />
-              : <Navigate to="/" replace />
+            !usuario
+              ? <Navigate to="/" replace />
+              : puedeVerPanelAdmin
+                ? <AdminLayout />
+                // Super admin sin facultad elegida: primero debe escoger una
+                : <Navigate to={rol === ROL.SUPER_ADMIN ? '/superadmin' : '/'} replace />
           }
         >
           <Route index element={<Navigate to="/admin/asesorias" replace />} />

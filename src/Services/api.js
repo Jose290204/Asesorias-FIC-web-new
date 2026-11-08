@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { leerFacultadActiva } from './facultadActiva';
 
 // Sin VITE_API_URL las peticiones van al mismo origen del front ('/api/v1/...')
 // y el proxy de Vite las reenvía a Laravel.
@@ -13,6 +14,14 @@ const api = axios.create({
   },
   withCredentials: true, // manda y recibe la cookie de sesión
   withXSRFToken: true,   // lee XSRF-TOKEN y lo manda como header X-XSRF-TOKEN
+});
+
+// Si el super admin está dentro del panel de una facultad, todas las peticiones llevan
+// su id en X-Facultad-Id. El backend lo valida y solo lo respeta para el super admin.
+api.interceptors.request.use((config) => {
+  const facultad = leerFacultadActiva();
+  if (facultad?.id) config.headers['X-Facultad-Id'] = facultad.id;
+  return config;
 });
 
 // Se llama UNA vez antes del login. Esta ruta NO lleva /api/v1: la define Sanctum.

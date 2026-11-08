@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import logoFic from '../../../assets/fic_logo.png';
+import logoAsesorias from '../../../assets/logo_asesorias.png';
 import logoUas from '../../../assets/logo_uas.png';
+import UsuarioSidebar from './UsuarioSidebar';
 
 // Ruta base del grupo desplegable de reportes
 const RUTA_REPORTES = '/admin/reportes';
@@ -15,12 +16,8 @@ const SUBMENU_REPORTES = [
   { path: `${RUTA_REPORTES}/licenciatura`, label: 'Por licenciatura' }
 ];
 
-export default function AdminSidebar({ mobile = false }) {
+export default function AdminSidebar({ escritorio = false }) {
   const { pathname } = useLocation();
-
-  const [collapsedState, setCollapsed] = useState(false);
-  // En el drawer móvil el menú siempre va expandido
-  const collapsed = mobile ? false : collapsedState;
 
   // El grupo de reportes empieza abierto si ya se está dentro de alguno de sus reportes
   const enReportes = pathname.startsWith(RUTA_REPORTES);
@@ -31,15 +28,7 @@ export default function AdminSidebar({ mobile = false }) {
     if (enReportes) setReportesAbierto(true);
   }, [enReportes]);
 
-  // Con el menú colapsado solo se ven íconos: al tocar Reportes se expande el menú para mostrar las opciones
-  const handleToggleReportes = () => {
-    if (collapsed) {
-      setCollapsed(false);
-      setReportesAbierto(true);
-      return;
-    }
-    setReportesAbierto((prev) => !prev);
-  };
+  const handleToggleReportes = () => setReportesAbierto((prev) => !prev);
 
   const iconoReportes = (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,34 +112,19 @@ export default function AdminSidebar({ mobile = false }) {
       }
     >
       <span className="shrink-0">{item.icon}</span>
-      {!collapsed && <span className="truncate">{item.label}</span>}
+      <span className="truncate">{item.label}</span>
     </NavLink>
   );
 
   return (
     <aside
-      className={`bg-[#244B91] text-white flex flex-col justify-between min-h-dvh shrink-0 transition-all duration-300 relative shadow-xl ${collapsed ? 'w-20' : 'w-70'
-        }`}
+      className={`bg-[#244B91] text-white flex flex-col justify-between min-h-dvh shrink-0 transition-all duration-300 relative shadow-xl w-70`}
     >
-      {/* Botón para colapsar/expandir la barra (solo escritorio) */}
-      {!mobile && (
-        <button
-          onClick={() => setCollapsed(!collapsedState)}
-          className="absolute -right-3 top-8 bg-white text-[#122a88] p-1 rounded-full shadow-md hover:scale-110 transition-transform z-10"
-          title={collapsed ? "Expandir menú" : "Colapsar menú"}
-        >
-          <svg className={`w-4 h-4 transform transition-transform ${collapsed ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-      )}
-
       <div>
         <div className="py-6 flex justify-center items-center">
-          <div className={`rounded-full bg-white p-1 border-0 border-white flex items-center justify-center overflow-hidden transition-all ${collapsed ? 'w-12 h-12' : 'w-30 h-30'
-            }`}>
+          <div className={`rounded-full bg-white p-1 border-0 border-white flex items-center justify-center overflow-hidden transition-all w-30 h-30`}>
             <img
-              src={logoFic}
+              src={logoAsesorias}
               alt="Logo Tutorías"
               className="w-full h-full object-contain rounded-full"
               onError={(e) => {
@@ -170,15 +144,13 @@ export default function AdminSidebar({ mobile = false }) {
               type="button"
               onClick={handleToggleReportes}
               aria-expanded={reportesAbierto}
-              title={collapsed ? 'Reportes' : undefined}
               className={`w-full flex items-center gap-3 px-3 py-3 rounded-[5px] font-medium text-sm transition-all duration-200 cursor-pointer ${enReportes
                 ? 'bg-blue-900/50 text-white font-semibold'
                 : 'text-blue-100 hover:bg-blue-900/50 hover:text-white'
                 }`}
             >
               <span className="shrink-0">{iconoReportes}</span>
-              {!collapsed && (
-                <>
+              <>
                   <span className="truncate flex-1 text-left">Reportes</span>
                   <svg
                     className={`w-4 h-4 shrink-0 transition-transform duration-200 ${reportesAbierto ? 'rotate-180' : ''}`}
@@ -189,10 +161,9 @@ export default function AdminSidebar({ mobile = false }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
                   </svg>
                 </>
-              )}
             </button>
 
-            {!collapsed && reportesAbierto && (
+            {reportesAbierto && (
               <div className="mt-1 ml-5 pl-3 border-l border-blue-300/40 space-y-1">
                 {SUBMENU_REPORTES.map((sub) => (
                   <NavLink
@@ -216,6 +187,8 @@ export default function AdminSidebar({ mobile = false }) {
           {navItemsDespues.map(renderItem)}
         </nav>
       </div>
+      {/* Perfil y cerrar sesión: al fondo del menú, solo en escritorio */}
+      {escritorio && <UsuarioSidebar rutaPerfil="/admin/perfil-administrador" />}
     </aside>
   );
 }
