@@ -1,5 +1,7 @@
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
+import DoneIcon from '@mui/icons-material/Done';
 import SendIcon from '@mui/icons-material/Send';
 import {
     Avatar,
@@ -12,6 +14,8 @@ import {
     useMediaQuery
 } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
+import TextoConEnlaces from '../../../../../components/ui/TextoConEnlaces';
+import useChatAsesoria from '../../../../../hooks/useChatAsesoria';
 
 // --- CHAT DEL ESTUDIANTE CON EL ASESOR ---
 // Celular: pantalla completa, estilo WhatsApp (cabecera arriba, mensajes con scroll, barra para escribir abajo).
@@ -20,24 +24,29 @@ import { useEffect, useRef, useState } from 'react';
 
 const COLOR_PRINCIPAL = '#08338F';
 
-// Conversación de prueba (quítala cuando conectes el chat real)
-const MENSAJES_DEMO = [
-    { id: 1, texto: '¿Buenas tardes maestro, me podría mandar el link?', propio: true },
-    { id: 2, texto: 'Buenas tardes, claro que si ahorita te lo mando', propio: false },
-    { id: 3, texto: 'www.zoom.com/j/123456', propio: false },
-    { id: 4, texto: 'Muchas gracias maestro', propio: true }
-];
+// "8 nov, 1:48 p.m." (día y hora locales del dispositivo)
+const formatearFechaHora = (iso) =>
+    iso
+        ? new Date(iso).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+        : '';
 
-export default function ModalChatAsesoriaEstudiante({ open, onClose, data, onSendMessage, showToast }) {
+export default function ModalChatAsesoriaEstudiante({ open, onClose, data, showToast }) {
     const esCelular = useMediaQuery('(max-width:599.95px)');
-    const [mensajes, setMensajes] = useState([]);
     const [texto, setTexto] = useState('');
     const panelRef = useRef(null);
     const listaRef = useRef(null);
 
-    // Al cambiar de conversación se cargan sus mensajes (data.mensajes o la conversación de prueba)
+    // Mensajes reales: carga inicial, consulta periódica y envío (ver hooks/useChatAsesoria.js)
+    const enCurso = data?.estatus === 'en_curso';
+    const { mensajes, cargando, errorCarga, leidosHasta, enviar } = useChatAsesoria({
+        asesoriaId: data?.id,
+        abierto: Boolean(open),
+        enCurso,
+        showToast
+    });
+
+    // Al cambiar de conversación se limpia lo que estaba escrito
     useEffect(() => {
-        setMensajes(data?.mensajes ?? MENSAJES_DEMO);
         setTexto('');
     }, [data?.id]);
 
@@ -76,18 +85,10 @@ export default function ModalChatAsesoriaEstudiante({ open, onClose, data, onSen
         const contenido = texto.trim();
         if (!contenido) return;
 
-        const nuevoMensaje = { id: Date.now(), texto: contenido, propio: true };
-        setMensajes((prev) => [...prev, nuevoMensaje]);
         setTexto('');
-
-        try {
-            if (onSendMessage) await onSendMessage(data, nuevoMensaje);
-        } catch (error) {
-            // Si falla el envío se quita el mensaje, se devuelve el texto al campo y se avisa con un toast
-            setMensajes((prev) => prev.filter((mensaje) => mensaje.id !== nuevoMensaje.id));
-            setTexto(contenido);
-            if (showToast) showToast('No se pudo enviar el mensaje', 'error');
-        }
+        // Si falla, el hook quita el mensaje y avisa con un toast; aquí se devuelve el texto al campo
+        const enviado = await enviar(contenido);
+        if (!enviado) setTexto(contenido);
     };
 
     const handleKeyDown = (event) => {
@@ -184,9 +185,11 @@ export default function ModalChatAsesoriaEstudiante({ open, onClose, data, onSen
                         backgroundColor: esCelular ? '#F0F2F5' : '#ffffff'
                     }}
                 >
-                    {mensajes.length === 0 ? (
-                        <Typography sx={{ color: '#666666', fontSize: '14px', textAlign: 'center', mt: 4 }}>
-                            Aún no hay mensajes.
+                    {cargando || errorCarga || mensajes.length === 0 ? (
+                        <Typography
+                            sx={{ color: errorCarga ? '#B42318' : '#666666', fontSize: '14px', textAlign: 'center', mt: 4 }}
+                        >
+                            {cargando ? 'Cargando mensajes...' : errorCarga || 'Aún no hay mensajes.'}
                         </Typography>
                     ) : (
                         mensajes.map((mensaje) => (
@@ -206,55 +209,94 @@ export default function ModalChatAsesoriaEstudiante({ open, onClose, data, onSen
                                     wordBreak: 'break-word'
                                 }}
                             >
-                                {mensaje.texto}
+                                <TextoConEnlaces texto={mensaje.texto} propio={mensaje.propio} />
+                                {/* Día y hora; en los mensajes propios, una palomita (enviado) o dos azules (leído) */}
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'flex-end',
+                                        gap: 0.5,
+                                        mt: 0.5,
+                                        fontSize: '11px',
+                                        lineHeight: 1,
+                                        opacity: mensaje.propio ? 0.85 : 0.6
+                                    }}
+                                >
+                                    {formatearFechaHora(mensaje.fecha)}
+                                    {mensaje.propio &&
+                                        (typeof mensaje.id === 'number' && mensaje.id <= leidosHasta ? (
+                                            <DoneAllIcon sx={{ fontSize: 16, color: '#7FD0FF' }} />
+                                        ) : (
+                                            <DoneIcon sx={{ fontSize: 16 }} />
+                                        ))}
+                                </Box>
                             </Box>
                         ))
                     )}
                 </Box>
 
                 {/* Barra para escribir (fija abajo) */}
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        px: 1.5,
-                        py: 1.25,
-                        pb: esCelular ? 'calc(10px + env(safe-area-inset-bottom))' : 1.25,
-                        borderTop: '1px solid #e0e0e0',
-                        backgroundColor: '#ffffff',
-                        flexShrink: 0
-                    }}
-                >
-                    <TextField
-                        autoFocus={!esCelular}
-                        fullWidth
-                        size="small"
-                        placeholder="Escribe..."
-                        autoComplete="off"
-                        value={texto}
-                        onChange={(e) => setTexto(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        slotProps={{
-                            input: {
-                                sx: {
-                                    borderRadius: '999px',
-                                    backgroundColor: '#F3F3F3',
-                                    px: 1,
-                                    '& fieldset': { border: 'none' }
-                                }
-                            }
+                {enCurso ? (
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            px: 1.5,
+                            py: 1.25,
+                            pb: esCelular ? 'calc(10px + env(safe-area-inset-bottom))' : 1.25,
+                            borderTop: '1px solid #e0e0e0',
+                            backgroundColor: '#ffffff',
+                            flexShrink: 0
                         }}
-                    />
-                    <IconButton
-                        aria-label="Enviar mensaje"
-                        onClick={handleEnviar}
-                        disabled={!texto.trim()}
-                        sx={{ color: COLOR_PRINCIPAL }}
                     >
-                        <SendIcon />
-                    </IconButton>
-                </Box>
+                        <TextField
+                            autoFocus={!esCelular}
+                            fullWidth
+                            size="small"
+                            placeholder="Escribe..."
+                            autoComplete="off"
+                            value={texto}
+                            onChange={(e) => setTexto(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            slotProps={{
+                                input: {
+                                    sx: {
+                                        borderRadius: '999px',
+                                        backgroundColor: '#F3F3F3',
+                                        px: 1,
+                                        '& fieldset': { border: 'none' }
+                                    }
+                                }
+                            }}
+                        />
+                        <IconButton
+                            aria-label="Enviar mensaje"
+                            onClick={handleEnviar}
+                            disabled={!texto.trim()}
+                            sx={{ color: COLOR_PRINCIPAL }}
+                        >
+                            <SendIcon />
+                        </IconButton>
+                    </Box>
+                ) : (
+                    <Box
+                        sx={{
+                            px: 1.5,
+                            py: 1.25,
+                            pb: esCelular ? 'calc(10px + env(safe-area-inset-bottom))' : 1.25,
+                            borderTop: '1px solid #e0e0e0',
+                            backgroundColor: '#ffffff',
+                            textAlign: 'center',
+                            flexShrink: 0
+                        }}
+                    >
+                        <Typography sx={{ color: '#666666', fontSize: '13px' }}>
+                            Esta asesoría ya terminó. El chat es solo de lectura.
+                        </Typography>
+                    </Box>
+                )}
             </Paper>
         </Slide>
     );

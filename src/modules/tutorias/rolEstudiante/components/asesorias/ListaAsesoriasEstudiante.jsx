@@ -10,7 +10,7 @@ import TarjetaAsesoriaEstudiante from './TarjetaAsesoriaEstudiante';
 
 // Cuadrícula de tarjetas de las asesorías en curso (también en escritorio: aquí no hay tabla).
 // Las asesorías las carga la vista; esto las muestra y maneja los modales de cada tarjeta.
-export default function ListaAsesoriasEstudiante({ asesorias = [] }) {
+export default function ListaAsesoriasEstudiante({ asesorias = [], onChatLeido }) {
     // Estados para Modales
     const [selectedAsesoria, setSelectedAsesoria] = useState(null);
     const [modalMaterialOpen, setModalMaterialOpen] = useState(false);
@@ -42,11 +42,10 @@ export default function ListaAsesoriasEstudiante({ asesorias = [] }) {
 
     const handleOpenMaterial = openModal(setModalMaterialOpen);
     const handleOpenSesiones = openModal(setModalSesionesOpen);
-    const handleOpenChat = openModal(setModalChatOpen);
-
-    // Si esta función lanza un error, el chat quita el mensaje y muestra un toast de error.
-    const handleSendMessage = async (asesoria, mensaje) => {
-        console.log('Mensaje enviado en la asesoría', asesoria?.id, mensaje);
+    // Al abrir el chat se quita el globito de mensajes sin leer (el chat los marca como leídos)
+    const handleOpenChat = (asesoria, event) => {
+        openModal(setModalChatOpen)(asesoria, event);
+        if (onChatLeido) onChatLeido(asesoria.id);
     };
 
     if (asesorias.length === 0) {
@@ -90,9 +89,12 @@ export default function ListaAsesoriasEstudiante({ asesorias = [] }) {
 
             <ModalChatAsesoriaEstudiante
                 open={modalChatOpen}
-                onClose={() => setModalChatOpen(false)}
+                onClose={() => {
+                    setModalChatOpen(false);
+                    // Lo que se vio en el chat ya quedó leído
+                    if (onChatLeido) onChatLeido(selectedAsesoria?.id);
+                }}
                 data={selectedAsesoria}
-                onSendMessage={handleSendMessage}
                 showToast={showToast}
             />
 

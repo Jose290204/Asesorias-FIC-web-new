@@ -29,6 +29,8 @@ export const aFormatoAsesoria = (a) => ({
   motivo_cancelacion: a.motivo_cancelacion,
   finalizada_en: a.finalizada_en,
   sesiones_count: a.sesiones_count ?? 0,
+  // Mensajes del chat que la otra persona escribió y este usuario aún no ha leído (globito del botón Chat)
+  mensajes_sin_leer: a.mensajes_sin_leer ?? 0,
 });
 
 // GET /asesor/asesorias (paginada de 10 en 10)

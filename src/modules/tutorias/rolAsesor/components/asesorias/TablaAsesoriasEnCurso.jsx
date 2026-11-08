@@ -5,6 +5,7 @@ import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
+import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
@@ -44,7 +45,7 @@ export default function TablaAsesoriasEnCurso({
     onCompletar,
     onCancelar,
     onSesionesCambio,
-    onEnviarMensaje,
+    onChatLeido,
 }) {
     // Mismo corte que "md" de Tailwind: menos de 768px = móvil
     const esMovil = useMediaQuery('(max-width:767px)');
@@ -90,7 +91,11 @@ export default function TablaAsesoriasEnCurso({
     const handleOpenMaterial = openModal(setModalMaterialOpen);
     const handleOpenCancelar = openModal(setModalCancelarOpen);
     const handleOpenSesiones = openModal(setModalSesionesOpen);
-    const handleOpenChat = openModal(setModalChatOpen);
+    // Al abrir el chat se quita el globito de mensajes sin leer (el chat los marca como leídos)
+    const handleOpenChat = (asesoria, event) => {
+        openModal(setModalChatOpen)(asesoria, event);
+        if (onChatLeido) onChatLeido(asesoria.id);
+    };
 
     // Abre el menú ⋮ guardando de qué tarjeta vino
     const handleOpenMenu = (asesoria, event) => {
@@ -104,12 +109,6 @@ export default function TablaAsesoriasEnCurso({
     const handleMenuAccion = (abrirModal) => (event) => {
         closeMenu();
         abrirModal(selectedAsesoria, event);
-    };
-
-    // Si esta función lanza un error, el chat quita el mensaje y muestra un toast de error.
-    const handleSendMessage = async (asesoria, mensaje) => {
-        console.log('Mensaje enviado en la asesoría', asesoria?.id, mensaje);
-        if (onEnviarMensaje) await onEnviarMensaje(asesoria, mensaje);
     };
 
     // Los tres regresan true si salió bien (el modal se cierra) y false si falló
@@ -246,15 +245,18 @@ export default function TablaAsesoriasEnCurso({
                                                     </IconButton>
                                                 </Tooltip>
 
-                                                <Tooltip title="Chat">
-                                                    <IconButton
-                                                        size="small"
-                                                        sx={estiloAccion('#1565C0', 'rgba(21, 101, 192, 0.10)')}
-                                                        onClick={(e) => handleOpenChat(asesoria, e)}
-                                                    >
-                                                        <ChatOutlinedIcon fontSize="small" />
-                                                    </IconButton>
-                                                </Tooltip>
+                                                {/* Globito rojo con los mensajes sin leer; con 0 no se muestra */}
+                                                <Badge badgeContent={asesoria.mensajes_sin_leer} max={99} color="error" overlap="circular">
+                                                    <Tooltip title="Chat">
+                                                        <IconButton
+                                                            size="small"
+                                                            sx={estiloAccion('#1565C0', 'rgba(21, 101, 192, 0.10)')}
+                                                            onClick={(e) => handleOpenChat(asesoria, e)}
+                                                        >
+                                                            <ChatOutlinedIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Badge>
 
                                                 <Tooltip title="Completar asesoría">
                                                     <IconButton
@@ -350,9 +352,12 @@ export default function TablaAsesoriasEnCurso({
 
             <ModalChatAsesoriaAsesor
                 open={modalChatOpen}
-                onClose={() => setModalChatOpen(false)}
+                onClose={() => {
+                    setModalChatOpen(false);
+                    // Lo que se vio en el chat ya quedó leído
+                    if (onChatLeido) onChatLeido(selectedAsesoria?.id);
+                }}
                 data={selectedAsesoria}
-                onSendMessage={handleSendMessage}
                 showToast={showToast}
             />
 

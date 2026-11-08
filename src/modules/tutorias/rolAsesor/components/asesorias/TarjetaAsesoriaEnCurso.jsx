@@ -2,6 +2,7 @@ import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined
 import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -104,14 +105,22 @@ export default function TarjetaAsesoriaEnCurso({ asesoria, onMenu, onMaterial, o
                 >
                     Material
                 </Button>
-                <Button
-                    variant="contained"
-                    sx={{ minHeight: 40, color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-                    startIcon={<ChatOutlinedIcon />}
-                    onClick={(e) => onChat(asesoria, e)}
+                {/* Globito rojo con los mensajes sin leer; con 0 no se muestra */}
+                <Badge
+                    badgeContent={asesoria.mensajes_sin_leer}
+                    max={99}
+                    color="error"
+                    sx={{ width: '100%', '& > .MuiButton-root': { flex: 1 } }}
                 >
-                    Chat
-                </Button>
+                    <Button
+                        variant="contained"
+                        sx={{ minHeight: 40, color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
+                        startIcon={<ChatOutlinedIcon />}
+                        onClick={(e) => onChat(asesoria, e)}
+                    >
+                        Chat
+                    </Button>
+                </Badge>
             </CardActions>
         </Card>
     );

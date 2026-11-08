@@ -93,11 +93,6 @@ export default function TablaHistorialAsesorias({ historial = [] }) {
         abrirModal(selectedAsesoria, event);
     };
 
-    // Si esta función lanza un error, el chat quita el mensaje y muestra un toast de error.
-    const handleSendMessage = async (asesoria, mensaje) => {
-        console.log('Mensaje enviado en la asesoría', asesoria?.id, mensaje);
-    };
-
     if (historial.length === 0) {
         return (
             <Box className="w-full text-center py-10">
@@ -303,7 +298,6 @@ export default function TablaHistorialAsesorias({ historial = [] }) {
                 open={modalChatOpen}
                 onClose={() => setModalChatOpen(false)}
                 data={selectedAsesoria}
-                onSendMessage={handleSendMessage}
                 showToast={showToast}
             />
 

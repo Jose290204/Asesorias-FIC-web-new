@@ -20,17 +20,21 @@ export default function AsesoriasEstudiante() {
     const [toast, setToast] = useState({ open: false, message: "", type: "info" });
 
     // Carga las asesorías en curso del estudiante
-    const cargarAsesorias = useCallback(async () => {
+    // silencioso = recarga sin quitar la lista (refresco automático)
+    const cargarAsesorias = useCallback(async ({ silencioso = false } = {}) => {
         try {
-            setLoading(true);
+            if (!silencioso) setLoading(true);
             setError(false);
             const { asesorias: lista, meta: metaNueva } = await traerAsesorias({ estatus: "en_curso", page: pagina });
             setAsesorias(lista);
             setMeta(metaNueva);
         } catch (err) {
             console.error("Error al cargar asesorías", err);
-            setError(true);
-            setToast({ open: true, message: mensajesDeError(err)[0], type: "error" });
+            // Un refresco automático que falla no molesta: se intenta de nuevo en el siguiente
+            if (!silencioso) {
+                setError(true);
+                setToast({ open: true, message: mensajesDeError(err)[0], type: "error" });
+            }
         } finally {
             setLoading(false);
         }
@@ -39,6 +43,19 @@ export default function AsesoriasEstudiante() {
     useEffect(() => {
         cargarAsesorias();
     }, [cargarAsesorias]);
+
+    // Cada 20 s se refresca la lista sin quitarla (solo con la pestaña a la vista):
+    // así el globito de mensajes sin leer se actualiza solo
+    useEffect(() => {
+        const intervalo = setInterval(() => {
+            if (!document.hidden) cargarAsesorias({ silencioso: true });
+        }, 20000);
+        return () => clearInterval(intervalo);
+    }, [cargarAsesorias]);
+
+    // Al abrir o cerrar el chat, esa asesoría ya no tiene mensajes sin leer
+    const handleChatLeido = (asesoriaId) =>
+        setAsesorias((prev) => prev.map((a) => (a.id === asesoriaId ? { ...a, mensajes_sin_leer: 0 } : a)));
 
     const total = meta?.total ?? asesorias.length;
 
@@ -63,13 +80,13 @@ export default function AsesoriasEstudiante() {
                 ) : error ? (
                     <div className="w-full py-10 text-center">
                         <p className="text-gray-500 mb-1">No se pudieron cargar las asesorías.</p>
-                        <Button onClick={cargarAsesorias} sx={{ textTransform: "none", fontWeight: 600 }}>
+                        <Button onClick={() => cargarAsesorias()} sx={{ textTransform: "none", fontWeight: 600 }}>
                             Reintentar
                         </Button>
                     </div>
                 ) : (
                     <>
-                        <ListaAsesoriasEstudiante asesorias={asesorias} />
+                        <ListaAsesoriasEstudiante asesorias={asesorias} onChatLeido={handleChatLeido} />
 
                         {/* Paginación: solo aparece si hay más de una página */}
                         {meta && meta.last_page > 1 && (

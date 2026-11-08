@@ -88,8 +88,11 @@ export default function AsesoriasEnCurso() {
             setMeta(metaNueva);
         } catch (err) {
             console.error('Error al cargar asesorías', err);
-            if (!silencioso) setError(true);
-            showToast(mensajesDeError(err)[0], 'error');
+            // Un refresco automático que falla no molesta: se intenta de nuevo en el siguiente
+            if (!silencioso) {
+                setError(true);
+                showToast(mensajesDeError(err)[0], 'error');
+            }
         } finally {
             setLoading(false);
         }
@@ -97,6 +100,15 @@ export default function AsesoriasEnCurso() {
 
     useEffect(() => {
         cargarAsesorias();
+    }, [cargarAsesorias]);
+
+    // Cada 20 s se refresca la lista sin quitarla (solo con la pestaña a la vista):
+    // así el globito de mensajes sin leer se actualiza solo
+    useEffect(() => {
+        const intervalo = setInterval(() => {
+            if (!document.hidden) cargarAsesorias({ silencioso: true });
+        }, 20000);
+        return () => clearInterval(intervalo);
     }, [cargarAsesorias]);
 
     const clearFocus = (event) => {
@@ -138,6 +150,10 @@ export default function AsesoriasEnCurso() {
 
     // Registrar o borrar una sesión cambia el conteo que muestra la lista
     const handleSesionesCambio = () => cargarAsesorias({ silencioso: true });
+
+    // Al abrir o cerrar el chat, esa asesoría ya no tiene mensajes sin leer
+    const handleChatLeido = (asesoriaId) =>
+        setAsesoriasEnCurso((prev) => prev.map((a) => (a.id === asesoriaId ? { ...a, mensajes_sin_leer: 0 } : a)));
 
     const total = meta?.total ?? asesoriasEnCurso.length;
 
@@ -222,6 +238,7 @@ export default function AsesoriasEnCurso() {
                             onCompletar={handleCompletar}
                             onCancelar={handleCancelar}
                             onSesionesCambio={handleSesionesCambio}
+                            onChatLeido={handleChatLeido}
                         />
 
                         {/* Paginación: solo aparece si hay más de una página */}
