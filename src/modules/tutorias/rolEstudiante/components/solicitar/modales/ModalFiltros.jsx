@@ -20,7 +20,7 @@ const MENU_CON_SCROLL = {
  *  - onChange: (e) => void   (e.target.name / e.target.value)
  *  - onApply, onClear
  */
-export default function ModalFiltrosEstudiante({
+export default function ModalFiltros({
     open,
     onClose,
     opciones = { materias: [], horarios: [], modalidades: [] },

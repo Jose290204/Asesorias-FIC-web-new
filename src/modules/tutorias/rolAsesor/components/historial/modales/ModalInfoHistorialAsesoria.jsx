@@ -14,12 +14,14 @@ import { useState } from 'react';
 
 import { CAMPO_BLOQUEADO } from '../../compartidos/estilosModales';
 import ModalSesionesAsesor from '../../compartidos/ModalSesionesAsesor';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 const ETIQUETA_ESTATUS = { completada: 'Completada', cancelada: 'Cancelada', en_curso: 'En curso' };
 
 // Una asesoría del historial ya está cerrada (completada o cancelada) y la API no deja editarla,
 // así que este modal es solo de consulta. Desde aquí se pueden ver sus sesiones.
 export default function ModalInfoHistorialAsesoria({ open, onClose, data, showToast }) {
+    const esCelular = useMediaQuery('(max-width:599.95px)');
     const [sesionesOpen, setSesionesOpen] = useState(false);
 
     if (!data) return null;
@@ -31,8 +33,9 @@ export default function ModalInfoHistorialAsesoria({ open, onClose, data, showTo
             <Dialog
                 open={Boolean(open)}
                 onClose={onClose}
+                fullScreen={esCelular}
                 sx={{
-                    '& .MuiPaper-root': {
+                    '& .MuiPaper-root': esCelular ? { borderRadius: 0 } : {
                         width: '550px',
                         maxWidth: '90vw',
                         maxHeight: '90dvh',

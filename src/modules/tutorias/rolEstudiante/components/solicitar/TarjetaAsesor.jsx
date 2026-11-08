@@ -10,9 +10,10 @@ import { useState } from 'react';
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import SendIcon from '@mui/icons-material/Send';
 
-import { ModalInformacion, ModalSolicitar } from './ModalesSolicitarAsesorias';
+import ModalCrearSolicitud from './modales/ModalCrearSolicitud';
+import ModalInfoAsesor from './modales/ModalInfoAsesor';
 
-export default function TarjetaSolicitarAsesorias({ asesor, onSaveSolicitud, showToast, razones = [] }) {
+export default function TarjetaAsesor({ asesor, onSaveSolicitud, showToast, razones = [] }) {
     const [openInfo, setOpenInfo] = useState(false);
     const [openSolicitar, setOpenSolicitar] = useState(false);
 
@@ -117,16 +118,17 @@ export default function TarjetaSolicitarAsesorias({ asesor, onSaveSolicitud, sho
                 </CardActions>
             </Card>
 
-            <ModalInformacion
+            <ModalInfoAsesor
                 open={openInfo}
                 onClose={() => setOpenInfo(false)}
                 asesor={asesor}
             />
 
-            <ModalSolicitar
+            <ModalCrearSolicitud
                 open={openSolicitar}
                 onClose={() => setOpenSolicitar(false)}
-                asesor={asesor}
+                asesorFijo={asesor}
+                asesores={[asesor]}
                 onSave={onSaveSolicitud}
                 showToast={showToast}
                 razones={razones}

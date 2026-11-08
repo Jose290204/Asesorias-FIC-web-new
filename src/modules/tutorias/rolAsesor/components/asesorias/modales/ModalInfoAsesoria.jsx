@@ -11,7 +11,8 @@ import { useCatalogos } from '../../../../../../context/CatalogosContext';
 import useDisponibilidadAsesor from '../../../hooks/useDisponibilidadAsesor';
 import CampoSelect from '../../compartidos/CampoSelect';
 import { claveHorario, diaDeFecha, fechaCoincideConDia, opcionesDeHorario } from '../../../utils/horarios';
-import { PAPER_MODAL, CAMPO_BLOQUEADO } from '../../compartidos/estilosModales';
+import { PAPER_MODAL, PAPER_MODAL_CELULAR, CAMPO_BLOQUEADO } from '../../compartidos/estilosModales';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // "lunes" -> "Lunes" usando el catálogo de días (si no está, se capitaliza el valor)
 const etiquetaDeDia = (catalogos, dia) =>
@@ -28,6 +29,7 @@ export default function ModalInfoAsesoria({ open, onClose, data, onSave, showToa
 }
 
 function ContenidoInfoAsesoria({ onClose, data, onSave, showToast }) {
+    const esCelular = useMediaQuery('(max-width:599.95px)');
     const { catalogos } = useCatalogos();
     const { disponibilidad, cargando } = useDisponibilidadAsesor(true);
 
@@ -125,7 +127,7 @@ function ContenidoInfoAsesoria({ onClose, data, onSave, showToast }) {
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
-            <Dialog open onClose={onClose} sx={PAPER_MODAL}>
+            <Dialog open onClose={onClose} fullScreen={esCelular} sx={esCelular ? PAPER_MODAL_CELULAR : PAPER_MODAL}>
                 <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.2rem' }}>
                     Información Asesoría
                     <IconButton

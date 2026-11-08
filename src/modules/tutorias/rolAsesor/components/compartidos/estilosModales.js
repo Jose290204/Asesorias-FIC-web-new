@@ -13,6 +13,11 @@ export const PAPER_MODAL = {
     }
 };
 
+// Modal grande en celular: ocupa toda la pantalla (se usa junto con fullScreen del Dialog)
+export const PAPER_MODAL_CELULAR = {
+    '& .MuiPaper-root': { borderRadius: 0 }
+};
+
 // Modal chico de confirmación
 export const PAPER_CONFIRMACION = {
     '& .MuiPaper-root': {

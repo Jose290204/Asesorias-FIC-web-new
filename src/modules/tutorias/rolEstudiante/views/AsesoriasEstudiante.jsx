@@ -1,26 +1,20 @@
+import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
+import Pagination from "@mui/material/Pagination";
 import { useCallback, useEffect, useState } from "react";
 import ToastNotification from "../../../../components/ui/ToastNotification";
-import TarjetaAsesoriasEstudiantes from "../components/TarjetaAsesoriasEstudiantes";
-
-// Datos de prueba
-const ASESORIAS_PRUEBA = [
-    { id: 12, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Base de Datos", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM", material_adicional: [{ id_material: 1, nombre_archivo: "Guia_Base_de_Datos.pdf", mime_type: "application/pdf", url_archivo: "#" }, { id_material: 2, nombre_archivo: "Ejercicios.docx", mime_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", url_archivo: "#" }] },
-    { id: 13, asesor: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 14, asesor: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 15, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 16, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 17, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 18, asesor: "Alexander Israel Barrera Rodrigez", email: "ai.barrera@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 19, asesor: "Luis Fernando Vlelazquez Araujo", email: "lf.velazquez@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 20, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" },
-    { id: 21, asesor: "Jenifer Guadalupe Tizoc Lopez", email: "jg.tizoc@info.uas.edu.mx", materia: "Introducción a la programación", fecha: "05/03/2004", modalidad: "Presencial", horario: "10:00 - 11:00 AM" }
-];
+import { traerAsesorias } from "../../../../Services/asesoriasEstudianteService";
+import { mensajesDeError } from "../../../../Services/errores";
+import ListaAsesoriasEstudiante from "../components/asesorias/ListaAsesoriasEstudiante";
 
 export default function AsesoriasEstudiante() {
     const [asesorias, setAsesorias] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
+
+    // La API pagina de 10 en 10: "meta" trae la última página y el total
+    const [pagina, setPagina] = useState(1);
+    const [meta, setMeta] = useState(null);
 
     // Toast para errores de carga
     const [toast, setToast] = useState({ open: false, message: "", type: "info" });
@@ -30,25 +24,35 @@ export default function AsesoriasEstudiante() {
         try {
             setLoading(true);
             setError(false);
-            // TODO: reemplazar por la llamada real al servicio (ej. asesoriasService.obtenerAsesoriasEstudiante())
-            await new Promise((resolve) => setTimeout(resolve, 300));
-            setAsesorias(ASESORIAS_PRUEBA);
+            const { asesorias: lista, meta: metaNueva } = await traerAsesorias({ estatus: "en_curso", page: pagina });
+            setAsesorias(lista);
+            setMeta(metaNueva);
         } catch (err) {
             console.error("Error al cargar asesorías", err);
             setError(true);
-            setToast({ open: true, message: "No se pudieron cargar las asesorías", type: "error" });
+            setToast({ open: true, message: mensajesDeError(err)[0], type: "error" });
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [pagina]);
 
     useEffect(() => {
         cargarAsesorias();
     }, [cargarAsesorias]);
 
+    const total = meta?.total ?? asesorias.length;
+
     return (
         <div className="min-h-[calc(100dvh-4.5rem)] w-full px-4 py-6 md:px-17 md:py-10 flex flex-col items-start justify-start gap-6 md:gap-11 bg-gray-100">
-            <p className="text-2xl font-bold">Asesorias En Curso</p>
+            <div>
+                <p className="text-2xl font-bold">Asesorias En Curso</p>
+                {!loading && !error && (
+                    <p className="mt-1 text-sm text-gray-600">
+                        <span className="font-bold">{total}</span>{" "}
+                        {total === 1 ? "asesoría en curso" : "asesorías en curso"}
+                    </p>
+                )}
+            </div>
 
             <div className="w-full pb-5">
                 {loading ? (
@@ -59,12 +63,21 @@ export default function AsesoriasEstudiante() {
                 ) : error ? (
                     <div className="w-full py-10 text-center">
                         <p className="text-gray-500 mb-1">No se pudieron cargar las asesorías.</p>
-                        <button onClick={cargarAsesorias} className="text-blue-700 font-semibold underline cursor-pointer">
+                        <Button onClick={cargarAsesorias} sx={{ textTransform: "none", fontWeight: 600 }}>
                             Reintentar
-                        </button>
+                        </Button>
                     </div>
                 ) : (
-                    <TarjetaAsesoriasEstudiantes asesorias={asesorias} />
+                    <>
+                        <ListaAsesoriasEstudiante asesorias={asesorias} />
+
+                        {/* Paginación: solo aparece si hay más de una página */}
+                        {meta && meta.last_page > 1 && (
+                            <div className="mt-6 flex w-full justify-center">
+                                <Pagination count={meta.last_page} page={pagina} onChange={(_, nueva) => setPagina(nueva)} />
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 

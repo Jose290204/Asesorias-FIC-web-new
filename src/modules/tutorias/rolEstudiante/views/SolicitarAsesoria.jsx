@@ -10,9 +10,9 @@ import ToastNotification from "../../../../components/ui/ToastNotification";
 import { traerAsesores } from "../../../../Services/asesoresEstudianteService";
 import { traerOpcionesFiltros } from "../../../../Services/opcionesFiltrosService";
 import { crearSolicitud } from "../../../../Services/solicitudesEstudianteService";
-import { ModalCrearSolicitud } from "../components/ModalesSolicitarAsesorias";
-import ModalFiltrosEstudiante from "../components/ModalFiltrosEstudiante";
-import TarjetaSolicitarAsesorias from "../components/TarjetaSolicitarAsesorias";
+import ModalCrearSolicitud from "../components/solicitar/modales/ModalCrearSolicitud";
+import ModalFiltros from "../components/solicitar/modales/ModalFiltros";
+import TarjetaAsesor from "../components/solicitar/TarjetaAsesor";
 
 // Cada filtro guarda el VALOR que se manda al backend (id o texto del enum), "" = sin filtrar
 const initialFiltros = {
@@ -245,7 +245,7 @@ export default function SolicitarAsesoria() {
                 </p>
             ) : (
                 asesores.map((item) => (
-                    <TarjetaSolicitarAsesorias
+                    <TarjetaAsesor
                         key={item.id}
                         asesor={item}
                         onSaveSolicitud={handleCrearSolicitud}
@@ -269,7 +269,7 @@ export default function SolicitarAsesoria() {
         )}
 
         {/* Modal de Filtros del estudiante */}
-        <ModalFiltrosEstudiante
+        <ModalFiltros
             open={openModalFiltros}
             onClose={() => setOpenModalFiltros(false)}
             opciones={opciones}

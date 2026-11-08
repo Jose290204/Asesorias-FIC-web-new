@@ -1,4 +1,4 @@
-import { ExternalLink, Menu } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LogoBienestar from '../assets/dependencias/bienestar.png';
 import LogoFicFooter from '../assets/dependencias/logofic.png';
@@ -16,19 +16,12 @@ export default function LayoutPublico({ children, mostrarFooter = true }) {
       {/* Barra de navegación superior (AppBar) */}
       <header className="sticky top-0 z-50 bg-[#244B91] text-white h-[70px] pr-[35px] sm:pr-[90px] flex items-center justify-between shadow-md relative">
 
-        {/* Lado Izquierdo: Menú + Logo UAS */}
+        {/* Lado Izquierdo: Logo UAS */}
         <div className="flex items-center">
-          <button
-            className="absolute left-2 sm:left-4 p-1.5 hover:bg-white/10 rounded-lg transition"
-            aria-label="Abrir menú"
-          >
-            <Menu className="w-6 h-6 text-white" />
-          </button>
-
           <img
             src={LogoUas}
             alt="Logo Institucional"
-            className="h-12 sm:h-[55px] ml-[60px] sm:ml-[90px] w-auto object-contain"
+            className="h-12 sm:h-[55px] ml-4 sm:ml-6 w-auto object-contain"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = 'https://placehold.co/48x48/2b3a55/FFFFFF?text=UAS';

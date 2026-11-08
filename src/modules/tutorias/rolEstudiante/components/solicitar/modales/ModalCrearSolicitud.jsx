@@ -1,25 +1,12 @@
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
-import {
-    Autocomplete,
-    Box,
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    IconButton,
-    InputAdornment,
-    MenuItem,
-    TextField,
-    Typography,
-    createFilterOptions
-} from '@mui/material';
+import { Autocomplete, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, InputAdornment, MenuItem, TextField, createFilterOptions } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import 'dayjs/locale/es';
 import { useEffect, useState } from 'react';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // --- HELPERS ---
 const claveNombre = (texto) => String(texto ?? '').trim().toLowerCase();
@@ -33,47 +20,6 @@ const sinDuplicados = (lista, obtenerClave) => {
         return true;
     });
 };
-
-// Convierte ["A, B", "C"] o "A / B" en ["A", "B", "C"]
-const aLista = (valor) =>
-    (Array.isArray(valor) ? valor : [valor])
-        .flatMap((v) => String(v ?? '').split(/[,/]/))
-        .map((v) => v.trim())
-        .filter(Boolean);
-
-// Datos de respaldo para ModalInformacion cuando un asesor no trae disponibilidad cargada
-const MATERIAS_DEMO = [
-    { id_materia: 9001, materia: 'Programación Web' },
-    { id_materia: 9002, materia: 'Bases de Datos' },
-    { id_materia: 9003, materia: 'Estructura de Datos' },
-    { id_materia: 9004, materia: 'Cálculo Diferencial' },
-    { id_materia: 9005, materia: 'Cálculo Integral' },
-    { id_materia: 9006, materia: 'Álgebra Lineal' },
-    { id_materia: 9007, materia: 'Redes de Computadoras' },
-    { id_materia: 9008, materia: 'Sistemas Operativos' },
-    { id_materia: 9009, materia: 'Ingeniería de Software' },
-    { id_materia: 9010, materia: 'Programación Orientada a Objetos' },
-    { id_materia: 9011, materia: 'Probabilidad y Estadística' },
-    { id_materia: 9012, materia: 'Matemáticas Discretas' }
-];
-const HORARIOS_DEMO = [
-    { id_horario: 9001, horario: '08:00 - 09:00' },
-    { id_horario: 9002, horario: '09:00 - 10:00' },
-    { id_horario: 9003, horario: '10:00 - 11:00' },
-    { id_horario: 9004, horario: '11:00 - 12:00' },
-    { id_horario: 9005, horario: '12:00 - 13:00' },
-    { id_horario: 9006, horario: '13:00 - 14:00' },
-    { id_horario: 9007, horario: '14:00 - 15:00' },
-    { id_horario: 9008, horario: '15:00 - 16:00' },
-    { id_horario: 9009, horario: '16:00 - 17:00' },
-    { id_horario: 9010, horario: '17:00 - 18:00' },
-    { id_horario: 9011, horario: '18:00 - 19:00' },
-    { id_horario: 9012, horario: '19:00 - 20:00' }
-];
-const MODALIDADES_DEMO = [
-    { id_modalidad: 9001, modalidad: 'Presencial' },
-    { id_modalidad: 9002, modalidad: 'Virtual' }
-];
 
 // Lista desplegable de los select: altura máxima con scroll interno
 const MENU_CON_SCROLL = {
@@ -101,7 +47,8 @@ const FORMULARIO_CREAR_INICIAL = {
 // 1. MODAL CREAR SOLICITUD (buscador global o, con asesorFijo, desde la tarjeta)
 // Flujo: asesor -> materia -> horario -> fecha (restringida al día del horario) -> modalidad -> nota
 // ==========================================
-export function ModalCrearSolicitud({ open, onClose, onSave, showToast, asesores = [], asesorFijo = null, razones = []}) {
+export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, asesores = [], asesorFijo = null, razones = []}) {
+    const esCelular = useMediaQuery('(max-width:599.95px)');
     // asesorFijo: si viene (desde la tarjeta), el asesor ya está elegido y bloqueado
     const [formData, setFormData] = useState({ ...FORMULARIO_CREAR_INICIAL, asesor: asesorFijo });
     const [calendarioOpen, setCalendarioOpen] = useState(false);
@@ -206,8 +153,9 @@ export function ModalCrearSolicitud({ open, onClose, onSave, showToast, asesores
             <Dialog
                 open={Boolean(open)}
                 onClose={onClose}
+                fullScreen={esCelular}
                 sx={{
-                    '& .MuiPaper-root': {
+                    '& .MuiPaper-root': esCelular ? { borderRadius: 0 } : {
                         width: '550px',
                         maxWidth: '90vw',
                         maxHeight: '90vh',
@@ -420,83 +368,4 @@ export function ModalCrearSolicitud({ open, onClose, onSave, showToast, asesores
             </Dialog>
         </LocalizationProvider>
     );
-}
-
-// ==========================================
-// 2. MODAL INFORMACIÓN
-// ==========================================
-export function ModalInformacion({ open, onClose, asesor }) {
-    if (!asesor) return null;
-
-    // Lo que trae el objeto del asesor (una línea por materia / horario).
-    // Si no trae nada, se muestran datos de respaldo.
-    const materiasAsesor = aLista(asesor.materias);
-    const horariosAsesor = aLista(asesor.horarios ?? asesor.horario);
-    const modalidadesAsesor = aLista(asesor.modalidad ?? asesor.modalidades);
-    const materias = (materiasAsesor.length > 0 ? materiasAsesor : MATERIAS_DEMO.slice(0, 4).map((m) => m.materia)).join('\n');
-    const horarios = (horariosAsesor.length > 0 ? horariosAsesor : HORARIOS_DEMO.slice(0, 4).map((h) => h.horario)).join('\n');
-    const modalidades = (modalidadesAsesor.length > 0 ? modalidadesAsesor : MODALIDADES_DEMO.map((m) => m.modalidad)).join('\n');
-
-    return (
-        <Dialog
-            open={Boolean(open)}
-            onClose={onClose}
-            sx={{
-                '& .MuiPaper-root': {
-                    width: '450px',
-                    maxWidth: '90vw',
-                    borderRadius: '12px',
-                    p: 1.5
-                }
-            }}
-        >
-            <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.25rem', textAlign: 'center', }}>
-                {asesor.asesor || asesor.nombre}
-                <IconButton
-                    aria-label="close"
-                    onClick={onClose}
-                    sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
-                >
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
-
-            <DialogContent dividers sx={{ py: 2 }}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                    <Box>
-                        <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#6A6A6A' }}>Correo:</Typography>
-                        <Typography variant="body2">{asesor.email || asesor.correo || 'N/A'}</Typography>
-                    </Box>
-
-                    <Box>
-                        <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#6A6A6A' }}>Materias:</Typography>
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{materias}</Typography>
-                    </Box>
-
-                    <Box>
-                        <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#6A6A6A' }}>Horarios:</Typography>
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{horarios}</Typography>
-                    </Box>
-
-                    <Box>
-                        <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#6A6A6A' }}>Modalidad:</Typography>
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{modalidades}</Typography>
-                    </Box>
-                </Box>
-            </DialogContent>
-
-            <DialogActions sx={{ p: 2, justifyContent: 'flex-end' }}>
-                <Button variant="contained" onClick={onClose} sx={{ backgroundColor: '#08338F', '&:hover': { backgroundColor: '#062568' } }}>
-                    Cerrar
-                </Button>
-            </DialogActions>
-        </Dialog>
-    );
-}
-
-// ==========================================
-// 3. MODAL SOLICITAR (desde la tarjeta): mismo modal, con el asesor ya elegido
-// ==========================================
-export function ModalSolicitar({ asesor, ...props }) {
-    return <ModalCrearSolicitud {...props} asesorFijo={asesor} asesores={asesor ? [asesor] : []} />;
 }

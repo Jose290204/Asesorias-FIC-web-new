@@ -31,6 +31,7 @@ import {
     subirMaterial,
     traerMaterial
 } from '../../../../../Services/materialAsesorService';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 const getFileIcon = (tipo) => {
     if (tipo?.includes('pdf')) return <PictureAsPdfIcon color="error" />;
@@ -65,6 +66,7 @@ const validarArchivos = (archivos) => {
 // contra la API; no hay botón "Guardar". data es la asesoría (usa data.id).
 // soloLectura: sin subir ni eliminar (por ejemplo, en una asesoría cancelada).
 export default function ModalMaterialAsesoria({ open, onClose, data, soloLectura = false, showToast }) {
+    const esCelular = useMediaQuery('(max-width:599.95px)');
     const [lista, setLista] = useState([]);
     // Id de la asesoría cuya lista ya llegó (sirve para saber si todavía se está cargando)
     const [cargadoDe, setCargadoDe] = useState(null);
@@ -151,8 +153,9 @@ export default function ModalMaterialAsesoria({ open, onClose, data, soloLectura
             <Dialog
                 open={Boolean(open)}
                 onClose={onClose}
+                fullScreen={esCelular}
                 sx={{
-                    '& .MuiPaper-root': {
+                    '& .MuiPaper-root': esCelular ? { borderRadius: 0 } : {
                         width: '550px',
                         maxWidth: '550px',
                         height: '520px',

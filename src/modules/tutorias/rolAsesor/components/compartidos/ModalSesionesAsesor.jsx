@@ -27,6 +27,7 @@ import { useCatalogos } from '../../../../../context/CatalogosContext';
 import { mensajesDeError } from '../../../../../Services/errores';
 import { eliminarSesion, registrarSesion, traerSesiones } from '../../../../../Services/sesionesAsesorService';
 import CampoSelect from './CampoSelect';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 const FORMULARIO_INICIAL = { fecha: null, horarioId: '', tema: '', notas: '' };
 
@@ -38,6 +39,7 @@ const formatearFecha = (fecha) => dayjs(fecha).format('DD/MM/YYYY');
 // soloLectura: sin registrar ni eliminar (la API solo lo permite con la asesoría en curso).
 // onCambio: avisa a la vista que cambió el conteo de sesiones, para que recargue la lista.
 export default function ModalSesionesAsesor({ open, onClose, data, soloLectura = false, showToast, onCambio }) {
+    const esCelular = useMediaQuery('(max-width:599.95px)');
     const { catalogos } = useCatalogos();
     const horarios = catalogos?.horarios ?? [];
 
@@ -145,8 +147,9 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
             <Dialog
                 open={Boolean(open)}
                 onClose={cerrar}
+                fullScreen={esCelular}
                 sx={{
-                    '& .MuiPaper-root': {
+                    '& .MuiPaper-root': esCelular ? { borderRadius: 0 } : {
                         width: '550px',
                         maxWidth: '90vw',
                         maxHeight: '90dvh',

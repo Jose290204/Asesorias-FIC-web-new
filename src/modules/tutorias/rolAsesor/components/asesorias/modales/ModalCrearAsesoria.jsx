@@ -26,7 +26,8 @@ import { buscarEstudiantes } from '../../../../../../Services/asesoriasAsesorSer
 import useDisponibilidadAsesor from '../../../hooks/useDisponibilidadAsesor';
 import CampoSelect from '../../compartidos/CampoSelect';
 import { fechaCoincideConDia, opcionesDeHorario } from '../../../utils/horarios';
-import { PAPER_MODAL } from '../../compartidos/estilosModales';
+import { PAPER_MODAL, PAPER_MODAL_CELULAR } from '../../compartidos/estilosModales';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 // El asesor da de alta una asesoría directa (sin solicitud). Las fechas pasadas se permiten
 // (puede registrar una asesoría que ya empezó); el backend revisa que caiga dentro del ciclo vigente.
@@ -47,6 +48,7 @@ const FORMULARIO_CREAR_INICIAL = {
 };
 
 function ContenidoCrearAsesoria({ onClose, onSave }) {
+    const esCelular = useMediaQuery('(max-width:599.95px)');
     const { catalogos } = useCatalogos();
     const { disponibilidad, cargando: cargandoDisponibilidad } = useDisponibilidadAsesor(true);
 
@@ -155,7 +157,7 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
-            <Dialog open onClose={onClose} sx={PAPER_MODAL}>
+            <Dialog open onClose={onClose} fullScreen={esCelular} sx={esCelular ? PAPER_MODAL_CELULAR : PAPER_MODAL}>
                 <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.2rem' }}>
                     Crear Asesoría
                     <IconButton
