@@ -32,7 +32,7 @@ const NAV_ITEMS = [
 // Mismo menú lateral que admin, asesor y estudiante, con las opciones del super admin.
 export default function SuperAdminSidebar({ escritorio = false }) {
   return (
-    <aside className="bg-[#244B91] text-white flex flex-col justify-between min-h-dvh shrink-0 relative shadow-xl w-64">
+    <aside className="bg-[linear-gradient(180deg,#2a529b_0%,#244B91_55%,#162f66_100%)] text-white flex flex-col justify-between min-h-dvh shrink-0 relative shadow-[4px_0_24px_rgba(0,0,0,0.18)] w-64">
       <div>
         <div className="py-6 flex justify-center items-center">
           <div className="rounded-full bg-white p-1 flex items-center justify-center overflow-hidden w-30 h-30">
@@ -56,8 +56,8 @@ export default function SuperAdminSidebar({ escritorio = false }) {
               replace
               className={({ isActive }) =>
                 `w-full flex items-center gap-3 px-3 py-3 rounded-[5px] font-medium text-sm transition-all duration-200 ${isActive
-                  ? 'bg-white text-[#122a88] shadow-md font-semibold'
-                  : 'text-blue-100 hover:bg-blue-900/50 hover:text-white'
+                  ? 'border-l-[3px] border-[#d4b03c] bg-[linear-gradient(90deg,rgba(212,176,60,0.25),rgba(255,255,255,0.06))] text-white shadow-[0_0_18px_rgba(212,176,60,0.25),inset_0_0_0_1px_rgba(255,255,255,0.06)] font-semibold'
+                  : 'border-l-[3px] border-transparent text-blue-100 hover:translate-x-[3px] hover:bg-white/10 hover:text-white'
                 }`
               }
             >

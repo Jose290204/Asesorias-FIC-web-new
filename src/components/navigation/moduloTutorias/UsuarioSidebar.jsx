@@ -20,8 +20,8 @@ export default function UsuarioSidebar({ rutaPerfil }) {
         onClick={() => navigate(rutaPerfil, { replace: true })}
         title="Ver perfil"
         className={`flex w-full cursor-pointer items-center gap-3 rounded-[5px] px-3 py-2.5 text-sm font-medium transition-all duration-200 ${enPerfil
-          ? 'bg-white text-[#122a88] shadow-md font-semibold'
-          : 'text-blue-100 hover:bg-blue-900/50 hover:text-white'
+          ? 'border-l-[3px] border-[#d4b03c] bg-[linear-gradient(90deg,rgba(212,176,60,0.25),rgba(255,255,255,0.06))] text-white shadow-[0_0_18px_rgba(212,176,60,0.25),inset_0_0_0_1px_rgba(255,255,255,0.06)] font-semibold'
+          : 'border-l-[3px] border-transparent text-blue-100 hover:translate-x-[3px] hover:bg-white/10 hover:text-white'
           }`}
       >
         <Avatar sx={{ width: 32, height: 32, bgcolor: '#EBD9B4', color: '#8A6D2B', fontSize: 16, fontWeight: 'bold' }}>

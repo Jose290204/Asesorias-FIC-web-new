@@ -42,11 +42,11 @@ export default function BarraContexto() {
   const titulo = enPanelPrincipal ? 'Panel de Administración' : (facultad?.nombre ?? 'Asesorías');
 
   return (
-    <div className="sticky top-0 z-10 hidden items-center gap-3 bg-[#D2B23D] shadow-xl px-6 py-2 lg:flex">
+    <div className="sticky top-0 z-10 hidden items-center gap-3 bg-[linear-gradient(90deg,#dcc152_0%,#D2B23D_50%,#c4a22f_100%)] shadow-[0_4px_18px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.35)] border-b border-[#a98a1f]/40 px-6 py-2 lg:flex">
       <img
         src={enPanelPrincipal ? LogoUas : LogoFic}
         alt={enPanelPrincipal ? 'Logo de la UAS' : 'Logo de la facultad'}
-        className="h-10 w-auto object-contain"
+        className="h-10 w-auto object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.25)]"
       />
 
       <div className="min-w-0 flex-1">
@@ -56,7 +56,7 @@ export default function BarraContexto() {
       </div>
 
       {!enPanelPrincipal && ciclo?.nombre && (
-        <p className="whitespace-nowrap text-sm font-bold text-[#1B3A73]">
+        <p className="whitespace-nowrap rounded-full bg-[#1B3A73]/10 px-3 py-1 text-sm font-bold text-[#1B3A73] ring-1 ring-[#1B3A73]/20">
           Ciclo escolar {ciclo.nombre}
         </p>
       )}
