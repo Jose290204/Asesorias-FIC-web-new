@@ -87,17 +87,6 @@ export const SOLICITUDES_ADMIN_PRUEBA = [
     }
 ];
 
-// ---------------------------------------------------------------------------
-// PERFIL DEL ADMINISTRADOR (forma que usa PerfilAdministrador)
-// ---------------------------------------------------------------------------
-export const PERFIL_ADMIN_PRUEBA = {
-    nombre_completo: 'Leslie Mayram Barrera Rodriguez',
-    numero_cuenta: '19519958',
-    correo: 'admin.prueba@info.uas.edu.mx',
-    facultad: 'Facultad de Informática Culiacán'
-};
-
-
 // Sesiones activas para diseñar la pantalla "Usuarios en línea" sin backend.
 // Las fechas se calculan respecto al momento de carga para que siempre haya gente "en línea" y "ausente".
 const haceMinutos = (minutos) => new Date(Date.now() - minutos * 60000).toISOString();
