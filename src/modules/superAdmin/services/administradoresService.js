@@ -1,60 +1,57 @@
-// DATOS DE PRUEBA en memoria. Endpoints futuros:
-//   listar        -> GET   /superadmin/administradores?facultad_id=
-//   crear         -> POST  /superadmin/administradores
-//   editar        -> PUT   /superadmin/administradores/{id}
-//   eliminar      -> DELETE /superadmin/administradores/{id}
-//   cambiarEstado -> PATCH /superadmin/administradores/{id}
-const esperar = (ms = 250) => new Promise((r) => setTimeout(r, ms));
+// Administradores de facultad, conectados al backend (fase 2.0.3).
+//   listar        -> GET    /superadmin/administradores?facultad_id=
+//   crear         -> POST   /superadmin/administradores            (nace activo, con la contraseña que se define)
+//   editar        -> PUT    /superadmin/administradores/{id}       (password opcional)
+//   cambiarEstado -> PATCH  /superadmin/administradores/{id}/estado  { estatus: 'activo' | 'inactivo' }
+//   eliminar      -> DELETE /superadmin/administradores/{id}       (borrado lógico)
+// La API usa snake_case; las vistas usan camelCase, así que aquí se traduce en ambos sentidos.
+// Los errores de Axios se dejan pasar: quien llama los muestra con mensajesDeError().
+import api from '../../../Services/api';
 
-// La lista trae también el nombre completo ya armado, para mostrarlo en la tabla
-const conNombreCompleto = (a) => ({
-  ...a,
-  nombreCompleto: [a.nombre, a.apellidoPaterno, a.apellidoMaterno].filter(Boolean).join(' '),
+// API -> vistas
+const aFront = (a) => ({
+  id: a.id,
+  nombre: a.nombre,
+  apellidoPaterno: a.apellido_paterno,
+  apellidoMaterno: a.apellido_materno ?? '',
+  nombreCompleto: a.nombre_completo,
+  correo: a.correo,
+  facultadId: a.facultad_id,
+  estatus: a.estatus,
 });
 
-let administradores = [
-  { id: 101, nombre: 'María Fernanda', apellidoPaterno: 'López', apellidoMaterno: 'Soto', correo: 'admin1@fic.test', facultadId: 1, estatus: 'activo' },
-  { id: 102, nombre: 'Carlos Alberto', apellidoPaterno: 'Ruiz', apellidoMaterno: 'Pérez', correo: 'admin2@fic.test', facultadId: 1, estatus: 'activo' },
-  { id: 103, nombre: 'Laura Beatriz', apellidoPaterno: 'Gómez', apellidoMaterno: 'Ibarra', correo: 'laura.gomez@fca.test', facultadId: 2, estatus: 'pendiente' },
-];
-let siguienteId = 104;
+// Vistas -> API. La contraseña solo viaja si se escribió (al editar, vacía = no cambiarla)
+const aApi = ({ facultadId, nombre, apellidoPaterno, apellidoMaterno, correo, password }) => ({
+  facultad_id: facultadId,
+  nombre,
+  apellido_paterno: apellidoPaterno,
+  apellido_materno: apellidoMaterno || null,
+  correo,
+  ...(password ? { password } : {}),
+});
 
 export async function listarAdministradores(facultadId = null) {
-  await esperar();
-  return administradores
-    .filter((a) => !facultadId || a.facultadId === facultadId)
-    .map(conNombreCompleto);
+  const { data } = await api.get('/superadmin/administradores', {
+    params: facultadId ? { facultad_id: facultadId } : {},
+  });
+  return data.data.map(aFront);
 }
 
-// Pendiente de decidir: contraseña inicial o código de activación. Por ahora queda "pendiente".
-export async function crearAdministrador({ nombre, apellidoPaterno, apellidoMaterno, correo, facultadId }) {
-  await esperar();
-  if (administradores.some((a) => a.correo.toLowerCase() === correo.toLowerCase())) {
-    throw new Error('Ya existe un usuario con ese correo.');
-  }
-  const nuevo = { id: siguienteId++, nombre, apellidoPaterno, apellidoMaterno, correo, facultadId, estatus: 'pendiente' };
-  administradores = [...administradores, nuevo];
-  return conNombreCompleto(nuevo);
+export async function crearAdministrador(datos) {
+  const { data } = await api.post('/superadmin/administradores', aApi(datos));
+  return aFront(data.data);
 }
 
-export async function editarAdministrador(id, { nombre, apellidoPaterno, apellidoMaterno, correo, facultadId }) {
-  await esperar();
-  if (administradores.some((a) => a.id !== id && a.correo.toLowerCase() === correo.toLowerCase())) {
-    throw new Error('Ya existe un usuario con ese correo.');
-  }
-  administradores = administradores.map((a) =>
-    a.id === id ? { ...a, nombre, apellidoPaterno, apellidoMaterno, correo, facultadId } : a
-  );
-  return conNombreCompleto(administradores.find((a) => a.id === id));
+export async function editarAdministrador(id, datos) {
+  const { data } = await api.put(`/superadmin/administradores/${id}`, aApi(datos));
+  return aFront(data.data);
 }
 
 export async function cambiarEstadoAdministrador(id, estatus) {
-  await esperar();
-  administradores = administradores.map((a) => (a.id === id ? { ...a, estatus } : a));
-  return conNombreCompleto(administradores.find((a) => a.id === id));
+  const { data } = await api.patch(`/superadmin/administradores/${id}/estado`, { estatus });
+  return aFront(data.data);
 }
 
 export async function eliminarAdministrador(id) {
-  await esperar();
-  administradores = administradores.filter((a) => a.id !== id);
+  await api.delete(`/superadmin/administradores/${id}`);
 }

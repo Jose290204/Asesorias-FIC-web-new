@@ -22,6 +22,16 @@ export function FacultadActivaProvider({ children }) {
     }
   }, [loading, usuario]);
 
+  // api.js avisa cuando el backend rechaza la facultad elegida (inactiva o inexistente)
+  useEffect(() => {
+    const olvidar = () => {
+      limpiarFacultadActiva();
+      setGuardada(null);
+    };
+    window.addEventListener('facultad-invalida', olvidar);
+    return () => window.removeEventListener('facultad-invalida', olvidar);
+  }, []);
+
   const entrar = (facultad) => {
     guardarFacultadActiva(facultad);
     setGuardada({ id: facultad.id, nombre: facultad.nombre, siglas: facultad.siglas });

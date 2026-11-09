@@ -8,6 +8,7 @@ import {
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useCallback, useEffect, useState } from 'react';
 import { ToastNotification } from '../../../components/ui/ToastNotification';
+import { mensajesDeError } from '../../../Services/errores';
 import TarjetaAdministrador from '../components/TarjetaAdministrador';
 import ModalAdministrador from '../components/ModalAdministrador';
 import ModalEliminarAdministrador from '../components/ModalEliminarAdministrador';
@@ -95,8 +96,8 @@ export default function Administradores() {
       await cambiarEstadoAdministrador(admin.id, nuevo);
       avisar(nuevo === 'activo' ? 'Administrador activado.' : 'Administrador desactivado.');
       await cargar(filtro);
-    } catch {
-      avisar('No se pudo cambiar el estado.', 'error');
+    } catch (e) {
+      avisar(mensajesDeError(e)[0] ?? 'No se pudo cambiar el estado.', 'error');
     }
   };
 
@@ -105,8 +106,8 @@ export default function Administradores() {
       await eliminarAdministrador(admin.id);
       avisar('Administrador eliminado.');
       await cargar(filtro);
-    } catch {
-      avisar('No se pudo eliminar al administrador.', 'error');
+    } catch (e) {
+      avisar(mensajesDeError(e)[0] ?? 'No se pudo eliminar al administrador.', 'error');
     }
   };
 

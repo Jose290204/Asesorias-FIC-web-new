@@ -36,7 +36,25 @@ api.interceptors.response.use(
     const url = error.config?.url ?? '';
     const esDeSesion = url.includes('/auth/login') || url.includes('/auth/me');
 
-    if (error.response?.status === 401 && !esDeSesion) {
+    const estatus = error.response?.status;
+    const codigo = error.response?.data?.codigo;
+
+    if (estatus === 401 && !esDeSesion) {
+      window.dispatchEvent(new Event('sesion-expirada'));
+    }
+
+    // La facultad en la que trabajaba el super admin ya no sirve (se desactivó o no existe):
+    // se avisa para que FacultadActivaContext la olvide y las guardas lo regresen a /superadmin
+    if (
+      estatus === 422 &&
+      (codigo === 'facultad_invalida' || codigo === 'facultad_requerida') &&
+      leerFacultadActiva()
+    ) {
+      window.dispatchEvent(new Event('facultad-invalida'));
+    }
+
+    // La facultad del usuario se desactivó con su sesión abierta: se cierra la sesión del front
+    if (estatus === 403 && codigo === 'facultad_inactiva' && !esDeSesion) {
       window.dispatchEvent(new Event('sesion-expirada'));
     }
 

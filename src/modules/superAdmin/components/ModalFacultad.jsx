@@ -1,6 +1,7 @@
 import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
 import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
 import { useRef, useState } from 'react';
+import { mensajesDeError } from '../../../Services/errores';
 
 const VACIO = { nombre: '', siglas: '' };
 const TIPOS_LOGO = ['image/png', 'image/jpeg', 'image/webp'];
@@ -77,7 +78,19 @@ export default function ModalFacultad({ open, onClose, onGuardar, facultad = nul
       document.activeElement?.blur();
       onClose();
     } catch (e) {
-      setErrores((er) => ({ ...er, general: e.message ?? 'No se pudo guardar.' }));
+      // 422: el backend dice qué campo falló (siglas repetidas, logo inválido...)
+      const campos = e.response?.data?.errors;
+      if (campos) {
+        setErrores((er) => ({
+          ...er,
+          nombre: campos.nombre?.[0],
+          siglas: campos.siglas?.[0],
+          logo: campos.logo?.[0],
+          general: campos.nombre || campos.siglas || campos.logo ? undefined : mensajesDeError(e)[0],
+        }));
+      } else {
+        setErrores((er) => ({ ...er, general: mensajesDeError(e)[0] }));
+      }
     } finally {
       setGuardando(false);
     }

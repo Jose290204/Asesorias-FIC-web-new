@@ -69,6 +69,7 @@ export default function TarjetaFacultad({ facultad, onEntrar, onEditar, onCambia
           variant="contained"
           startIcon={<LoginIcon />}
           onClick={() => onEntrar(facultad)}
+          disabled={!activa}
           sx={{ textTransform: 'none', bgcolor: '#08338F' }}
         >
           Entrar al panel

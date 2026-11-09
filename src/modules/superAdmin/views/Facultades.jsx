@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ToastNotification } from '../../../components/ui/ToastNotification';
 import { useFacultadActiva } from '../../../context/FacultadActivaContext';
+import { mensajesDeError } from '../../../Services/errores';
 import ModalDesactivarFacultad from '../components/ModalDesactivarFacultad';
 import ModalFacultad from '../components/ModalFacultad';
 import TarjetaFacultad from '../components/TarjetaFacultad';
@@ -27,7 +28,7 @@ function DatoResumen({ valor, etiqueta }) {
 
 export default function Facultades() {
   const navigate = useNavigate();
-  const { entrar } = useFacultadActiva();
+  const { facultadActiva, entrar, salir } = useFacultadActiva();
 
   const [facultades, setFacultades] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -78,7 +79,9 @@ export default function Facultades() {
 
   const handleGuardar = async (datos) => {
     if (modal.facultad) {
-      await editarFacultad(modal.facultad.id, datos);
+      const actualizada = await editarFacultad(modal.facultad.id, datos);
+      // Si es la facultad en la que está trabajando, la barra "Estás viendo" debe mostrar los datos nuevos
+      if (facultadActiva?.id === actualizada.id) entrar(actualizada);
       avisar('Facultad actualizada.');
     } else {
       await crearFacultad(datos);
@@ -90,12 +93,14 @@ export default function Facultades() {
   const cambiarEstado = async (facultad) => {
     try {
       await cambiarEstadoFacultad(facultad.id, !facultad.activa);
+      // Una facultad desactivada ya no se puede usar como contexto
+      if (facultad.activa && facultadActiva?.id === facultad.id) salir();
       avisar(facultad.activa
         ? 'Facultad desactivada. Sus usuarios ya no pueden iniciar sesión.'
         : 'Facultad activada. Sus usuarios ya pueden iniciar sesión.');
       await cargar();
-    } catch {
-      avisar('No se pudo cambiar el estado.', 'error');
+    } catch (e) {
+      avisar(mensajesDeError(e)[0] ?? 'No se pudo cambiar el estado.', 'error');
     }
   };
 
