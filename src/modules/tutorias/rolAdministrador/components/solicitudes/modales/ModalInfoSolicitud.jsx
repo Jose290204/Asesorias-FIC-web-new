@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 
 import { formatearFechaVisible } from '../../../../rolEstudiante/utils/fechaSolicitud';
+import { ETIQUETA_ESTATUS } from '../estatusSolicitud';
 
 /**
  * Detalle de una solicitud (solo lectura).
@@ -26,18 +27,18 @@ export default function ModalInfoSolicitud({ open, onClose, data, onAprobar, onR
     // Celular: pantalla completa. Resto: ventana centrada.
     const esCelular = useMediaQuery('(max-width:599.95px)');
 
-    // La fecha puede venir en "fecha_inicio" (datos de prueba) o dentro de "raw" (servicio)
-    const fecha = data?.fecha_inicio ?? data?.raw?.fecha ?? data?.fecha;
+    const fecha = data?.fecha_inicio;
 
     // Cada campo: [etiqueta, valor]. Los que no tienen valor no se muestran.
     const campos = [
+        ['Estatus', ETIQUETA_ESTATUS[data?.estatus] ?? data?.estatus],
         ['Estudiante', data?.estudiante],
         ['Licenciatura', data?.licenciatura],
         ['Grado y grupo', data?.gradoGrupo],
         ['Asesor solicitado', data?.asesor],
         ['Materia', data?.materia],
         ['Fecha solicitada', fecha ? formatearFechaVisible(fecha) : ''],
-        ['Horario', data?.horario],
+        ['Horario', data?.horario_con_dia ?? data?.horario],
         ['Modalidad', data?.modalidad],
         ['Razón de asesoría', data?.razonAsesoria]
     ].filter(([, valor]) => Boolean(valor));
@@ -82,6 +83,18 @@ export default function ModalInfoSolicitud({ open, onClose, data, onAprobar, onR
                             slotProps={{ input: { readOnly: true }, inputLabel: { shrink: true } }}
                         />
                     ))}
+
+                    {data?.motivo_rechazo && (
+                        <TextField
+                            label="Motivo del rechazo"
+                            size="small"
+                            fullWidth
+                            multiline
+                            minRows={2}
+                            value={data.motivo_rechazo}
+                            slotProps={{ input: { readOnly: true }, inputLabel: { shrink: true } }}
+                        />
+                    )}
 
                     {data?.observaciones && (
                         <TextField

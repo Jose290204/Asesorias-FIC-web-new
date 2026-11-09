@@ -12,13 +12,15 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
 import { formatearFechaVisible } from '../../../rolEstudiante/utils/fechaSolicitud';
+import { COLOR_ESTATUS, ETIQUETA_ESTATUS } from './estatusSolicitud';
 
 // Versión móvil de una fila de la tabla de solicitudes.
 // Mismo diseño que la tarjeta de asesorías: ícono de información arriba a la derecha + botones Rechazar y Aprobar.
 // Solo muestra; las acciones las maneja quien la usa (TablaSolicitudes).
 export default function TarjetaSolicitudAdmin({ row, onInfo, onAprobar, onRechazar }) {
-    // La fecha viene en "fecha_inicio" (datos de prueba) o dentro de "raw" (servicio)
-    const fecha = row.fecha_inicio ?? row.raw?.fecha ?? row.fecha;
+    const fecha = row.fecha_inicio;
+    const pendiente = row.estatus === 'pendiente';
+    const colorEstatus = COLOR_ESTATUS[row.estatus];
 
     return (
         <Card
@@ -66,7 +68,7 @@ export default function TarjetaSolicitudAdmin({ row, onInfo, onAprobar, onRechaz
                         <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: '#08338F', mt: '1px', flexShrink: 0 }} />
                         <Typography sx={{ fontSize: '15px', color: '#333333' }}>
                             {formatearFechaVisible(fecha)}
-                            {row.horario && ` · ${row.horario}`}
+                            {row.horario && ` · ${row.horario_con_dia ?? row.horario}`}
                         </Typography>
                     </Box>
 
@@ -82,6 +84,11 @@ export default function TarjetaSolicitudAdmin({ row, onInfo, onAprobar, onRechaz
                         )}
                         <Chip
                             size="small"
+                            label={ETIQUETA_ESTATUS[row.estatus] ?? row.estatus}
+                            sx={{ backgroundColor: colorEstatus?.fondo, color: colorEstatus?.texto, fontWeight: 700 }}
+                        />
+                        <Chip
+                            size="small"
                             variant="outlined"
                             label={`Solicitud #${row.id_solicitud ?? row.id}`}
                             sx={{ borderColor: '#BDBDBD', color: '#555555', fontWeight: 600 }}
@@ -90,7 +97,8 @@ export default function TarjetaSolicitudAdmin({ row, onInfo, onAprobar, onRechaz
                 </Box>
             </CardContent>
 
-            {/* Botones: dos columnas iguales; Rechazar con borde y Aprobar con relleno */}
+            {/* Botones: dos columnas iguales; Rechazar con borde y Aprobar con relleno. Solo en pendientes */}
+            {pendiente && (
             <CardActions
                 sx={{
                     padding: '0px 24px 20px 24px',
@@ -120,6 +128,7 @@ export default function TarjetaSolicitudAdmin({ row, onInfo, onAprobar, onRechaz
                     Aprobar
                 </Button>
             </CardActions>
+            )}
         </Card>
     );
 }

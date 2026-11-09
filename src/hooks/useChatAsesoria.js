@@ -23,8 +23,10 @@ const unir = (actuales, nuevos) => {
 //  - asesoriaId: id de la asesoría
 //  - abierto:    el modal está abierto (solo entonces se consulta)
 //  - enCurso:    false = historial, solo lectura: se carga una vez y no se consulta más
+//  - soloLectura: quien mira no es parte de la conversación (el administrador): NO marca los mensajes
+//                como leídos, porque eso avisaría al estudiante y al asesor que alguien los leyó
 //  - showToast:  para avisar si falla un envío
-export default function useChatAsesoria({ asesoriaId, abierto, enCurso, showToast }) {
+export default function useChatAsesoria({ asesoriaId, abierto, enCurso, soloLectura = false, showToast }) {
   const [mensajes, setMensajes] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [errorCarga, setErrorCarga] = useState(null);
@@ -68,7 +70,7 @@ export default function useChatAsesoria({ asesoriaId, abierto, enCurso, showToas
         setErrorCarga(null);
 
         // Si hay mensajes de la otra persona, se avisa que ya se vieron
-        if (nuevos.some((m) => !m.propio)) marcarLeidos(asesoriaId).catch(() => {});
+        if (!soloLectura && nuevos.some((m) => !m.propio)) marcarLeidos(asesoriaId).catch(() => {});
       } catch (error) {
         // Una consulta periódica que falla se ignora: la siguiente lo intenta de nuevo
         if (vigente && primera) setErrorCarga(mensajesDeError(error)[0]);
@@ -97,7 +99,7 @@ export default function useChatAsesoria({ asesoriaId, abierto, enCurso, showToas
       if (intervalo) clearInterval(intervalo);
       document.removeEventListener('visibilitychange', alVolver);
     };
-  }, [abierto, asesoriaId, enCurso]);
+  }, [abierto, asesoriaId, enCurso, soloLectura]);
 
   // Envía un mensaje: aparece al instante (temporal) y se cambia por el real cuando el servidor responde.
   // Regresa true si se envió, false si falló (el temporal se quita para que el modal devuelva el texto).

@@ -11,32 +11,37 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import TextoConEnlaces from '../../../../../../components/ui/TextoConEnlaces';
+import useChatAsesoria from '../../../../../../hooks/useChatAsesoria';
 
 // --- CHAT DE UNA ASESORÍA, VISTO POR EL ADMINISTRADOR (SOLO LECTURA) ---
 // Celular: pantalla completa. Tablet / escritorio: ventana flotante abajo a la derecha.
 // No hay barra para escribir: el administrador solo puede leer la conversación.
-// Mensajes: { id, texto, autor } -> autor: 'estudiante' (derecha, azul) o 'asesor' (izquierda, blanco).
+// Mensajes reales (GET /asesorias/{id}/mensajes): { id, texto, fecha, emisor: {id, nombre} }.
+// Si el emisor es el asesor de la asesoría va a la izquierda en blanco; si no, es el estudiante (derecha, azul).
+// En modo solo lectura NO se marcan los mensajes como leídos: el administrador no es parte de la conversación.
 
 const COLOR_PRINCIPAL = '#08338F';
 
-// Conversación de prueba (quítala cuando conectes el chat real)
-const MENSAJES_DEMO = [
-    { id: 1, texto: '¿Buenas tardes maestro, me podría mandar el link?', autor: 'estudiante' },
-    { id: 2, texto: 'Buenas tardes, claro que si ahorita te lo mando', autor: 'asesor' },
-    { id: 3, texto: 'www.zoom.com/j/123456', autor: 'asesor' },
-    { id: 4, texto: 'Muchas gracias maestro', autor: 'estudiante' }
-];
+// "8 nov, 1:48 p.m." (día y hora locales del dispositivo)
+const formatearFechaHora = (iso) =>
+    iso
+        ? new Date(iso).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+        : '';
 
-export default function ModalChatAsesoriaAdmin({ open, onClose, data }) {
+export default function ModalChatAsesoriaAdmin({ open, onClose, data, showToast }) {
     const esCelular = useMediaQuery('(max-width:599.95px)');
-    const [mensajes, setMensajes] = useState([]);
     const listaRef = useRef(null);
 
-    // Al cambiar de conversación se cargan sus mensajes (data.mensajes o la conversación de prueba)
-    useEffect(() => {
-        setMensajes(data?.mensajes ?? MENSAJES_DEMO);
-    }, [data?.id, data?.mensajes]);
+    // Mensajes reales: carga inicial y consulta periódica mientras la asesoría esté en curso (solo lectura)
+    const { mensajes, cargando, errorCarga } = useChatAsesoria({
+        asesoriaId: data?.id,
+        abierto: Boolean(open),
+        enCurso: data?.estatus === 'en_curso',
+        soloLectura: true,
+        showToast
+    });
 
     // Baja al último mensaje al abrir el chat
     useEffect(() => {
@@ -135,14 +140,17 @@ export default function ModalChatAsesoriaAdmin({ open, onClose, data }) {
                         backgroundColor: esCelular ? '#F0F2F5' : '#ffffff'
                     }}
                 >
-                    {mensajes.length === 0 ? (
-                        <Typography sx={{ color: '#666666', fontSize: '14px', textAlign: 'center', mt: 4 }}>
-                            Aún no hay mensajes.
+                    {cargando || errorCarga || mensajes.length === 0 ? (
+                        <Typography
+                            sx={{ color: errorCarga ? '#B42318' : '#666666', fontSize: '14px', textAlign: 'center', mt: 4 }}
+                        >
+                            {cargando ? 'Cargando mensajes...' : errorCarga || 'Aún no hay mensajes.'}
                         </Typography>
                     ) : (
                         mensajes.map((mensaje) => {
-                            const esEstudiante = mensaje.autor === 'estudiante';
-                            const nombre = esEstudiante ? nombreEstudiante : nombreAsesor;
+                            // El emisor trae su id: si es el asesor de la asesoría, el mensaje es del asesor
+                            const esEstudiante = mensaje.emisor?.id !== data?.id_asesor;
+                            const nombre = mensaje.emisor?.nombre || (esEstudiante ? nombreEstudiante : nombreAsesor);
 
                             return (
                                 <Box
@@ -188,7 +196,11 @@ export default function ModalChatAsesoriaAdmin({ open, onClose, data }) {
                                             wordBreak: 'break-word'
                                         }}
                                     >
-                                        {mensaje.texto}
+                                        <TextoConEnlaces texto={mensaje.texto} propio={esEstudiante} />
+                                        {/* Día y hora del mensaje */}
+                                        <Box sx={{ mt: 0.5, textAlign: 'right', fontSize: '11px', lineHeight: 1, opacity: esEstudiante ? 0.85 : 0.6 }}>
+                                            {formatearFechaHora(mensaje.fecha)}
+                                        </Box>
                                     </Box>
                                 </Box>
                             );

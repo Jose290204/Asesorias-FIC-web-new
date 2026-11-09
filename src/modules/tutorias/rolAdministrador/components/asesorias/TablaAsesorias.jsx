@@ -339,6 +339,7 @@ export default function TablaAsesorias({ rows = [], onCompletar, onCancelar, onG
                 open={modalChatOpen}
                 onClose={() => setModalChatOpen(false)}
                 data={selectedRow}
+                showToast={showToast}
             />
 
             {/* Toast de los modales sin conectar */}
