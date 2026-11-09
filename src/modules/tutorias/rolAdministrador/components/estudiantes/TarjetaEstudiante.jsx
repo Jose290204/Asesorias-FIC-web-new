@@ -1,7 +1,9 @@
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
+import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -10,13 +12,7 @@ import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 
-// Colores del chip de estado: verde para ACTIVO y gris para cualquier otro
-const estiloEstado = (estado) =>
-    String(estado).toUpperCase() === 'ACTIVO'
-        ? { backgroundColor: '#E6F4EA', color: '#1B5E20' }
-        : { backgroundColor: '#F1F3F4', color: '#5F6368' };
-
-// Línea con ícono y texto (correo, número de cuenta)
+// Línea con ícono y texto (correo, número de cuenta, licenciatura)
 function LineaDato({ icono, texto }) {
     if (!texto) return null;
 
@@ -31,9 +27,9 @@ function LineaDato({ icono, texto }) {
 }
 
 // Versión móvil de una fila de la tabla de estudiantes.
-// Mismo diseño que las demás tarjetas del admin: borde azul, datos y dos botones (Información y Eliminar).
+// Mismo diseño que las demás tarjetas del admin: borde azul, datos y tres botones (Información, Editar y Dar de baja).
 // Solo muestra; las acciones las maneja quien la usa (TablaEstudiantes).
-export default function TarjetaEstudiante({ row, onInfo, onEliminar }) {
+export default function TarjetaEstudiante({ row, onInfo, onEditar, onEliminar }) {
     return (
         <Card
             sx={{
@@ -56,21 +52,15 @@ export default function TarjetaEstudiante({ row, onInfo, onEliminar }) {
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <LineaDato icono={<MailOutlinedIcon sx={{ fontSize: 20 }} />} texto={row.correo} />
                     <LineaDato icono={<BadgeOutlinedIcon sx={{ fontSize: 20 }} />} texto={row.numeroCuenta} />
+                    <LineaDato icono={<SchoolOutlinedIcon sx={{ fontSize: 20 }} />} texto={row.licenciatura} />
 
-                    {/* Chips: grupo, estado e identificador */}
+                    {/* Chips: grupo e identificador */}
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mt: '4px' }}>
                         {row.grupo && (
                             <Chip
                                 size="small"
                                 label={`Grupo ${row.grupo}`}
                                 sx={{ backgroundColor: '#E8EEF9', color: '#08338F', fontWeight: 600 }}
-                            />
-                        )}
-                        {row.estado && (
-                            <Chip
-                                size="small"
-                                label={row.estado}
-                                sx={{ ...estiloEstado(row.estado), fontWeight: 600 }}
                             />
                         )}
                         <Chip
@@ -110,13 +100,28 @@ export default function TarjetaEstudiante({ row, onInfo, onEliminar }) {
                     Información
                 </Button>
                 <Button
+                    variant="outlined"
+                    sx={{
+                        minHeight: 40,
+                        color: '#08338F',
+                        borderColor: '#08338F',
+                        borderRadius: '5px',
+                        textTransform: 'none',
+                        '&:hover': { borderColor: '#08338F', backgroundColor: 'rgba(8, 51, 143, 0.08)' }
+                    }}
+                    startIcon={<EditOutlinedIcon />}
+                    onClick={(e) => onEditar(row, e)}
+                >
+                    Editar
+                </Button>
+                <Button
                     variant="contained"
                     color="error"
-                    sx={{ minHeight: 40, color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
+                    sx={{ gridColumn: '1 / -1', minHeight: 40, color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
                     startIcon={<DeleteOutlinedIcon />}
                     onClick={(e) => onEliminar(row, e)}
                 >
-                    Eliminar
+                    Dar de baja
                 </Button>
             </CardActions>
         </Card>

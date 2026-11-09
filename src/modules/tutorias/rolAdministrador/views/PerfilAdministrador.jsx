@@ -50,7 +50,7 @@ export default function PerfilAdministrador() {
 
     if (loading) {
         return (
-            <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-[#F4F7FC] flex items-center justify-center">
+            <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent flex items-center justify-center">
                 <p className="text-gray-500">Cargando perfil...</p>
             </div>
         );
@@ -71,7 +71,7 @@ export default function PerfilAdministrador() {
     const estadisticas = perfil.estadisticas;
 
     return (
-        <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-[#F4F7FC] px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
+        <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
             <p className="text-2xl font-bold">Perfil</p>
 
             <div className="w-full flex flex-col items-center gap-5">

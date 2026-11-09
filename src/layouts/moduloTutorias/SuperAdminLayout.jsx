@@ -10,6 +10,7 @@ import BarraContexto from '../../components/navigation/moduloTutorias/BarraConte
 import SuperAdminSidebar from '../../components/navigation/moduloTutorias/SuperAdminSidebar';
 import { useAuth } from '../../context/AuthContext';
 import { CatalogosProvider } from '../../context/CatalogosContext';
+import { CLASES_FONDO_CONTENIDO, FONDO_CONTENIDO } from './fondoContenido';
 
 const RUTA_PERFIL = '/superadmin/perfil';
 const RUTA_INICIO = '/superadmin/facultades';
@@ -120,7 +121,10 @@ export default function SuperAdminLayout() {
           </Menu>
         </header>
 
-        <main className="min-w-0 flex-1 bg-gray-100">
+        <main
+        className={`min-w-0 flex-1 ${CLASES_FONDO_CONTENIDO}`}
+        style={{ backgroundImage: FONDO_CONTENIDO }}
+      >
           <CatalogosProvider>
             <Outlet />
           </CatalogosProvider>

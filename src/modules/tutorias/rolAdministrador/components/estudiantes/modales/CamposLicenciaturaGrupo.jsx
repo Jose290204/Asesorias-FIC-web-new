@@ -1,69 +1,48 @@
 import { MenuItem, TextField } from '@mui/material';
 import { useMemo } from 'react';
 
-import { catalogoService } from '../../../services/catalogoService';
+import { useCatalogos } from '../../../../../../context/CatalogosContext';
 
 // Altura máxima del menú de las listas desplegables, para que no se desborden
 const MENU_LISTA = { slotProps: { paper: { sx: { maxHeight: 240 } } } };
 
 /**
- * Lista de licenciatura y lista de grupo que dependen una de la otra:
- * los grupos mostrados son los de la licenciatura elegida, y al cambiar de licenciatura el grupo se limpia.
- * Recibe `children` para poner otro campo (por ejemplo el promedio) al lado del grupo.
+ * Lista de licenciatura y lista de grupo que dependen una de la otra, con los datos de la facultad
+ * (vienen de GET /catalogos): los grupos mostrados son los de la licenciatura elegida,
+ * y al cambiar de licenciatura el grupo se limpia si no pertenece a la nueva.
  *
  * Props:
- *  - licenciatura, grupo: valores actuales
- *  - onChange: recibe los campos que cambiaron, por ejemplo { licenciatura, grupo: '' }
- *  - required, mostrarErrores: marcan la licenciatura como obligatoria y muestran el error si está vacía
- *    (el grupo no es obligatorio porque hay licenciaturas sin grupos en el catálogo)
+ *  - licenciaturaId, grupoId: valores actuales ('' si no hay)
+ *  - onChange: recibe los dos valores, { licenciaturaId, grupoId }
+ *  - mostrarErrores: muestra "Campo obligatorio" en el grupo si está vacío (el grupo es obligatorio)
+ *  - soloLectura: muestra los valores sin dejar cambiarlos
  */
 export default function CamposLicenciaturaGrupo({
-    licenciatura = '',
-    grupo = '',
+    licenciaturaId = '',
+    grupoId = '',
     onChange,
-    required = false,
     mostrarErrores = false,
-    children
+    soloLectura = false
 }) {
-    // TODO: reemplazar por la consulta real de catálogos al backend
-    const { licenciaturas, grupos } = useMemo(() => {
-        try {
-            const catalogos = catalogoService.getCatalogos();
-            return { licenciaturas: catalogos.licenciaturas || [], grupos: catalogos.grupos || [] };
-        } catch (error) {
-            console.error('Error al cargar catálogos:', error);
-            return { licenciaturas: [], grupos: [] };
-        }
-    }, []);
+    const { catalogos } = useCatalogos();
 
-    // La licenciatura del estudiante puede venir con otras mayúsculas; se empareja con la del catálogo
-    const licenciaturaCatalogo = licenciaturas.find(
-        (item) => item.licenciatura.toUpperCase() === String(licenciatura).toUpperCase()
+    const licenciaturas = useMemo(() => catalogos?.licenciaturas ?? [], [catalogos]);
+    const grupos = useMemo(() => catalogos?.grupos ?? [], [catalogos]);
+
+    // Grupos de la licenciatura elegida
+    const gruposVisibles = useMemo(
+        () => grupos.filter((g) => g.licenciatura_id === licenciaturaId),
+        [grupos, licenciaturaId]
     );
 
-    // Opciones de licenciatura (si el valor actual no está en el catálogo se agrega para poder mostrarlo)
-    const opcionesLicenciatura = licenciaturas.map((item) => item.licenciatura);
-    if (licenciatura && !licenciaturaCatalogo) opcionesLicenciatura.unshift(licenciatura);
-    const valorLicenciatura = licenciaturaCatalogo?.licenciatura ?? licenciatura;
-
-    // Grupos de la licenciatura elegida (si el grupo actual no está en la lista se agrega para poder mostrarlo)
-    const opcionesGrupo = licenciaturaCatalogo
-        ? grupos.filter((item) => item.id_licenciatura === licenciaturaCatalogo.id_licenciatura).map((item) => item.grupo)
-        : [];
-    if (grupo && !opcionesGrupo.includes(grupo)) opcionesGrupo.unshift(grupo);
-
-    const sinLicenciatura = !licenciatura;
-    const sinGrupos = !sinLicenciatura && opcionesGrupo.length === 0;
+    const sinLicenciatura = !licenciaturaId;
+    const sinGrupos = !sinLicenciatura && gruposVisibles.length === 0;
+    const grupoVacio = !grupoId;
 
     const handleLicenciatura = (e) => {
         const nueva = e.target.value;
-        const nuevaCatalogo = licenciaturas.find((item) => item.licenciatura === nueva);
-        const gruposNuevos = nuevaCatalogo
-            ? grupos.filter((item) => item.id_licenciatura === nuevaCatalogo.id_licenciatura).map((item) => item.grupo)
-            : [];
-
-        // El grupo se conserva solo si también existe en la licenciatura nueva
-        onChange?.({ licenciatura: nueva, grupo: gruposNuevos.includes(grupo) ? grupo : '' });
+        const sigueValido = grupos.some((g) => g.id === grupoId && g.licenciatura_id === nueva);
+        onChange?.({ licenciaturaId: nueva, grupoId: sigueValido ? grupoId : '' });
     };
 
     return (
@@ -73,47 +52,51 @@ export default function CamposLicenciaturaGrupo({
                 label="Licenciatura"
                 size="small"
                 fullWidth
-                required={required}
-                value={valorLicenciatura}
+                required={!soloLectura}
+                disabled={soloLectura}
+                value={licenciaturaId}
                 onChange={handleLicenciatura}
-                error={mostrarErrores && required && sinLicenciatura}
-                helperText={mostrarErrores && required && sinLicenciatura ? 'Campo obligatorio' : ''}
+                error={mostrarErrores && sinLicenciatura}
+                helperText={mostrarErrores && sinLicenciatura ? 'Campo obligatorio' : ''}
                 slotProps={{ select: { MenuProps: MENU_LISTA } }}
             >
-                {opcionesLicenciatura.map((item) => (
-                    <MenuItem key={item} value={item} sx={{ whiteSpace: 'normal' }}>
-                        {item}
+                {licenciaturas.map((item) => (
+                    <MenuItem key={item.id} value={item.id} sx={{ whiteSpace: 'normal' }}>
+                        {item.nombre}
                     </MenuItem>
                 ))}
             </TextField>
 
-            <div className="flex gap-4">
-                <TextField
-                    select
-                    label="Grupo"
-                    size="small"
-                    sx={{ flex: 1 }}
-                    value={grupo}
-                    onChange={(e) => onChange?.({ grupo: e.target.value })}
-                    disabled={sinLicenciatura || sinGrupos}
-                    helperText={
-                        sinLicenciatura
-                            ? 'Elige primero la licenciatura'
-                            : sinGrupos
-                                ? 'Sin grupos para esta licenciatura'
+            <TextField
+                select
+                label="Grupo"
+                size="small"
+                fullWidth
+                required={!soloLectura}
+                value={grupoId}
+                onChange={(e) => onChange?.({ licenciaturaId, grupoId: e.target.value })}
+                disabled={soloLectura || sinLicenciatura || sinGrupos}
+                error={mostrarErrores && !sinLicenciatura && !sinGrupos && grupoVacio}
+                helperText={
+                    soloLectura
+                        ? ''
+                        : sinLicenciatura
+                        ? 'Elige primero la licenciatura'
+                        : sinGrupos
+                            ? 'Sin grupos para esta licenciatura'
+                            : mostrarErrores && grupoVacio
+                                ? 'Campo obligatorio'
                                 : ''
-                    }
-                    slotProps={{ select: { MenuProps: MENU_LISTA } }}
-                >
-                    {opcionesGrupo.map((item) => (
-                        <MenuItem key={item} value={item}>
-                            {item}
-                        </MenuItem>
-                    ))}
-                </TextField>
-
-                {children}
-            </div>
+                }
+                slotProps={{ select: { MenuProps: MENU_LISTA } }}
+            >
+                {gruposVisibles.map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                        {/* Un mismo nombre de grupo puede existir en presencial y en virtual */}
+                        {item.modalidad === 'virtual' ? `${item.nombre} (virtual)` : item.nombre}
+                    </MenuItem>
+                ))}
+            </TextField>
         </>
     );
 }

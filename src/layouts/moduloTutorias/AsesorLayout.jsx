@@ -10,6 +10,7 @@ import AsesorSidebar from '../../components/navigation/moduloTutorias/AsesorSide
 import BarraContexto from '../../components/navigation/moduloTutorias/BarraContexto';
 import { useAuth } from '../../context/AuthContext';
 import { CatalogosProvider } from '../../context/CatalogosContext';
+import { CLASES_FONDO_CONTENIDO, FONDO_CONTENIDO } from './fondoContenido';
 
 // Misma ruta que usa "Perfil" en el sidebar
 const RUTA_PERFIL = '/tutorias/asesor/perfil-asesor';
@@ -128,7 +129,10 @@ export default function AsesorLayout() {
         </Menu>
       </header>
 
-      <main className="min-w-0 flex-1 bg-gray-100">
+      <main
+        className={`min-w-0 flex-1 ${CLASES_FONDO_CONTENIDO}`}
+        style={{ backgroundImage: FONDO_CONTENIDO }}
+      >
         <Outlet />
       </main>
       </div>

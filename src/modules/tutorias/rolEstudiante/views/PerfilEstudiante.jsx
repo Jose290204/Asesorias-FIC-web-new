@@ -26,7 +26,7 @@ export default function PerfilEstudiante() {
 
     if (loading) {
         return (
-            <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-gray-100 flex items-center justify-center">
+            <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent flex items-center justify-center">
                 <p className="text-gray-500">Cargando perfil...</p>
             </div>
         );
@@ -34,7 +34,7 @@ export default function PerfilEstudiante() {
 
     if (error || !perfil) {
         return (
-            <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-gray-100 flex items-center justify-center">
+            <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent flex items-center justify-center">
                 <p className="text-gray-500">No se pudo cargar el perfil.</p>
             </div>
         );
@@ -48,7 +48,7 @@ export default function PerfilEstudiante() {
     const estadisticas = perfil.estadisticas;
 
     return (
-        <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-gray-100 px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
+        <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
             <p className="text-2xl font-bold">Perfil</p>
 
             <div className="w-full flex flex-col items-center gap-5">

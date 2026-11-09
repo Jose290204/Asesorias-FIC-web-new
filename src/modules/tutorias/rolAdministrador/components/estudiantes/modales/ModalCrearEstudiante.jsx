@@ -16,14 +16,16 @@ import CampoContrasena from '../../asesoresDisciplinares/modales/CampoContrasena
 import CamposLicenciaturaGrupo from './CamposLicenciaturaGrupo';
 
 const FORMULARIO_INICIAL = {
-    nombre: '',
+    nombres: '',
+    apellido_paterno: '',
+    apellido_materno: '',
     numeroCuenta: '',
     correo: '',
     telefono: '',
-    licenciatura: '',
-    grupo: '',
-    promedio: '',
-    contrasena: ''
+    licenciaturaId: '',
+    grupo_id: '',
+    contrasena: '',
+    confirmarContrasena: ''
 };
 
 // Letras (con acentos y ñ) y espacios
@@ -32,26 +34,21 @@ const SOLO_LETRAS = /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]/g;
 const SOLO_NUMEROS = /\D/g;
 // Formato básico de correo: algo@dominio.ext
 const FORMATO_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Largo mínimo de la contraseña
+// Largo de la contraseña (el backend pide de 8 a 72)
 const MIN_CONTRASENA = 8;
-
-// Deja solo dígitos y un punto decimal con hasta dos decimales (ej. 8.75)
-const limpiarPromedio = (valor) => {
-    const soloValido = valor.replace(/[^\d.]/g, '');
-    const [entero, ...decimales] = soloValido.split('.');
-    return decimales.length ? `${entero}.${decimales.join('').slice(0, 2)}` : entero;
-};
+const MAX_CONTRASENA = 72;
+// El teléfono es opcional, pero si se escribe debe tener entre 10 y 15 dígitos
+const MIN_TELEFONO = 10;
 
 /**
- * Alta de un estudiante.
- * El estudiante siempre se crea con estado ACTIVO.
+ * Alta de un estudiante. Se crea ACTIVO y con la contraseña que escribe el administrador.
  *
  * Props:
  *  - open, onClose
- *  - onSave: recibe el estudiante nuevo (sin id; el id lo asigna quien lo guarda)
- *  - showToast: (mensaje, tipo) para avisar que se creó
+ *  - onSave: recibe el formulario y regresa una promesa con true si se creó (el modal se cierra)
+ *    o false si falló (el modal sigue abierto con lo escrito; el aviso lo da quien lo usa)
  */
-export default function ModalCrearEstudiante({ open, onClose, onSave, showToast }) {
+export default function ModalCrearEstudiante({ open, onClose, onSave }) {
     // Celular: pantalla completa. Resto: ventana centrada.
     const esCelular = useMediaQuery('(max-width:599.95px)');
 
@@ -75,14 +72,16 @@ export default function ModalCrearEstudiante({ open, onClose, onSave, showToast 
     };
 
     // Validaciones
-    const nombreVacio = !formData.nombre.trim();
+    const nombresVacio = !formData.nombres.trim();
+    const paternoVacio = !formData.apellido_paterno.trim();
     const correoVacio = !formData.correo.trim();
     const correoInvalido = !correoVacio && !FORMATO_CORREO.test(formData.correo.trim());
     const cuentaVacia = !formData.numeroCuenta.trim();
-    const licenciaturaVacia = !formData.licenciatura;
-    const promedioInvalido = formData.promedio !== '' && !(Number(formData.promedio) >= 0 && Number(formData.promedio) <= 10);
+    const telefonoInvalido = formData.telefono !== '' && formData.telefono.length < MIN_TELEFONO;
+    const grupoVacio = !formData.grupo_id;
     const contrasenaVacia = !formData.contrasena;
     const contrasenaCorta = !contrasenaVacia && formData.contrasena.length < MIN_CONTRASENA;
+    const contrasenaNoCoincide = !contrasenaVacia && formData.contrasena !== formData.confirmarContrasena;
 
     const errorCorreo = correoVacio ? 'Campo obligatorio' : correoInvalido ? 'Correo no válido' : '';
     const errorContrasena = contrasenaVacia
@@ -94,38 +93,35 @@ export default function ModalCrearEstudiante({ open, onClose, onSave, showToast 
     const handleCrear = async () => {
         setIntentoGuardar(true);
         if (
-            nombreVacio ||
+            nombresVacio ||
+            paternoVacio ||
             correoVacio ||
             correoInvalido ||
             cuentaVacia ||
-            licenciaturaVacia ||
-            promedioInvalido ||
+            telefonoInvalido ||
+            grupoVacio ||
             contrasenaVacia ||
-            contrasenaCorta
+            contrasenaCorta ||
+            contrasenaNoCoincide
         ) {
             return;
         }
 
-        try {
-            setGuardando(true);
-            document.activeElement?.blur();
-            // TODO: enviar el alta al backend (la contraseña solo viaja en esta petición) y usar el id que regrese
-            await onSave?.({
-                ...formData,
-                nombre: formData.nombre.trim(),
-                correo: formData.correo.trim(),
-                telefono: formData.telefono.trim(),
-                numeroCuenta: formData.numeroCuenta.trim(),
-                estado: 'ACTIVO'
-            });
-            showToast?.('Estudiante creado correctamente', 'success');
-            onClose();
-        } catch (error) {
-            console.error('Error al crear el estudiante:', error);
-            showToast?.('No se pudo crear el estudiante', 'error');
-        } finally {
-            setGuardando(false);
-        }
+        setGuardando(true);
+        document.activeElement?.blur();
+
+        const guardado = await onSave?.({
+            ...formData,
+            nombres: formData.nombres.trim(),
+            apellido_paterno: formData.apellido_paterno.trim(),
+            apellido_materno: formData.apellido_materno.trim(),
+            correo: formData.correo.trim(),
+            telefono: formData.telefono.trim(),
+            numeroCuenta: formData.numeroCuenta.trim()
+        });
+
+        setGuardando(false);
+        if (guardado) onClose();
     };
 
     const handleCloseModal = () => {
@@ -165,16 +161,39 @@ export default function ModalCrearEstudiante({ open, onClose, onSave, showToast 
             <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, py: 3 }}>
                 {/* Solo letras y espacios */}
                 <TextField
-                    label="Nombre completo"
+                    label="Nombre(s)"
                     size="small"
                     fullWidth
                     required
-                    value={formData.nombre}
-                    onChange={handleChange('nombre', (v) => v.replace(SOLO_LETRAS, ''))}
-                    error={intentoGuardar && nombreVacio}
-                    helperText={intentoGuardar && nombreVacio ? 'Campo obligatorio' : ''}
-                    slotProps={{ htmlInput: { maxLength: 100 } }}
+                    value={formData.nombres}
+                    onChange={handleChange('nombres', (v) => v.replace(SOLO_LETRAS, ''))}
+                    error={intentoGuardar && nombresVacio}
+                    helperText={intentoGuardar && nombresVacio ? 'Campo obligatorio' : ''}
+                    slotProps={{ htmlInput: { maxLength: 60 } }}
                 />
+
+                <div className="flex flex-col gap-5 sm:flex-row sm:gap-4">
+                    <TextField
+                        label="Apellido paterno"
+                        size="small"
+                        sx={{ flex: 1 }}
+                        required
+                        value={formData.apellido_paterno}
+                        onChange={handleChange('apellido_paterno', (v) => v.replace(SOLO_LETRAS, ''))}
+                        error={intentoGuardar && paternoVacio}
+                        helperText={intentoGuardar && paternoVacio ? 'Campo obligatorio' : ''}
+                        slotProps={{ htmlInput: { maxLength: 60 } }}
+                    />
+
+                    <TextField
+                        label="Apellido materno"
+                        size="small"
+                        sx={{ flex: 1 }}
+                        value={formData.apellido_materno}
+                        onChange={handleChange('apellido_materno', (v) => v.replace(SOLO_LETRAS, ''))}
+                        slotProps={{ htmlInput: { maxLength: 60 } }}
+                    />
+                </div>
 
                 {/* Solo números */}
                 <TextField
@@ -186,7 +205,7 @@ export default function ModalCrearEstudiante({ open, onClose, onSave, showToast 
                     onChange={handleChange('numeroCuenta', (v) => v.replace(SOLO_NUMEROS, ''))}
                     error={intentoGuardar && cuentaVacia}
                     helperText={intentoGuardar && cuentaVacia ? 'Campo obligatorio' : ''}
-                    slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 15 } }}
+                    slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 20 } }}
                 />
 
                 {/* Formato de correo: algo@dominio.ext */}
@@ -202,36 +221,27 @@ export default function ModalCrearEstudiante({ open, onClose, onSave, showToast 
                     helperText={intentoGuardar ? errorCorreo : ''}
                 />
 
-                {/* Solo números */}
+                {/* Solo números, opcional */}
                 <TextField
                     label="Teléfono"
                     size="small"
                     fullWidth
                     value={formData.telefono}
                     onChange={handleChange('telefono', (v) => v.replace(SOLO_NUMEROS, ''))}
-                    slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 10 } }}
+                    error={intentoGuardar && telefonoInvalido}
+                    helperText={intentoGuardar && telefonoInvalido ? `Mínimo ${MIN_TELEFONO} dígitos` : ''}
+                    slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 15 } }}
                 />
 
-                {/* Los grupos mostrados dependen de la licenciatura elegida */}
+                {/* Los grupos mostrados dependen de la licenciatura elegida; el grupo es obligatorio */}
                 <CamposLicenciaturaGrupo
-                    licenciatura={formData.licenciatura}
-                    grupo={formData.grupo}
-                    onChange={(cambios) => setFormData((prev) => ({ ...prev, ...cambios }))}
-                    required
+                    licenciaturaId={formData.licenciaturaId}
+                    grupoId={formData.grupo_id}
+                    onChange={({ licenciaturaId, grupoId }) =>
+                        setFormData((prev) => ({ ...prev, licenciaturaId, grupo_id: grupoId }))
+                    }
                     mostrarErrores={intentoGuardar}
-                >
-                    {/* Número entre 0 y 10, con hasta dos decimales */}
-                    <TextField
-                        label="Promedio"
-                        size="small"
-                        sx={{ flex: 1 }}
-                        value={formData.promedio}
-                        onChange={handleChange('promedio', limpiarPromedio)}
-                        error={intentoGuardar && promedioInvalido}
-                        helperText={intentoGuardar && promedioInvalido ? 'Entre 0 y 10' : ''}
-                        slotProps={{ htmlInput: { inputMode: 'decimal', maxLength: 5 } }}
-                    />
-                </CamposLicenciaturaGrupo>
+                />
 
                 <CampoContrasena
                     label="Contraseña"
@@ -240,6 +250,21 @@ export default function ModalCrearEstudiante({ open, onClose, onSave, showToast 
                     onChange={handleChange('contrasena', (v) => v.replace(/\s/g, ''))}
                     error={intentoGuardar && Boolean(errorContrasena)}
                     helperText={intentoGuardar && errorContrasena ? errorContrasena : `Mínimo ${MIN_CONTRASENA} caracteres`}
+                    slotProps={{ htmlInput: { maxLength: MAX_CONTRASENA } }}
+                />
+
+                <CampoContrasena
+                    label="Confirmar contraseña"
+                    required
+                    value={formData.confirmarContrasena}
+                    onChange={handleChange('confirmarContrasena', (v) => v.replace(/\s/g, ''))}
+                    error={contrasenaNoCoincide && (intentoGuardar || formData.confirmarContrasena.length > 0)}
+                    helperText={
+                        contrasenaNoCoincide && (intentoGuardar || formData.confirmarContrasena.length > 0)
+                            ? 'Las contraseñas no coinciden'
+                            : ''
+                    }
+                    slotProps={{ htmlInput: { maxLength: MAX_CONTRASENA } }}
                 />
             </DialogContent>
 

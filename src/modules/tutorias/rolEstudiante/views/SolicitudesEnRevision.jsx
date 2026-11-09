@@ -101,7 +101,7 @@ export default function SolicitudesEnRevision() {
     };
 
     return (
-        <div className="min-h-[calc(100dvh-3.5rem)] w-full px-4 md:px-17 py-6 md:py-10 flex flex-col items-start justify-start gap-6 md:gap-8 bg-gray-100">
+        <div className="min-h-[calc(100dvh-3.5rem)] w-full px-4 md:px-17 py-6 md:py-10 flex flex-col items-start justify-start gap-6 md:gap-8 bg-transparent">
             <p className="text-xl md:text-2xl font-bold">Solicitudes en revisión</p>
 
             {/* SECCIÓN DE FILTRO */}

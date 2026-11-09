@@ -24,6 +24,10 @@ export const ACCIONES = {
   'administrador.desactivado': { etiqueta: 'Administrador desactivado', tono: 'naranja', grupo: 'Administradores' },
   'administrador.eliminado': { etiqueta: 'Administrador eliminado', tono: 'rojo', grupo: 'Administradores' },
 
+  'estudiante.creado': { etiqueta: 'Estudiante creado', tono: 'verde', grupo: 'Estudiantes' },
+  'estudiante.editado': { etiqueta: 'Estudiante editado', tono: 'azul', grupo: 'Estudiantes' },
+  'estudiante.baja': { etiqueta: 'Estudiante dado de baja', tono: 'rojo', grupo: 'Estudiantes' },
+
   'solicitud.creada': { etiqueta: 'Solicitud creada', tono: 'verde', grupo: 'Solicitudes' },
   'solicitud.editada': { etiqueta: 'Solicitud editada', tono: 'azul', grupo: 'Solicitudes' },
   'solicitud.cancelada': { etiqueta: 'Solicitud cancelada', tono: 'naranja', grupo: 'Solicitudes' },

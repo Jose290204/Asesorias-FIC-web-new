@@ -43,7 +43,7 @@ export default function HistorialAsesoriasEstudiante() {
     const total = meta?.total ?? historial.length;
 
     return (
-        <div className="min-h-[calc(100dvh-4.5rem)] w-full px-4 py-6 md:px-17 md:py-10 flex flex-col items-start justify-start gap-6 md:gap-11 bg-gray-100">
+        <div className="min-h-[calc(100dvh-4.5rem)] w-full px-4 py-6 md:px-17 md:py-10 flex flex-col items-start justify-start gap-6 md:gap-11 bg-transparent">
             <div>
                 <p className="text-2xl font-bold">Historial de asesorias</p>
                 {!loading && !error && (

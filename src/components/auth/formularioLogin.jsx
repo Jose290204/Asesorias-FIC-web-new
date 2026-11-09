@@ -1,9 +1,9 @@
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LogoTutorias from '../../assets/Logo_tutorias.png';
 import { useAuth } from '../../context/AuthContext';
 import ToastNotification from '../ui/ToastNotification'; // Asegúrate de ajustar esta ruta
+import LogoFicAsesorias from './LogoFicAsesorias';
 
 
 export default function FormularioLogin() {
@@ -74,16 +74,8 @@ export default function FormularioLogin() {
   return (
     <div className="bg-white rounded-[15px] shadow-[0_0_7px_4px_rgba(158,158,158,0.3)] w-[300px] sm:w-[380px] h-[450px] sm:h-[530px] p-[25px] sm:p-[40px] flex flex-col items-center">
 
-      {/* Logo FIC Asesorías */}
-      <img
-        src={LogoTutorias}
-        alt="Logo Asesorías FIC"
-        className="w-[200px] sm:w-[227px] object-contain"
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = 'https://placehold.co/227x100/ffffff/000000?text=FIC+Asesorias';
-        }}
-      />
+      {/* Logo Asesorías */}
+      <LogoFicAsesorias />
 
       {/* Espaciado responsivo antes del formulario */}
       <div className="h-[35px] sm:h-[80px]"></div>

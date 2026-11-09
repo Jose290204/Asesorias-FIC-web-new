@@ -1,4 +1,6 @@
 import CloseIcon from '@mui/icons-material/Close';
+import EditOffOutlinedIcon from '@mui/icons-material/EditOffOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import {
     Button,
     Dialog,
@@ -7,6 +9,7 @@ import {
     DialogTitle,
     IconButton,
     TextField,
+    Tooltip,
     useMediaQuery
 } from '@mui/material';
 import { useEffect, useState } from 'react';
@@ -16,14 +19,16 @@ import CampoContrasena from '../../asesoresDisciplinares/modales/CampoContrasena
 import CamposLicenciaturaGrupo from './CamposLicenciaturaGrupo';
 
 const VALORES_VACIOS = {
-    nombre: '',
+    nombres: '',
+    apellido_paterno: '',
+    apellido_materno: '',
     numeroCuenta: '',
     correo: '',
     telefono: '',
-    licenciatura: '',
-    grupo: '',
-    promedio: '',
-    contrasena: ''
+    licenciaturaId: '',
+    grupo_id: '',
+    contrasena: '',
+    confirmarContrasena: ''
 };
 
 // Letras (con acentos y ñ) y espacios
@@ -32,66 +37,73 @@ const SOLO_LETRAS = /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]/g;
 const SOLO_NUMEROS = /\D/g;
 // Formato básico de correo: algo@dominio.ext
 const FORMATO_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Largo mínimo de la contraseña (solo se valida si se modifica)
+// Largo de la contraseña (solo se valida si se escribe una nueva; el backend pide de 8 a 72)
 const MIN_CONTRASENA = 8;
-
-// Deja solo dígitos y un punto decimal con hasta dos decimales (ej. 8.75)
-const limpiarPromedio = (valor) => {
-    const soloValido = valor.replace(/[^\d.]/g, '');
-    const [entero, ...decimales] = soloValido.split('.');
-    return decimales.length ? `${entero}.${decimales.join('').slice(0, 2)}` : entero;
-};
+const MAX_CONTRASENA = 72;
+// El teléfono es opcional, pero si se escribe debe tener entre 10 y 15 dígitos
+const MIN_TELEFONO = 10;
 
 /**
  * Información y edición de un estudiante.
- * La contraseña va al final y se ve con el ojito. Si no se toca, no pasa nada;
- * si se cambia, aparece "Confirmar contraseña" y deben coincidir.
+ * Abre en solo lectura; el lápiz junto al título activa la edición (y otra vez lo desactiva, descartando los cambios).
+ * En edición todo se puede cambiar. La contraseña aparece al final y empieza vacía: si no se escribe, no cambia;
+ * si se escribe una nueva, se pide confirmarla (útil cuando el estudiante la olvidó).
  *
  * Props:
  *  - open, onClose
- *  - data: estudiante seleccionado
- *  - onSave: recibe el estudiante con los cambios (puede ser asíncrona; si falla, se avisa con un error)
- *  - showToast: (mensaje, tipo) para avisar el resultado
+ *  - data: estudiante seleccionado (formato de estudiantesAdminService)
+ *  - onSave: recibe el formulario y regresa una promesa con true si se guardó (el modal se cierra)
+ *    o false si falló (el modal sigue abierto; el aviso lo da quien lo usa)
  */
-export default function ModalInfoEstudiante({ open, onClose, data, onSave, showToast }) {
+export default function ModalInfoEstudiante({ open, onClose, data, onSave }) {
     // Celular: pantalla completa. Resto: ventana centrada.
     const esCelular = useMediaQuery('(max-width:599.95px)');
 
     const [formData, setFormData] = useState(VALORES_VACIOS);
     // Copia inicial para saber si hubo cambios
     const [initialData, setInitialData] = useState(null);
-    const [confirmarContrasena, setConfirmarContrasena] = useState('');
     const [intentoGuardar, setIntentoGuardar] = useState(false);
     const [guardando, setGuardando] = useState(false);
+    // false = solo lectura (así abre siempre); true = se puede editar
+    const [editando, setEditando] = useState(false);
 
     useEffect(() => {
         if (!data || !open) return;
 
-        const promedioActual = data.promedio ?? data.raw?.promedio;
-
         const valoresIniciales = {
-            nombre: data.nombre || '',
+            nombres: data.nombres || '',
+            apellido_paterno: data.apellido_paterno || '',
+            apellido_materno: data.apellido_materno || '',
             numeroCuenta: data.numeroCuenta || '',
             correo: data.correo || '',
             telefono: data.telefono || '',
-            licenciatura: data.licenciatura || data.raw?.licenciatura || '',
-            grupo: data.grupo || data.raw?.grupo || '',
-            promedio: promedioActual !== undefined && promedioActual !== null ? String(promedioActual) : '',
-            // TODO: la contraseña actual depende de lo que entregue el backend
-            contrasena: data.contrasena || ''
+            licenciaturaId: data.licenciatura_id || '',
+            grupo_id: data.grupo_id || '',
+            contrasena: '',
+            confirmarContrasena: ''
         };
 
         setFormData(valoresIniciales);
         setInitialData(valoresIniciales);
-        setConfirmarContrasena('');
         setIntentoGuardar(false);
         setGuardando(false);
+        setEditando(false);
     }, [data, open]);
 
     // Hay cambios reales respecto a lo que se abrió
     const hasChanges = () => {
         if (!initialData) return false;
         return JSON.stringify(formData) !== JSON.stringify(initialData);
+    };
+
+    // El lápiz alterna entre ver y editar. Al salir de la edición se descartan los cambios sin guardar
+    const handleToggleEdicion = () => {
+        document.activeElement?.blur();
+        if (editando && initialData) {
+            setFormData(initialData);
+            setIntentoGuardar(false);
+        }
+        setEditando((prev) => !prev);
     };
 
     // Actualiza un campo aplicando un filtro a lo que se escribe (o pega)
@@ -101,16 +113,18 @@ export default function ModalInfoEstudiante({ open, onClose, data, onSave, showT
     };
 
     // Validaciones
-    const nombreVacio = !formData.nombre.trim();
+    const nombresVacio = !formData.nombres.trim();
+    const paternoVacio = !formData.apellido_paterno.trim();
     const correoVacio = !formData.correo.trim();
     const correoInvalido = !correoVacio && !FORMATO_CORREO.test(formData.correo.trim());
     const cuentaVacia = !formData.numeroCuenta.trim();
-    const promedioInvalido = formData.promedio !== '' && !(Number(formData.promedio) >= 0 && Number(formData.promedio) <= 10);
+    const telefonoInvalido = formData.telefono !== '' && formData.telefono.length < MIN_TELEFONO;
+    const grupoVacio = !formData.grupo_id;
 
-    // La contraseña cambió respecto a la que traía el estudiante
-    const contrasenaModificada = Boolean(initialData) && formData.contrasena !== initialData.contrasena;
+    // Contraseña nueva: solo se valida si se escribió algo
+    const contrasenaModificada = formData.contrasena !== '';
     const contrasenaCorta = contrasenaModificada && formData.contrasena.length < MIN_CONTRASENA;
-    const contrasenaNoCoincide = contrasenaModificada && formData.contrasena !== confirmarContrasena;
+    const contrasenaNoCoincide = contrasenaModificada && formData.contrasena !== formData.confirmarContrasena;
 
     const errorCorreo = correoVacio ? 'Campo obligatorio' : correoInvalido ? 'Correo no válido' : '';
 
@@ -119,43 +133,34 @@ export default function ModalInfoEstudiante({ open, onClose, data, onSave, showT
 
         setIntentoGuardar(true);
         if (
-            nombreVacio ||
+            nombresVacio ||
+            paternoVacio ||
             correoVacio ||
             correoInvalido ||
             cuentaVacia ||
-            promedioInvalido ||
+            telefonoInvalido ||
+            grupoVacio ||
             contrasenaCorta ||
             contrasenaNoCoincide
         ) {
             return;
         }
 
-        try {
-            setGuardando(true);
-            document.activeElement?.blur();
+        setGuardando(true);
+        document.activeElement?.blur();
 
-            // La contraseña solo se actualiza si se modificó
-            const { contrasena, ...resto } = formData;
-            const cambios = {
-                ...data,
-                ...resto,
-                nombre: resto.nombre.trim(),
-                correo: resto.correo.trim(),
-                telefono: resto.telefono.trim(),
-                numeroCuenta: resto.numeroCuenta.trim()
-            };
-            if (contrasenaModificada) cambios.contrasena = contrasena;
+        const guardado = await onSave?.(data, {
+            ...formData,
+            nombres: formData.nombres.trim(),
+            apellido_paterno: formData.apellido_paterno.trim(),
+            apellido_materno: formData.apellido_materno.trim(),
+            correo: formData.correo.trim(),
+            telefono: formData.telefono.trim(),
+            numeroCuenta: formData.numeroCuenta.trim()
+        });
 
-            // TODO: enviar los cambios al backend (la contraseña solo viaja en esta petición)
-            await onSave?.(cambios);
-            showToast?.('Información del estudiante actualizada', 'info');
-            onClose();
-        } catch (error) {
-            console.error('Error al guardar los cambios:', error);
-            showToast?.('Error al guardar los cambios', 'error');
-        } finally {
-            setGuardando(false);
-        }
+        setGuardando(false);
+        if (guardado) onClose();
     };
 
     const handleCloseModal = () => {
@@ -181,8 +186,18 @@ export default function ModalInfoEstudiante({ open, onClose, data, onSave, showT
                     }
             }}
         >
-            <DialogTitle sx={{ m: 0, p: 2, pr: 7, fontWeight: 'bold', fontSize: '1.2rem' }}>
+            <DialogTitle sx={{ m: 0, p: 2, pr: 7, display: 'flex', alignItems: 'center', gap: 1, fontWeight: 'bold', fontSize: '1.2rem' }}>
                 Información del Estudiante
+                <Tooltip title={editando ? 'Dejar de editar' : 'Editar'}>
+                    <IconButton
+                        size="small"
+                        aria-label={editando ? 'Dejar de editar' : 'Editar estudiante'}
+                        onClick={handleToggleEdicion}
+                        sx={{ color: editando ? '#244B91' : 'text.secondary', backgroundColor: editando ? 'rgba(36, 75, 145, 0.10)' : 'transparent' }}
+                    >
+                        {editando ? <EditOffOutlinedIcon fontSize="small" /> : <EditOutlinedIcon fontSize="small" />}
+                    </IconButton>
+                </Tooltip>
                 <IconButton
                     aria-label="close"
                     onClick={handleCloseModal}
@@ -192,23 +207,61 @@ export default function ModalInfoEstudiante({ open, onClose, data, onSave, showT
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, py: 3 }}>
+            <DialogContent
+                dividers
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2.5,
+                    py: 3,
+                    // En solo lectura los campos siguen legibles (MUI los pone en gris claro al deshabilitarlos)
+                    '& .MuiInputBase-input.Mui-disabled': { WebkitTextFillColor: '#1F2937' },
+                    '& .MuiInputLabel-root.Mui-disabled': { color: 'text.secondary' }
+                }}
+            >
                 {/* Solo letras y espacios */}
                 <TextField
-                    label="Nombre completo"
+                    label="Nombre(s)"
+                    disabled={!editando}
                     size="small"
                     fullWidth
                     required
-                    value={formData.nombre}
-                    onChange={handleChange('nombre', (v) => v.replace(SOLO_LETRAS, ''))}
-                    error={intentoGuardar && nombreVacio}
-                    helperText={intentoGuardar && nombreVacio ? 'Campo obligatorio' : ''}
-                    slotProps={{ htmlInput: { maxLength: 100 } }}
+                    value={formData.nombres}
+                    onChange={handleChange('nombres', (v) => v.replace(SOLO_LETRAS, ''))}
+                    error={intentoGuardar && nombresVacio}
+                    helperText={intentoGuardar && nombresVacio ? 'Campo obligatorio' : ''}
+                    slotProps={{ htmlInput: { maxLength: 60 } }}
                 />
+
+                <div className="flex flex-col gap-5 sm:flex-row sm:gap-4">
+                    <TextField
+                        label="Apellido paterno"
+                    disabled={!editando}
+                        size="small"
+                        sx={{ flex: 1 }}
+                        required
+                        value={formData.apellido_paterno}
+                        onChange={handleChange('apellido_paterno', (v) => v.replace(SOLO_LETRAS, ''))}
+                        error={intentoGuardar && paternoVacio}
+                        helperText={intentoGuardar && paternoVacio ? 'Campo obligatorio' : ''}
+                        slotProps={{ htmlInput: { maxLength: 60 } }}
+                    />
+
+                    <TextField
+                        label="Apellido materno"
+                    disabled={!editando}
+                        size="small"
+                        sx={{ flex: 1 }}
+                        value={formData.apellido_materno}
+                        onChange={handleChange('apellido_materno', (v) => v.replace(SOLO_LETRAS, ''))}
+                        slotProps={{ htmlInput: { maxLength: 60 } }}
+                    />
+                </div>
 
                 {/* Solo números */}
                 <TextField
                     label="Número de cuenta"
+                    disabled={!editando}
                     size="small"
                     fullWidth
                     required
@@ -216,12 +269,13 @@ export default function ModalInfoEstudiante({ open, onClose, data, onSave, showT
                     onChange={handleChange('numeroCuenta', (v) => v.replace(SOLO_NUMEROS, ''))}
                     error={intentoGuardar && cuentaVacia}
                     helperText={intentoGuardar && cuentaVacia ? 'Campo obligatorio' : ''}
-                    slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 15 } }}
+                    slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 20 } }}
                 />
 
                 {/* Formato de correo: algo@dominio.ext */}
                 <TextField
                     label="Correo institucional"
+                    disabled={!editando}
                     type="email"
                     size="small"
                     fullWidth
@@ -232,56 +286,62 @@ export default function ModalInfoEstudiante({ open, onClose, data, onSave, showT
                     helperText={intentoGuardar ? errorCorreo : ''}
                 />
 
-                {/* Solo números */}
+                {/* Solo números, opcional */}
                 <TextField
                     label="Teléfono"
+                    disabled={!editando}
                     size="small"
                     fullWidth
                     value={formData.telefono}
                     onChange={handleChange('telefono', (v) => v.replace(SOLO_NUMEROS, ''))}
-                    slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 10 } }}
+                    error={intentoGuardar && telefonoInvalido}
+                    helperText={intentoGuardar && telefonoInvalido ? `Mínimo ${MIN_TELEFONO} dígitos` : ''}
+                    slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 15 } }}
                 />
 
-                {/* Los grupos mostrados dependen de la licenciatura elegida */}
+                {/* Los grupos mostrados dependen de la licenciatura elegida; el grupo es obligatorio */}
                 <CamposLicenciaturaGrupo
-                    licenciatura={formData.licenciatura}
-                    grupo={formData.grupo}
-                    onChange={(cambios) => setFormData((prev) => ({ ...prev, ...cambios }))}
-                >
-                    {/* Número entre 0 y 10, con hasta dos decimales */}
-                    <TextField
-                        label="Promedio"
-                        size="small"
-                        sx={{ flex: 1 }}
-                        value={formData.promedio}
-                        onChange={handleChange('promedio', limpiarPromedio)}
-                        error={intentoGuardar && promedioInvalido}
-                        helperText={intentoGuardar && promedioInvalido ? 'Entre 0 y 10' : ''}
-                        slotProps={{ htmlInput: { inputMode: 'decimal', maxLength: 5 } }}
-                    />
-                </CamposLicenciaturaGrupo>
-
-                <CampoContrasena
-                    label="Contraseña"
-                    value={formData.contrasena}
-                    onChange={handleChange('contrasena', (v) => v.replace(/\s/g, ''))}
-                    error={contrasenaCorta}
-                    helperText={contrasenaCorta ? `Mínimo ${MIN_CONTRASENA} caracteres` : ''}
+                    licenciaturaId={formData.licenciaturaId}
+                    grupoId={formData.grupo_id}
+                    onChange={({ licenciaturaId, grupoId }) =>
+                        setFormData((prev) => ({ ...prev, licenciaturaId, grupo_id: grupoId }))
+                    }
+                    mostrarErrores={intentoGuardar}
+                    soloLectura={!editando}
                 />
 
-                {/* Solo aparece cuando se modifica la contraseña */}
-                {contrasenaModificada && (
+                {editando && (
+                    <>
+                    {/* Vacía = no se cambia. Sirve para ponerle una nueva si el estudiante la olvidó */}
                     <CampoContrasena
-                        label="Confirmar contraseña"
-                        value={confirmarContrasena}
-                        onChange={(e) => setConfirmarContrasena(e.target.value.replace(/\s/g, ''))}
-                        error={contrasenaNoCoincide && (intentoGuardar || confirmarContrasena.length > 0)}
+                        label="Nueva contraseña"
+                        value={formData.contrasena}
+                        onChange={handleChange('contrasena', (v) => v.replace(/\s/g, ''))}
+                        error={contrasenaCorta}
                         helperText={
-                            contrasenaNoCoincide && (intentoGuardar || confirmarContrasena.length > 0)
-                                ? 'Las contraseñas no coinciden'
-                                : ''
+                            contrasenaCorta
+                                ? `Mínimo ${MIN_CONTRASENA} caracteres`
+                                : 'Déjala vacía para conservar la actual. Al cambiarla se cierran sus sesiones abiertas.'
                         }
+                        slotProps={{ htmlInput: { maxLength: MAX_CONTRASENA } }}
                     />
+
+                    {/* Solo aparece cuando se escribe una contraseña nueva */}
+                    {contrasenaModificada && (
+                        <CampoContrasena
+                            label="Confirmar contraseña"
+                            value={formData.confirmarContrasena}
+                            onChange={handleChange('confirmarContrasena', (v) => v.replace(/\s/g, ''))}
+                            error={contrasenaNoCoincide && (intentoGuardar || formData.confirmarContrasena.length > 0)}
+                            helperText={
+                                contrasenaNoCoincide && (intentoGuardar || formData.confirmarContrasena.length > 0)
+                                    ? 'Las contraseñas no coinciden'
+                                    : ''
+                            }
+                            slotProps={{ htmlInput: { maxLength: MAX_CONTRASENA } }}
+                        />
+                    )}
+                    </>
                 )}
             </DialogContent>
 
@@ -295,21 +355,29 @@ export default function ModalInfoEstudiante({ open, onClose, data, onSave, showT
                     '& > button': { flex: esCelular ? 1 : 'none', minHeight: 40 }
                 }}
             >
-                <Button variant="outlined" color="inherit" onClick={handleCloseModal}>
-                    Cancelar
-                </Button>
-                <Button
-                    variant="contained"
-                    disabled={!hasChanges() || guardando}
-                    sx={{
-                        backgroundColor: '#2e7d32',
-                        '&:hover': { backgroundColor: '#1b5e20' },
-                        '&.Mui-disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' }
-                    }}
-                    onClick={handleApply}
-                >
-                    Aplicar Cambios
-                </Button>
+                {editando ? (
+                    <>
+                        <Button variant="outlined" color="inherit" onClick={handleToggleEdicion}>
+                            Cancelar
+                        </Button>
+                        <Button
+                            variant="contained"
+                            disabled={!hasChanges() || guardando}
+                            sx={{
+                                backgroundColor: '#2e7d32',
+                                '&:hover': { backgroundColor: '#1b5e20' },
+                                '&.Mui-disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' }
+                            }}
+                            onClick={handleApply}
+                        >
+                            Aplicar Cambios
+                        </Button>
+                    </>
+                ) : (
+                    <Button variant="outlined" color="inherit" onClick={handleCloseModal}>
+                        Cerrar
+                    </Button>
+                )}
             </DialogActions>
         </Dialog>
     );

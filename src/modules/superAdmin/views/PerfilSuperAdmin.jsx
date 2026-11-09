@@ -29,7 +29,7 @@ export default function PerfilSuperAdmin() {
     .join(' ');
 
   return (
-    <div className="flex min-h-[calc(100dvh-3.5rem)] w-full flex-col items-start gap-6 bg-[#F4F7FC] px-4 py-8 md:gap-8 md:px-17 md:py-10">
+    <div className="flex min-h-[calc(100dvh-3.5rem)] w-full flex-col items-start gap-6 bg-transparent px-4 py-8 md:gap-8 md:px-17 md:py-10">
       <p className="text-2xl font-bold">Perfil</p>
 
       <div className="flex w-full flex-col items-center gap-5">

@@ -107,7 +107,7 @@ export default function AsesoresDisciplinares() {
     });
 
     return (
-        <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-[#F4F7FC] px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
+        <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
             <p className="text-2xl font-bold">Asesores Disciplinares</p>
 
             {/* Barra de herramientas: en celular el buscador va arriba y "Cargar Asesores" debajo (a la mitad del ancho) */}

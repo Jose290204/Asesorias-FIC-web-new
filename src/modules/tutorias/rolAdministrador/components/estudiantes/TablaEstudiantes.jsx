@@ -1,4 +1,5 @@
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
@@ -10,16 +11,14 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
-import ToastNotification from '../../../../../components/ui/ToastNotification';
 import ModalEliminarEstudiante from './modales/ModalEliminarEstudiante';
-import ModalInfoEstudiante from './modales/ModalInfoEstudiante';
+import ModalEstudiante from './modales/ModalEstudiante';
 import TarjetaEstudiante from './TarjetaEstudiante';
 
 // Estilo del encabezado de la tabla: azul sólido, letras chicas, mayúsculas y en negritas
@@ -43,14 +42,9 @@ const estiloAccion = (color, fondo) => ({
     '&.Mui-disabled': { color: '#C4C9D4' }
 });
 
-// Chip de estado: verde para ACTIVO y gris para cualquier otro
-const estiloEstado = (estado) =>
-    String(estado).toUpperCase() === 'ACTIVO'
-        ? { backgroundColor: '#E6F4EA', color: '#1B5E20' }
-        : { backgroundColor: '#F1F3F4', color: '#5F6368' };
-
-// rows: filas ya filtradas por la vista.
-// onUpdate: recibe el estudiante editado (puede ser asíncrona). onDelete: recibe el estudiante a eliminar (puede ser asíncrona).
+// rows: la página actual que entregó la API (la búsqueda, los filtros y la paginación los maneja la vista).
+// onUpdate(estudiante, formulario) y onDelete(estudiante): regresan una promesa con true si salió bien
+// y false si falló; la vista es quien avisa del resultado con su toast.
 export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
     // Mismo corte que "md" de Tailwind: menos de 768px = móvil
     const esMovil = useMediaQuery('(max-width:767px)');
@@ -58,34 +52,8 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
     // Estados para modales
     const [selectedRow, setSelectedRow] = useState(null);
     const [modalInfoOpen, setModalInfoOpen] = useState(false);
+    const [modalEditarOpen, setModalEditarOpen] = useState(false);
     const [modalEliminarOpen, setModalEliminarOpen] = useState(false);
-
-    // Estado para el toast global
-    const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
-
-    // Estados para la paginación
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-
-    // Si la búsqueda cambia la cantidad de filas, se vuelve a la primera página
-    useEffect(() => {
-        setPage(0);
-    }, [rows.length]);
-
-    const showToast = (message, type = 'info') => {
-        setToast({ open: true, message, type });
-    };
-
-    const handleCloseToast = () => {
-        setToast((prev) => ({ ...prev, open: false }));
-    };
-
-    const handleChangePage = (event, newPage) => setPage(newPage);
-
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
-    };
 
     // Quita el foco del elemento activo antes de abrir un modal
     const clearFocus = (event) => {
@@ -100,73 +68,42 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
         setModalInfoOpen(true);
     };
 
+    const handleOpenEditar = (row, event) => {
+        clearFocus(event);
+        setSelectedRow(row);
+        setModalEditarOpen(true);
+    };
+
     const handleOpenEliminar = (row, event) => {
         clearFocus(event);
         setSelectedRow(row);
         setModalEliminarOpen(true);
     };
 
-    const handleConfirmEliminar = async () => {
-        try {
-            await onDelete?.(selectedRow);
-            showToast('Estudiante eliminado con éxito', 'success');
-        } catch (error) {
-            console.error('Error al eliminar el estudiante:', error);
-            showToast('Error al eliminar el estudiante', 'error');
-        }
-    };
-
-    const visibleRows = rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-
-    // Paginación compartida; en móvil se oculta el selector de filas por página
-    const paginacion = (
-        <TablePagination
-            rowsPerPageOptions={esMovil ? [] : [5, 10, 25]}
-            component="div"
-            count={rows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            labelRowsPerPage="Filas por página:"
-            labelDisplayedRows={({ page, count }) => {
-                const totalPages = Math.ceil(count / rowsPerPage) || 1;
-                return `Página ${page + 1} de ${totalPages}`;
-            }}
-            sx={{
-                borderTop: esMovil ? 'none' : '1px solid #E5E7EB',
-                px: 2,
-                color: '#374151',
-                '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': { color: '#374151' }
-            }}
-        />
-    );
+    const handleConfirmEliminar = () => onDelete?.(selectedRow);
 
     return (
         <>
             {esMovil ? (
                 /* ---------- Vista móvil: tarjetas ---------- */
                 <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {visibleRows.length === 0 ? (
+                    {rows.length === 0 ? (
                         <Typography sx={{ textAlign: 'center', py: 4, color: '#666666' }}>
                             No se encontraron estudiantes
                         </Typography>
                     ) : (
                         <Box className="w-full grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-4">
-                            {visibleRows.map((row) => (
+                            {rows.map((row) => (
                                 <TarjetaEstudiante
                                     key={row.id}
                                     row={row}
                                     onInfo={handleOpenInfo}
+                                    onEditar={handleOpenEditar}
                                     onEliminar={handleOpenEliminar}
                                 />
                             ))}
                         </Box>
                     )}
-
-                    <Paper variant="outlined" sx={{ borderRadius: '12px', borderColor: '#E5E7EB' }}>
-                        {paginacion}
-                    </Paper>
                 </Box>
             ) : (
                 /* ---------- Vista escritorio: tabla ---------- */
@@ -181,28 +118,28 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
                     }}
                 >
                     <TableContainer sx={{ maxHeight: '560px', overflowY: 'auto' }}>
-                        <Table stickyHeader sx={{ minWidth: 850 }}>
+                        <Table stickyHeader sx={{ minWidth: 950 }}>
                             <TableHead>
                                 <TableRow sx={{ '& th': ESTILO_ENCABEZADO, '& th:first-of-type': { pl: 3 }, '& th:last-child': { pr: 3 } }}>
                                     <TableCell sx={{ width: '70px' }} align="center">ID</TableCell>
                                     <TableCell align="left">Nombre</TableCell>
                                     <TableCell align="left">Correo</TableCell>
                                     <TableCell align="center">Número de Cuenta</TableCell>
+                                    <TableCell align="left">Licenciatura</TableCell>
                                     <TableCell align="center">Grupo</TableCell>
-                                    <TableCell align="center">Estado</TableCell>
                                     <TableCell sx={{ width: '120px' }} align="center">Acciones</TableCell>
                                 </TableRow>
                             </TableHead>
 
                             <TableBody>
-                                {visibleRows.length === 0 ? (
+                                {rows.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={7} align="center" sx={{ py: 5, color: '#6B7280', border: 0 }}>
                                             No se encontraron estudiantes
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    visibleRows.map((row) => (
+                                    rows.map((row) => (
                                         <TableRow
                                             key={row.id}
                                             hover
@@ -230,22 +167,14 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
                                             <TableCell align="left">{row.correo}</TableCell>
                                             <TableCell align="center">{row.numeroCuenta}</TableCell>
 
+                                            <TableCell align="left">{row.licenciatura}</TableCell>
+
                                             <TableCell align="center">
                                                 {row.grupo && (
                                                     <Chip
                                                         size="small"
                                                         label={row.grupo}
                                                         sx={{ backgroundColor: '#E8EEF9', color: '#08338F', fontWeight: 600, fontSize: '12px' }}
-                                                    />
-                                                )}
-                                            </TableCell>
-
-                                            <TableCell align="center">
-                                                {row.estado && (
-                                                    <Chip
-                                                        size="small"
-                                                        label={row.estado}
-                                                        sx={{ ...estiloEstado(row.estado), fontWeight: 600, fontSize: '12px' }}
                                                     />
                                                 )}
                                             </TableCell>
@@ -262,7 +191,17 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
                                                         </IconButton>
                                                     </Tooltip>
 
-                                                    <Tooltip title="Eliminar">
+                                                    <Tooltip title="Editar">
+                                                        <IconButton
+                                                            size="small"
+                                                            sx={estiloAccion('#8A6D2B', 'rgba(196, 158, 13, 0.12)')}
+                                                            onClick={(e) => handleOpenEditar(row, e)}
+                                                        >
+                                                            <EditOutlinedIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+
+                                                    <Tooltip title="Dar de baja">
                                                         <IconButton
                                                             size="small"
                                                             sx={estiloAccion('#C62828', 'rgba(198, 40, 40, 0.10)')}
@@ -279,18 +218,24 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
                             </TableBody>
                         </Table>
                     </TableContainer>
-
-                    {paginacion}
                 </Paper>
             )}
 
             {/* Modales (compartidos por la tabla y las tarjetas) */}
-            <ModalInfoEstudiante
+            {/* Información: todo bloqueado */}
+            <ModalEstudiante
+                soloLectura
                 open={modalInfoOpen}
                 onClose={() => setModalInfoOpen(false)}
                 data={selectedRow}
+            />
+
+            {/* Editar */}
+            <ModalEstudiante
+                open={modalEditarOpen}
+                onClose={() => setModalEditarOpen(false)}
+                data={selectedRow}
                 onSave={onUpdate}
-                showToast={showToast}
             />
 
             <ModalEliminarEstudiante
@@ -298,14 +243,6 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
                 onClose={() => setModalEliminarOpen(false)}
                 onConfirm={handleConfirmEliminar}
                 data={selectedRow}
-            />
-
-            {/* Toast global */}
-            <ToastNotification
-                open={toast.open}
-                onClose={handleCloseToast}
-                message={toast.message}
-                type={toast.type}
             />
         </>
     );

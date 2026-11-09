@@ -11,6 +11,7 @@ import BarraFacultadActiva from '../../components/navigation/moduloTutorias/Barr
 import BarraContexto from '../../components/navigation/moduloTutorias/BarraContexto';
 import { useAuth } from '../../context/AuthContext';
 import { CatalogosProvider } from '../../context/CatalogosContext';
+import { CLASES_FONDO_CONTENIDO, FONDO_CONTENIDO } from './fondoContenido';
 
 const RUTA_PERFIL = '/admin/perfil-administrador';
 const RUTA_INICIO = '/admin/asesorias';
@@ -123,7 +124,10 @@ export default function AdminLayout() {
       </header>
       </div>
 
-      <main className="min-w-0 flex-1 bg-gray-100">
+      <main
+        className={`min-w-0 flex-1 ${CLASES_FONDO_CONTENIDO}`}
+        style={{ backgroundImage: FONDO_CONTENIDO }}
+      >
         <CatalogosProvider>
           <Outlet />
         </CatalogosProvider>

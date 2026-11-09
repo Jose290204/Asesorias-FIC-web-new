@@ -103,7 +103,7 @@ export default function SolicitudesPendientes() {
     const total = meta?.total ?? solicitudes.length;
 
     return (
-        <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-gray-100 px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
+        <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
             <div>
                 <p className="text-2xl font-bold">Solicitudes Pendientes</p>
                 {!loading && !error && (

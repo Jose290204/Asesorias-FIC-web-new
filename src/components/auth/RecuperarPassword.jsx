@@ -1,11 +1,11 @@
 import { Eye, EyeOff, KeyRound, Lock, Mail } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import LogoTutorias from '../../assets/Logo_tutorias.png';
 import {
     restablecerPassword,
     solicitarCodigo,
     verificarCodigo,
 } from '../../Services/authService';
+import LogoFicAsesorias from './LogoFicAsesorias';
 
 const ESPERA_REENVIO = 60; // el backend solo deja pedir 1 código por minuto
 
@@ -123,16 +123,8 @@ export default function RecuperarPassword({ onVolver, onExito, showToast }) {
   return (
     <div className="bg-white rounded-[15px] shadow-[0_0_7px_4px_rgba(158,158,158,0.3)] w-[300px] sm:w-[380px] min-h-[450px] sm:min-h-[530px] p-[25px] sm:p-[40px] flex flex-col items-center">
 
-      {/* Logo FIC Asesorías (igual que el login) */}
-      <img
-        src={LogoTutorias}
-        alt="Logo Asesorías FIC"
-        className="w-[200px] sm:w-[227px] object-contain"
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = 'https://placehold.co/227x100/ffffff/000000?text=FIC+Asesorias';
-        }}
-      />
+      {/* Logo Asesorías (igual que el login) */}
+      <LogoFicAsesorias />
 
       <div className="h-[30px] sm:h-[45px]"></div>
 
