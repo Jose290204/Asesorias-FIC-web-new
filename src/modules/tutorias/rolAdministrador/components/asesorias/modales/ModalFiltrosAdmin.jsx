@@ -17,8 +17,8 @@ const MENU_CON_SCROLL = {
  *  - opciones: { licenciaturas, grupos, modalidades, horarios, razones }, cada lista de { valor, etiqueta }
  *      "valor" es lo que se guarda en el filtro (id); "etiqueta" es lo que ve el usuario.
  *  - filtros: { licenciatura, grupo, modalidad, horario, razon } (valores actuales; "" = sin filtrar)
- *  - onChange: (e) => void   (e.target.name / e.target.value)
- *  - onApply, onClear
+ *  - onChange: (e) => void   (e.target.name / e.target.value). "Aplicar Filtros" los manda a la lista.
+ *  - onApply: () => void
  */
 export default function ModalFiltrosAdmin({
     open,
@@ -26,8 +26,7 @@ export default function ModalFiltrosAdmin({
     opciones = { licenciaturas: [], grupos: [], modalidades: [], horarios: [], razones: [] },
     filtros = { licenciatura: '', grupo: '', modalidad: '', horario: '', razon: '' },
     onChange,
-    onApply,
-    onClear
+    onApply
 }) {
     const campos = [
         { name: 'licenciatura', label: 'Licenciatura', placeholder: 'Todas las licenciaturas', lista: opciones.licenciaturas },
@@ -92,14 +91,6 @@ export default function ModalFiltrosAdmin({
                         className="w-full bg-[#244b91] hover:bg-[#244b91] text-white font-semibold py-2 rounded-lg transition-colors cursor-pointer"
                     >
                         Aplicar Filtros
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={onClear}
-                        className="font-bold text-black hover:underline text-sm cursor-pointer"
-                    >
-                        Limpiar Filtros
                     </button>
                 </div>
             </DialogContent>

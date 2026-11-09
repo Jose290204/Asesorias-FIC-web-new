@@ -10,6 +10,7 @@ import AdminSidebar from '../../components/navigation/moduloTutorias/AdminSideba
 import BarraFacultadActiva from '../../components/navigation/moduloTutorias/BarraFacultadActiva';
 import BarraContexto from '../../components/navigation/moduloTutorias/BarraContexto';
 import { useAuth } from '../../context/AuthContext';
+import { CatalogosProvider } from '../../context/CatalogosContext';
 
 const RUTA_PERFIL = '/admin/perfil-administrador';
 const RUTA_INICIO = '/admin/asesorias';
@@ -123,7 +124,9 @@ export default function AdminLayout() {
       </div>
 
       <main className="min-w-0 flex-1 bg-gray-100">
-        <Outlet />
+        <CatalogosProvider>
+          <Outlet />
+        </CatalogosProvider>
       </main>
       </div>
     </div>

@@ -9,6 +9,7 @@ import LogoUas from '../../assets/logo_uas.png';
 import BarraContexto from '../../components/navigation/moduloTutorias/BarraContexto';
 import SuperAdminSidebar from '../../components/navigation/moduloTutorias/SuperAdminSidebar';
 import { useAuth } from '../../context/AuthContext';
+import { CatalogosProvider } from '../../context/CatalogosContext';
 
 const RUTA_PERFIL = '/superadmin/perfil';
 const RUTA_INICIO = '/superadmin/facultades';
@@ -120,7 +121,9 @@ export default function SuperAdminLayout() {
         </header>
 
         <main className="min-w-0 flex-1 bg-gray-100">
-          <Outlet />
+          <CatalogosProvider>
+            <Outlet />
+          </CatalogosProvider>
         </main>
       </div>
     </div>

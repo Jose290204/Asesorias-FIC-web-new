@@ -38,7 +38,11 @@ const formatearFecha = (fecha) => dayjs(fecha).format('DD/MM/YYYY');
 // data es la asesoría (usa data.id y data.fecha_inicio).
 // soloLectura: sin registrar ni eliminar (la API solo lo permite con la asesoría en curso).
 // onCambio: avisa a la vista que cambió el conteo de sesiones, para que recargue la lista.
-export default function ModalSesionesAsesor({ open, onClose, data, soloLectura = false, showToast, onCambio }) {
+// acciones: { registrar, eliminar } para usar otras rutas (el administrador usa /admin/...);
+// por defecto son las del asesor. Listar siempre usa la ruta compartida.
+export default function ModalSesionesAsesor({ open, onClose, data, soloLectura = false, showToast, onCambio, acciones }) {
+    const registrar = acciones?.registrar ?? registrarSesion;
+    const eliminar = acciones?.eliminar ?? eliminarSesion;
     const esCelular = useMediaQuery('(max-width:599.95px)');
     const { catalogos } = useCatalogos();
     const horarios = catalogos?.horarios ?? [];
@@ -100,7 +104,7 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
 
         setGuardando(true);
         try {
-            const nueva = await registrarSesion(asesoriaId, {
+            const nueva = await registrar(asesoriaId, {
                 fecha: formulario.fecha.format('YYYY-MM-DD'),
                 horarioId: Number(formulario.horarioId),
                 tema: formulario.tema.trim(),
@@ -124,7 +128,7 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
 
         setEliminando(true);
         try {
-            await eliminarSesion(sesionAEliminar.id);
+            await eliminar(sesionAEliminar.id);
             setSesiones((prev) => prev.filter((s) => s.id !== sesionAEliminar.id));
             setSesionAEliminar(null);
             showToast?.('Sesión eliminada correctamente', 'success');
@@ -182,9 +186,12 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
                             <Typography sx={{ fontWeight: 'bold', mb: 1.5 }}>Registrar sesión</Typography>
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
                                 {inicioFuturo && (
-                                    <Alert severity="info">
-                                        Esta asesoría inicia el {data.fecha_inicio_formateada}. Las sesiones se pueden registrar
-                                        a partir de esa fecha y nunca en fechas futuras.
+                                    // Texto corto y que parta línea dentro del recuadro: así no aparece la barra de desplazamiento horizontal
+                                    <Alert
+                                        severity="info"
+                                        sx={{ minWidth: 0, '& .MuiAlert-message': { minWidth: 0, overflowWrap: 'anywhere' } }}
+                                    >
+                                        Esta asesoría inicia el {data.fecha_inicio_formateada}. Podrás registrar sesiones desde esa fecha.
                                     </Alert>
                                 )}
 

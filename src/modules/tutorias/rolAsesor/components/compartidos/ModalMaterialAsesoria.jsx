@@ -65,7 +65,11 @@ const validarArchivos = (archivos) => {
 // Modal de material de una asesoría. Cada acción (subir, descargar, eliminar) se hace al momento
 // contra la API; no hay botón "Guardar". data es la asesoría (usa data.id).
 // soloLectura: sin subir ni eliminar (por ejemplo, en una asesoría cancelada).
-export default function ModalMaterialAsesoria({ open, onClose, data, soloLectura = false, showToast }) {
+// acciones: { subir, eliminar } para usar otras rutas (el administrador usa /admin/...);
+// por defecto son las del asesor. Listar y descargar siempre usan las rutas compartidas.
+export default function ModalMaterialAsesoria({ open, onClose, data, soloLectura = false, showToast, acciones }) {
+    const subir = acciones?.subir ?? subirMaterial;
+    const eliminar = acciones?.eliminar ?? eliminarMaterial;
     const esCelular = useMediaQuery('(max-width:599.95px)');
     const [lista, setLista] = useState([]);
     // Id de la asesoría cuya lista ya llegó (sirve para saber si todavía se está cargando)
@@ -113,7 +117,7 @@ export default function ModalMaterialAsesoria({ open, onClose, data, soloLectura
 
         setSubiendo(true);
         try {
-            const creados = await subirMaterial(asesoriaId, archivos);
+            const creados = await subir(asesoriaId, archivos);
             // La respuesta trae solo los archivos nuevos: se ponen arriba de la lista
             setLista((prev) => [...creados, ...prev]);
             showToast?.(creados.length === 1 ? 'Archivo subido correctamente' : 'Archivos subidos correctamente', 'success');
@@ -137,7 +141,7 @@ export default function ModalMaterialAsesoria({ open, onClose, data, soloLectura
 
         setEliminando(true);
         try {
-            await eliminarMaterial(archivoAEliminar.id);
+            await eliminar(archivoAEliminar.id);
             setLista((prev) => prev.filter((item) => item.id !== archivoAEliminar.id));
             showToast?.('Archivo eliminado correctamente', 'success');
             setArchivoAEliminar(null);

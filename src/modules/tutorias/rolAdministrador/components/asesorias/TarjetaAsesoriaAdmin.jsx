@@ -78,7 +78,7 @@ export default function TarjetaAsesoriaAdmin({ row, onInfo, onMaterial, onChat, 
                         <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: '#08338F', mt: '1px', flexShrink: 0 }} />
                         <Typography sx={{ fontSize: '15px', color: '#333333' }}>
                             {formatearFechaVisible(row.fecha_inicio)}
-                            {row.horario && ` · ${row.horario}`}
+                            {(row.horario_con_dia || row.horario) && ` · ${row.horario_con_dia || row.horario}`}
                         </Typography>
                     </Box>
 
@@ -162,7 +162,7 @@ export default function TarjetaAsesoriaAdmin({ row, onInfo, onMaterial, onChat, 
                 <Divider />
                 <MenuItem onClick={handleMenuAccion(onEliminar)} sx={{ minHeight: 44, color: '#C42525' }}>
                     <ListItemIcon><DeleteOutlineOutlinedIcon fontSize="small" sx={{ color: '#C42525' }} /></ListItemIcon>
-                    Eliminar asesoría
+                    Cancelar asesoría
                 </MenuItem>
             </Menu>
         </Card>
