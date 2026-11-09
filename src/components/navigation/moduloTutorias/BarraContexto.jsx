@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import LogoFic from '../../../assets/fic_logo.png';
+import LogoUas from '../../../assets/logo_uas.png';
 import { ROL } from '../../../constants/roles';
 import { useAuth } from '../../../context/AuthContext';
 import { useFacultadActiva } from '../../../context/FacultadActivaContext';
@@ -9,6 +10,8 @@ import { catalogosService } from '../../../Services/catalogosService';
 // - La facultad sale de la sesión (usuario.facultad); si el super admin está dentro del panel
 //   de una facultad, se muestra esa.
 // - El ciclo sale de GET /catalogos (campo ciclo_escolar). Si el backend aún no lo manda, no se muestra.
+// - En el panel principal del super admin (fuera de toda facultad) va el logo de la UAS y no hay ciclo:
+//   el ciclo escolar es de cada facultad, así que mostrar uno ahí sería engañoso.
 export default function BarraContexto() {
   const { usuario, rol } = useAuth();
   const { facultadActiva } = useFacultadActiva();
@@ -18,6 +21,8 @@ export default function BarraContexto() {
   const enPanelPrincipal = rol === ROL.SUPER_ADMIN && !facultadActiva;
 
   useEffect(() => {
+    if (enPanelPrincipal) return undefined;
+
     let vigente = true;
     catalogosService
       .obtenerCatalogos()
@@ -30,7 +35,7 @@ export default function BarraContexto() {
     return () => {
       vigente = false;
     };
-  }, [facultadActiva?.id]);
+  }, [enPanelPrincipal, facultadActiva?.id]);
 
   const facultad =
     rol === ROL.SUPER_ADMIN && facultadActiva ? facultadActiva : usuario?.facultad;
@@ -38,7 +43,11 @@ export default function BarraContexto() {
 
   return (
     <div className="sticky top-0 z-10 hidden items-center gap-3 bg-[#D2B23D] shadow-xl px-6 py-2 lg:flex">
-      <img src={LogoFic} alt="Logo de la facultad" className="h-10 w-auto object-contain" />
+      <img
+        src={enPanelPrincipal ? LogoUas : LogoFic}
+        alt={enPanelPrincipal ? 'Logo de la UAS' : 'Logo de la facultad'}
+        className="h-10 w-auto object-contain"
+      />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold text-[#1B3A73]">
@@ -46,7 +55,7 @@ export default function BarraContexto() {
         </p>
       </div>
 
-      {ciclo?.nombre && (
+      {!enPanelPrincipal && ciclo?.nombre && (
         <p className="whitespace-nowrap text-sm font-bold text-[#1B3A73]">
           Ciclo escolar {ciclo.nombre}
         </p>

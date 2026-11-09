@@ -18,6 +18,7 @@ import RecuperarContrasena from './modules/auth/view/RecuperarContrasena';
 import Administradores from './modules/superAdmin/views/Administradores';
 import Bitacora from './modules/superAdmin/views/Bitacora';
 import Facultades from './modules/superAdmin/views/Facultades';
+import PerfilSuperAdmin from './modules/superAdmin/views/PerfilSuperAdmin';
 
 // Vistas del Dashboard admin
 import Conocenos from './modules/paginasInicio/Conocenos';
@@ -101,7 +102,7 @@ export default function App() {
           <Route path="facultades" element={<Facultades />} />
           <Route path="administradores" element={<Administradores />} />
           <Route path="bitacora" element={<Bitacora />} />
-          <Route path="perfil" element={<PerfilAdministrador />} />
+          <Route path="perfil" element={<PerfilSuperAdmin />} />
         </Route>
 
         {/* Rutas del Administrador (también las usa el super admin dentro de una facultad) */}
