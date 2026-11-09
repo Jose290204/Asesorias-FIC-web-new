@@ -32,7 +32,7 @@ const NAV_ITEMS = [
 // Mismo menú lateral que admin, asesor y estudiante, con las opciones del super admin.
 export default function SuperAdminSidebar({ escritorio = false }) {
   return (
-    <aside className="bg-[#244B91] text-white flex flex-col justify-between min-h-dvh shrink-0 relative shadow-xl w-70">
+    <aside className="bg-[#244B91] text-white flex flex-col justify-between min-h-dvh shrink-0 relative shadow-xl w-64">
       <div>
         <div className="py-6 flex justify-center items-center">
           <div className="rounded-full bg-white p-1 flex items-center justify-center overflow-hidden w-30 h-30">

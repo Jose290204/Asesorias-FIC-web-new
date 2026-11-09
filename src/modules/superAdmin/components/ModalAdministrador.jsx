@@ -3,16 +3,16 @@ import { useState } from 'react';
 
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Crear un administrador de facultad.
+// Crear o editar un administrador de facultad. Si recibe `administrador` es edición.
 // Pendiente de decidir: contraseña inicial o código de activación (por ahora solo datos básicos).
 // El padre lo monta con `key` distinto en cada apertura para que inicie limpio.
-export default function ModalAdministrador({ open, onClose, onGuardar, facultades, facultadInicial = '' }) {
+export default function ModalAdministrador({ open, onClose, onGuardar, facultades, facultadInicial = '', administrador = null }) {
   const [form, setForm] = useState({
-    facultadId: facultadInicial,
-    nombre: '',
-    apellidoPaterno: '',
-    apellidoMaterno: '',
-    correo: '',
+    facultadId: administrador?.facultadId ?? facultadInicial,
+    nombre: administrador?.nombre ?? '',
+    apellidoPaterno: administrador?.apellidoPaterno ?? '',
+    apellidoMaterno: administrador?.apellidoMaterno ?? '',
+    correo: administrador?.correo ?? '',
   });
   const [errores, setErrores] = useState({});
   const [guardando, setGuardando] = useState(false);
@@ -73,7 +73,7 @@ export default function ModalAdministrador({ open, onClose, onGuardar, facultade
       fullWidth
       sx={{ '& .MuiPaper-root': { maxWidth: '520px', borderRadius: '12px', p: 1 } }}
     >
-      <DialogTitle sx={{ fontWeight: 'bold' }}>Nuevo administrador</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 'bold' }}>{administrador ? 'Editar administrador' : 'Nuevo administrador'}</DialogTitle>
 
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '8px !important' }}>
         {campo('facultadId', 'Facultad', {
@@ -92,7 +92,7 @@ export default function ModalAdministrador({ open, onClose, onGuardar, facultade
       <DialogActions sx={{ p: 2, gap: 1 }}>
         <Button variant="outlined" color="inherit" onClick={onClose} disabled={guardando}>Cancelar</Button>
         <Button variant="contained" onClick={handleGuardar} disabled={guardando}>
-          {guardando ? 'Guardando…' : 'Crear'}
+          {guardando ? 'Guardando…' : administrador ? 'Guardar' : 'Crear'}
         </Button>
       </DialogActions>
     </Dialog>

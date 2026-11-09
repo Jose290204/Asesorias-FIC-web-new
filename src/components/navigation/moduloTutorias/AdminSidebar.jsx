@@ -118,7 +118,7 @@ export default function AdminSidebar({ escritorio = false }) {
 
   return (
     <aside
-      className={`bg-[#244B91] text-white flex flex-col justify-between min-h-dvh shrink-0 transition-all duration-300 relative shadow-xl w-70`}
+      className={`bg-[#244B91] text-white flex flex-col justify-between min-h-dvh shrink-0 transition-all duration-300 relative shadow-xl w-64`}
     >
       <div>
         <div className="py-6 flex justify-center items-center">

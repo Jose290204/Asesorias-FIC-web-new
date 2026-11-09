@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ToastNotification } from '../../../components/ui/ToastNotification';
 import { useFacultadActiva } from '../../../context/FacultadActivaContext';
+import ModalDesactivarFacultad from '../components/ModalDesactivarFacultad';
 import ModalFacultad from '../components/ModalFacultad';
 import TarjetaFacultad from '../components/TarjetaFacultad';
 import {
@@ -14,6 +15,16 @@ import {
 } from '../services/facultadesService';
 
 // Pantalla de inicio del super admin: todas las facultades y la puerta a su panel.
+// Tarjeta pequeña del resumen de arriba
+function DatoResumen({ valor, etiqueta }) {
+  return (
+    <div className="rounded-[5px] bg-white px-4 py-3 shadow-md">
+      <p className="text-2xl font-bold text-[#08338F]">{valor}</p>
+      <p className="text-sm text-gray-600">{etiqueta}</p>
+    </div>
+  );
+}
+
 export default function Facultades() {
   const navigate = useNavigate();
   const { entrar } = useFacultadActiva();
@@ -25,6 +36,9 @@ export default function Facultades() {
   // Modal crear/editar: `modal` guarda { facultad } y `llave` fuerza formulario limpio en cada apertura
   const [modal, setModal] = useState(null);
   const [llave, setLlave] = useState(0);
+
+  // Facultad que se está por desactivar (null = modal cerrado)
+  const [porDesactivar, setPorDesactivar] = useState(null);
 
   const [toast, setToast] = useState({ open: false, message: '', type: 'success' });
   const avisar = (message, type = 'success') => setToast({ open: true, message, type });
@@ -43,6 +57,14 @@ export default function Facultades() {
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  // Totales de todo el sistema, calculados con las facultades que ya cargamos
+  const resumen = {
+    total: facultades.length,
+    activas: facultades.filter((f) => f.activa).length,
+    estudiantes: facultades.reduce((suma, f) => suma + f.estudiantes, 0),
+    asesorias: facultades.reduce((suma, f) => suma + f.asesorias, 0),
+  };
 
   const abrirModal = (facultad = null) => {
     setLlave((k) => k + 1);
@@ -65,14 +87,25 @@ export default function Facultades() {
     await cargar();
   };
 
-  const handleCambiarEstado = async (facultad) => {
+  const cambiarEstado = async (facultad) => {
     try {
       await cambiarEstadoFacultad(facultad.id, !facultad.activa);
-      avisar(facultad.activa ? 'Facultad desactivada.' : 'Facultad activada.');
+      avisar(facultad.activa
+        ? 'Facultad desactivada. Sus usuarios ya no pueden iniciar sesión.'
+        : 'Facultad activada. Sus usuarios ya pueden iniciar sesión.');
       await cargar();
     } catch {
       avisar('No se pudo cambiar el estado.', 'error');
     }
+  };
+
+  // Desactivar pide confirmación; activar se hace directo
+  const handleCambiarEstado = (facultad) => {
+    if (facultad.activa) {
+      setPorDesactivar(facultad);
+      return;
+    }
+    cambiarEstado(facultad);
   };
 
   return (
@@ -83,6 +116,15 @@ export default function Facultades() {
           Nueva facultad
         </Button>
       </div>
+
+      {!cargando && !error && (
+        <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <DatoResumen valor={resumen.total} etiqueta="Facultades" />
+          <DatoResumen valor={resumen.activas} etiqueta="Activas" />
+          <DatoResumen valor={resumen.estudiantes} etiqueta="Estudiantes" />
+          <DatoResumen valor={resumen.asesorias} etiqueta="Asesorías" />
+        </div>
+      )}
 
       {cargando && (
         <div className="flex justify-center py-16"><CircularProgress /></div>
@@ -122,6 +164,13 @@ export default function Facultades() {
           onGuardar={handleGuardar}
         />
       )}
+
+      <ModalDesactivarFacultad
+        open={Boolean(porDesactivar)}
+        data={porDesactivar}
+        onClose={() => setPorDesactivar(null)}
+        onConfirm={cambiarEstado}
+      />
 
       <ToastNotification
         open={toast.open}

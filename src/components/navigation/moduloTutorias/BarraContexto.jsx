@@ -18,7 +18,6 @@ export default function BarraContexto() {
   const enPanelPrincipal = rol === ROL.SUPER_ADMIN && !facultadActiva;
 
   useEffect(() => {
-    if (enPanelPrincipal) return undefined;
     let vigente = true;
     catalogosService
       .obtenerCatalogos()
@@ -31,11 +30,11 @@ export default function BarraContexto() {
     return () => {
       vigente = false;
     };
-  }, [enPanelPrincipal, facultadActiva?.id]);
+  }, [facultadActiva?.id]);
 
   const facultad =
     rol === ROL.SUPER_ADMIN && facultadActiva ? facultadActiva : usuario?.facultad;
-  const titulo = enPanelPrincipal ? 'Panel de Super Administración' : (facultad?.nombre ?? 'Asesorías');
+  const titulo = enPanelPrincipal ? 'Panel de Administración' : (facultad?.nombre ?? 'Asesorías');
 
   return (
     <div className="sticky top-0 z-10 hidden items-center gap-3 bg-[#D2B23D] shadow-xl px-6 py-2 lg:flex">
@@ -47,7 +46,7 @@ export default function BarraContexto() {
         </p>
       </div>
 
-      {!enPanelPrincipal && ciclo?.nombre && (
+      {ciclo?.nombre && (
         <p className="whitespace-nowrap text-sm font-bold text-[#1B3A73]">
           Ciclo escolar {ciclo.nombre}
         </p>
