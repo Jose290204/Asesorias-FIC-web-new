@@ -7,7 +7,7 @@ export default function EstudianteSidebar({ escritorio = false }) {
 
     const navItems = [
         {
-            path: '/tutorias/estudiante/solicitar-asesorias',
+            path: '/estudiante/solicitar-asesorias',
             label: 'Solicitar asesorias',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -16,7 +16,7 @@ export default function EstudianteSidebar({ escritorio = false }) {
             )
         },
         {
-            path: '/tutorias/estudiante/asesorias-estudiante',
+            path: '/estudiante/asesorias-estudiante',
             label: 'Asesorias',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,7 +25,7 @@ export default function EstudianteSidebar({ escritorio = false }) {
             )
         },
         {
-            path: '/tutorias/estudiante/solicitudes-en-revision',
+            path: '/estudiante/solicitudes-en-revision',
             label: 'Solicitudes en revisión',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,7 +34,7 @@ export default function EstudianteSidebar({ escritorio = false }) {
             )
         },
         {
-            path: '/tutorias/estudiante/historial-de-asesorias',
+            path: '/estudiante/historial-de-asesorias',
             label: 'Historial de asesorias',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,7 +85,7 @@ export default function EstudianteSidebar({ escritorio = false }) {
                 </nav>
             </div>
           {/* Perfil y cerrar sesión: al fondo del menú, solo en escritorio */}
-          {escritorio && <UsuarioSidebar rutaPerfil="/tutorias/estudiante/perfil-estudiante" />}
+          {escritorio && <UsuarioSidebar rutaPerfil="/estudiante/perfil-estudiante" />}
         </aside>
     );
 }

@@ -59,8 +59,8 @@ const ROL_ESTUDIANTE = 4;
 function getRutaPorRol(rol) {
   if (rol === ROL.SUPER_ADMIN) return '/superadmin/facultades';
   if (rol === ROL.ADMIN) return '/admin/asesorias';
-  if (ROLES_ASESOR.includes(rol)) return '/tutorias/asesor/solicitudes-pendientes';
-  if (rol === ROL_ESTUDIANTE) return '/tutorias/estudiante/solicitar-asesorias';
+  if (ROLES_ASESOR.includes(rol)) return '/asesor/solicitudes-pendientes';
+  if (rol === ROL_ESTUDIANTE) return '/estudiante/solicitar-asesorias';
   return '/';
 }
 
@@ -136,14 +136,14 @@ export default function App() {
 
         {/* Rutas de Asesor (disciplinar y par comparten layout) */}
         <Route
-          path="/tutorias/asesor"
+          path="/asesor"
           element={
             usuario && ROLES_ASESOR.includes(rol)
               ? <AsesorLayout />
               : <Navigate to="/" replace />
           }
         >
-          <Route index element={<Navigate to="/tutorias/asesor/solicitudes-pendientes" replace />} />
+          <Route index element={<Navigate to="/asesor/solicitudes-pendientes" replace />} />
           <Route path="solicitudes-pendientes" element={<SolicitudesPendientes />} />
           <Route path="disponibilidad" element={<DisponibilidadAsesor />} />
           <Route path="asesorias-en-curso" element={<AsesoriasEnCurso />} />
@@ -153,14 +153,14 @@ export default function App() {
 
         {/* Rutas de Estudiante */}
         <Route
-          path="/tutorias/estudiante"
+          path="/estudiante"
           element={
             usuario && rol === ROL_ESTUDIANTE
               ? <EstudianteLayout />
               : <Navigate to="/" replace />
           }
         >
-          <Route index element={<Navigate to="/tutorias/estudiante/solicitar-asesorias" replace />} />
+          <Route index element={<Navigate to="/estudiante/solicitar-asesorias" replace />} />
           <Route path="solicitar-asesorias" element={<SolicitarAsesoria />} />
           <Route path="asesorias-estudiante" element={<AsesoriasEstudiante />} />
           <Route path="solicitudes-en-revision" element={<SolicitudesEnRevision />} />

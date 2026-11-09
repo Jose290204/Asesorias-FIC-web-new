@@ -13,8 +13,8 @@ import { traerPerfilEstudiante } from '../../Services/estudiantesService';
 import { CLASES_FONDO_CONTENIDO, FONDO_CONTENIDO } from './fondoContenido';
 
 // Misma ruta que usa "Perfil" en el sidebar
-const RUTA_PERFIL = '/tutorias/estudiante/perfil-estudiante';
-const RUTA_SOLICITAR = '/tutorias/estudiante/solicitar-asesorias';
+const RUTA_PERFIL = '/estudiante/perfil-estudiante';
+const RUTA_SOLICITAR = '/estudiante/solicitar-asesorias';
 
 export default function EstudianteLayout() {
   const navigate = useNavigate();

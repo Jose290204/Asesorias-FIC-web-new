@@ -9,11 +9,11 @@ export default function SeleccionModulo({ userRole }) {
     // Manejador para el Módulo de Tutorías
     const handleTutoriasClick = () => {
         if (userRole === 'admin') {
-            navigate('/tutorias/admin');
+            navigate('/admin');
         } else if (userRole === 'asesor') {
-            navigate('/tutorias/asesor');
+            navigate('/asesor');
         } else if (userRole === 'estudiante') {
-            navigate('/tutorias/estudiante');
+            navigate('/estudiante');
         } else {
             alert('Rol no reconocido para el módulo de tutorías');
         }

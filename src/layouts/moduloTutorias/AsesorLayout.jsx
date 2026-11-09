@@ -13,9 +13,9 @@ import { CatalogosProvider } from '../../context/CatalogosContext';
 import { CLASES_FONDO_CONTENIDO, FONDO_CONTENIDO } from './fondoContenido';
 
 // Misma ruta que usa "Perfil" en el sidebar
-const RUTA_PERFIL = '/tutorias/asesor/perfil-asesor';
+const RUTA_PERFIL = '/asesor/perfil-asesor';
 // Pantalla de inicio del asesor (el logo lleva aquí)
-const RUTA_INICIO = '/tutorias/asesor/solicitudes-pendientes';
+const RUTA_INICIO = '/asesor/solicitudes-pendientes';
 
 export default function AsesorLayout() {
   const navigate = useNavigate();

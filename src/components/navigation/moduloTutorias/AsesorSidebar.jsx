@@ -7,7 +7,7 @@ export default function AsesorSidebar({ escritorio = false }) {
 
     const navItems = [
         {
-            path: '/tutorias/asesor/solicitudes-pendientes',
+            path: '/asesor/solicitudes-pendientes',
             label: 'Solicitudes Pendientes',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -16,7 +16,7 @@ export default function AsesorSidebar({ escritorio = false }) {
             )
         },
         {
-            path: '/tutorias/asesor/asesorias-en-curso',
+            path: '/asesor/asesorias-en-curso',
             label: 'Asesorias en curso',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,7 +25,7 @@ export default function AsesorSidebar({ escritorio = false }) {
             )
         },
                 {
-            path: '/tutorias/asesor/disponibilidad',
+            path: '/asesor/disponibilidad',
             label: 'Disponibilidad',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,7 +34,7 @@ export default function AsesorSidebar({ escritorio = false }) {
             )
         },
         {
-            path: '/tutorias/asesor/historial-de-asesorias',
+            path: '/asesor/historial-de-asesorias',
             label: 'Historial de asesorias',
             icon: (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,7 +85,7 @@ export default function AsesorSidebar({ escritorio = false }) {
                 </nav>
             </div>
           {/* Perfil y cerrar sesión: al fondo del menú, solo en escritorio */}
-          {escritorio && <UsuarioSidebar rutaPerfil="/tutorias/asesor/perfil-asesor" />}
+          {escritorio && <UsuarioSidebar rutaPerfil="/asesor/perfil-asesor" />}
         </aside>
     );
 }
