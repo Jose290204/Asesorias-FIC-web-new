@@ -41,7 +41,7 @@ export default function TarjetaBitacora({ registro, siglasFacultad, fecha }) {
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mt: 1.5 }}>
           <Chip size="small" label={siglasFacultad} sx={{ backgroundColor: '#E8EEF9', color: '#08338F', fontWeight: 600 }} />
-          <Chip size="small" variant="outlined" label={`IP ${ip}`} sx={{ borderColor: '#BDBDBD', color: '#555', fontWeight: 600 }} />
+          {ip && <Chip size="small" variant="outlined" label={`IP ${ip}`} sx={{ borderColor: '#BDBDBD', color: '#555', fontWeight: 600 }} />}
         </Box>
       </CardContent>
     </Card>
