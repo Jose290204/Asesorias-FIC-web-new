@@ -1,4 +1,4 @@
-// rolAdministrador/services/reportesService.js
+
 import api from '../../../../Services/api';
 import {
     ASESORES_REPORTE_PRUEBA,
@@ -128,6 +128,112 @@ const asesoriasPrueba = (cicloId) => {
                 ? desplazarDias(item.fecha_inicio, -190)
                 : null
     }));
+};
+
+// ===== Reportes por estudiante, grupo y licenciatura =====
+// Los tres comparten la misma base: la lista de asesorías del semestre, de la que se calculan los totales.
+
+const quitarLicenciatura = (texto) => String(texto || '').replace(/^Licenciatura en /i, '');
+
+// Asesoría con todos sus datos (asesor, estudiante, grupo y licenciatura), para armar cualquiera de los tres reportes
+const adaptarAsesoriaCompleta = (item) => ({
+    ...adaptarAsesoria(item),
+    asesor: item.asesor,
+    grupoNombre: item.grupo,
+    licenciatura: quitarLicenciatura(item.licenciatura)
+});
+
+// Cómo se identifica y se muestra cada tipo de reporte
+const ENTIDADES_REPORTE = {
+    estudiante: {
+        ruta: 'estudiantes',
+        clave: (a) => a.estudiante,
+        datos: (lista) => ({
+            nombre: lista[0].estudiante,
+            // En las pruebas un alumno aparece en varios grupos; se muestra el que más se repite
+            grupo: masFrecuente(lista.map((a) => a.grupoNombre)),
+            licenciatura: masFrecuente(lista.map((a) => a.licenciatura))
+        })
+    },
+    grupo: {
+        ruta: 'grupos',
+        clave: (a) => `${a.grupoNombre}|${a.licenciatura}`,
+        datos: (lista) => ({ nombre: lista[0].grupoNombre, licenciatura: lista[0].licenciatura })
+    },
+    licenciatura: {
+        ruta: 'licenciaturas',
+        clave: (a) => a.licenciatura,
+        datos: (lista) => ({
+            nombre: lista[0].licenciatura,
+            grupos: new Set(lista.map((a) => a.grupoNombre)).size
+        })
+    }
+};
+
+// El valor que más se repite de una lista
+const masFrecuente = (valores) => {
+    const conteo = new Map();
+    valores.forEach((v) => conteo.set(v, (conteo.get(v) || 0) + 1));
+    return [...conteo.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
+};
+
+// Totales de un conjunto de asesorías
+const totalesDeAsesorias = (lista) => {
+    const contar = (estatus) => lista.filter((a) => a.estatus === estatus).length;
+
+    return {
+        // TODO: las solicitudes vendrán del backend; aquí se inventan a partir de las asesorías de prueba
+        solicitudes: lista.length ? lista.length + 2 : 0,
+        enCurso: contar('En curso'),
+        completadas: contar('Completada'),
+        canceladas: contar('Cancelada'),
+        total: lista.length,
+        sesiones: lista.reduce((total, a) => total + a.sesiones, 0),
+        asesores: new Set(lista.map((a) => a.asesor)).size,
+        materias: new Set(lista.map((a) => a.materia)).size,
+        estudiantes: new Set(lista.map((a) => a.estudiante)).size
+    };
+};
+
+// Resumen (un renglón por estudiante, grupo o licenciatura) a partir de las asesorías de prueba
+const resumenDePrueba = (tipo, cicloId) => {
+    const entidad = ENTIDADES_REPORTE[tipo];
+    const porClave = new Map();
+
+    asesoriasPrueba(cicloId).map(adaptarAsesoriaCompleta).forEach((a) => {
+        const clave = entidad.clave(a);
+        porClave.set(clave, [...(porClave.get(clave) || []), a]);
+    });
+
+    return [...porClave.entries()]
+        .map(([clave, lista]) => ({ key: clave, ...entidad.datos(lista), ...totalesDeAsesorias(lista) }))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+        .map((fila, i) => ({ id: i + 1, ...fila }));
+};
+
+// Adapta un renglón del resumen que entregue el backend a la forma que usa la UI
+const adaptarResumenAgrupado = (tipo) => (item) => {
+    const enCurso = Number(item.en_curso) || 0;
+    const completadas = Number(item.completadas) || 0;
+    const canceladas = Number(item.canceladas) || 0;
+
+    return {
+        key: `${tipo}-${item.id}`,
+        id: item.id,
+        nombre: item.nombre,
+        grupo: item.grupo ?? '',
+        grupos: Number(item.grupos) || 0,
+        licenciatura: quitarLicenciatura(item.licenciatura),
+        solicitudes: Number(item.solicitudes) || 0,
+        enCurso,
+        completadas,
+        canceladas,
+        total: enCurso + completadas + canceladas,
+        asesores: Number(item.asesores) || 0,
+        materias: Number(item.materias) || 0,
+        estudiantes: Number(item.estudiantes) || 0,
+        sesiones: Number(item.sesiones) || 0
+    };
 };
 
 export const reportesService = {
@@ -275,5 +381,31 @@ export const reportesService = {
             params: { ciclo_id: cicloId }
         });
         return response.data.data.map(adaptarAsesoriaDeMateria);
+    }
+    ,
+
+    // Resumen del semestre: un renglón por estudiante, grupo o licenciatura. tipo: 'estudiante' | 'grupo' | 'licenciatura'
+    obtenerResumenAgrupado: async (tipo, cicloId) => {
+        if (USAR_DATOS_PRUEBA_ADMIN) return resumenDePrueba(tipo, cicloId);
+
+        // TODO: confirmar la ruta y el formato cuando exista el endpoint de admin en el backend
+        const response = await api.get(`/admin/reportes/${ENTIDADES_REPORTE[tipo].ruta}`, { params: { ciclo_id: cicloId } });
+        return response.data.data.map(adaptarResumenAgrupado(tipo));
+    },
+
+    // Todas las asesorías de un estudiante, grupo o licenciatura en un semestre; la pantalla calcula de ellas los desgloses
+    // entidad: un renglón del resumen (trae key, id y nombre)
+    obtenerAsesoriasAgrupado: async ({ tipo, entidad, cicloId }) => {
+        if (USAR_DATOS_PRUEBA_ADMIN) {
+            return asesoriasPrueba(cicloId)
+                .map(adaptarAsesoriaCompleta)
+                .filter((a) => ENTIDADES_REPORTE[tipo].clave(a) === entidad.key);
+        }
+
+        // TODO: confirmar la ruta y los parámetros cuando exista el endpoint de admin en el backend
+        const response = await api.get(`/admin/reportes/${ENTIDADES_REPORTE[tipo].ruta}/${entidad.id}/asesorias`, {
+            params: { ciclo_id: cicloId }
+        });
+        return response.data.data.map(adaptarAsesoriaCompleta);
     }
 };

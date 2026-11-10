@@ -33,6 +33,7 @@ import ReportePorMateria from './modules/tutorias/rolAdministrador/views/Reporte
 import Reportes from './modules/tutorias/rolAdministrador/views/Reportes';
 import Solicitudes from './modules/tutorias/rolAdministrador/views/Solicitudes';
 import UsuariosEnLinea from './modules/tutorias/rolAdministrador/views/UsuariosEnLinea';
+import BitacoraAdmin from './modules/tutorias/rolAdministrador/views/Bitacora';
 
 // Vistas de asesor
 import AsesoriasEnCurso from './modules/tutorias/rolAsesor/views/AsesoriasEnCurso';
@@ -132,6 +133,7 @@ export default function App() {
           <Route path="catalogos" element={<Catalogos />} />
           <Route path="perfil-administrador" element={<PerfilAdministrador />} />
           <Route path="usuarios-en-linea" element={<UsuariosEnLinea />} />
+          <Route path="bitacora" element={<BitacoraAdmin />} />
         </Route>
 
         {/* Rutas de Asesor (disciplinar y par comparten layout) */}
