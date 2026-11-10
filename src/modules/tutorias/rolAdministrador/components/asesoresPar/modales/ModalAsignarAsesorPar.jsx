@@ -10,91 +10,91 @@ import {
     Typography,
     useMediaQuery
 } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import InputBuscar from '../../../../../../components/ui/InputBuscar';
-import { getEstudiantes } from '../../../services/estudianteService';
+import { mensajesDeError } from '../../../../../../Services/errores';
+import { traerCandidatosParAdmin } from '../../../../../../Services/asesoresAdminService';
 
 /**
- * Cambio de rol: elige un estudiante para asignarlo como Asesor Par.
- * Solo aparecen estudiantes activos que todavía no son asesores par.
+ * Asignar un Asesor Par: se elige a un estudiante activo que todavía no es asesor y se le agrega el rol
+ * de asesor (sigue siendo estudiante). La API solo ofrece candidatos válidos, entregados de 10 en 10:
+ * para encontrar a alguien más se escribe en el buscador.
  *
  * Props:
  *  - open, onClose
- *  - asesoresActuales: lista de asesores par actuales (para excluir a los que ya lo son)
- *  - onAsignar: recibe el estudiante elegido y realiza el cambio de rol
- *  - showToast: (mensaje, tipo) para avisar el resultado
+ *  - onAsignar: recibe el estudiante elegido y regresa una promesa con true si se asignó (el modal se cierra)
+ *    o false si falló (el modal sigue abierto; el aviso lo da quien lo usa)
+ *  - showToast: (mensaje, tipo) solo para avisar si no se pudieron cargar los candidatos
  */
-export default function ModalAsignarAsesorPar({ open, onClose, asesoresActuales = [], onAsignar, showToast }) {
+export default function ModalAsignarAsesorPar({ open, onClose, onAsignar, showToast }) {
     // Celular: pantalla completa. Resto: ventana centrada.
     const esCelular = useMediaQuery('(max-width:599.95px)');
 
-    const [estudiantes, setEstudiantes] = useState([]);
-    const [seleccionado, setSeleccionado] = useState(null);
+    // Lo que se escribe en el buscador, y el texto que ya se mandó a la API (con una pausa al escribir)
     const [busqueda, setBusqueda] = useState('');
+    const [buscar, setBuscar] = useState('');
+
+    const [candidatos, setCandidatos] = useState([]);
+    const [seleccionado, setSeleccionado] = useState(null);
     const [cargando, setCargando] = useState(false);
     const [guardando, setGuardando] = useState(false);
 
-    // Al abrir se cargan los estudiantes; al cerrar se limpia el estado
+    // Al abrir, todo empieza limpio
     useEffect(() => {
-        if (open) {
-            setCargando(true);
-            // TODO: reemplazar por la consulta real al backend (estudiantes que no tengan el rol de Asesor Par)
-            getEstudiantes()
-                .then((data) => setEstudiantes(data || []))
-                .catch((error) => {
-                    console.error('Error al obtener estudiantes:', error);
-                    showToast?.('No se pudieron cargar los estudiantes', 'error');
-                })
-                .finally(() => setCargando(false));
-        } else {
-            setBusqueda('');
-            setSeleccionado(null);
-            setGuardando(false);
-        }
-        // showToast se omite a propósito para no volver a cargar la lista si cambia su referencia
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (!open) return;
+
+        setBusqueda('');
+        setBuscar('');
+        setSeleccionado(null);
+        setGuardando(false);
     }, [open]);
 
-    // Candidatos: activos, sin repetir y que no sean ya asesores par (se comparan por número de cuenta)
-    const candidatos = useMemo(() => {
-        const yaAsesores = new Set(asesoresActuales.map((a) => String(a.numeroCuenta)));
-        const vistos = new Set();
+    // Al dejar de escribir 400 ms se busca en la API
+    useEffect(() => {
+        const temporizador = setTimeout(() => setBuscar(busqueda.trim()), 400);
+        return () => clearTimeout(temporizador);
+    }, [busqueda]);
 
-        return estudiantes.filter((est) => {
-            const cuenta = String(est.numeroCuenta);
-            if (String(est.estado).toUpperCase() !== 'ACTIVO') return false;
-            if (yaAsesores.has(cuenta) || vistos.has(cuenta)) return false;
-            vistos.add(cuenta);
-            return true;
-        });
-    }, [estudiantes, asesoresActuales]);
+    // Se piden los candidatos al abrir y cada vez que cambia la búsqueda
+    useEffect(() => {
+        if (!open) return undefined;
 
-    const texto = busqueda.toLowerCase().trim();
-    const candidatosFiltrados = candidatos.filter((est) => {
-        if (!texto) return true;
-        return (
-            (est.nombre || '').toLowerCase().includes(texto) ||
-            String(est.numeroCuenta || '').toLowerCase().includes(texto) ||
-            (est.licenciatura || '').toLowerCase().includes(texto)
-        );
-    });
+        let cancelado = false;
+        setCargando(true);
+
+        traerCandidatosParAdmin({ buscar })
+            .then((lista) => {
+                if (!cancelado) setCandidatos(lista);
+            })
+            .catch((err) => {
+                console.error('Error al obtener los candidatos a asesor par:', err);
+                if (!cancelado) {
+                    setCandidatos([]);
+                    showToast?.(mensajesDeError(err)[0], 'error');
+                }
+            })
+            .finally(() => {
+                if (!cancelado) setCargando(false);
+            });
+
+        return () => {
+            cancelado = true;
+        };
+        // showToast se omite a propósito para no volver a cargar la lista si cambia su referencia
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, buscar]);
 
     const handleConfirmar = async () => {
         if (!seleccionado) return;
 
-        try {
-            setGuardando(true);
-            document.activeElement?.blur();
-            await onAsignar?.(seleccionado);
-            showToast?.(`${seleccionado.nombre} ahora es Asesor Par`, 'success');
-            onClose();
-        } catch (error) {
-            console.error('Error al asignar el rol de asesor par:', error);
-            showToast?.('No se pudo asignar el rol', 'error');
-        } finally {
-            setGuardando(false);
-        }
+        setGuardando(true);
+        document.activeElement?.blur();
+
+        const asignado = await onAsignar?.(seleccionado);
+
+        setGuardando(false);
+        if (asignado) onClose();
     };
 
     const handleCloseModal = () => {
@@ -133,7 +133,7 @@ export default function ModalAsignarAsesorPar({ open, onClose, asesoresActuales 
 
             <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2.5 }}>
                 <Typography variant="body2" color="text.secondary">
-                    Busca y selecciona al estudiante que pasará a tener el rol de Asesor Par.
+                    Busca y selecciona al estudiante que pasará a tener el rol de Asesor Par. Seguirá siendo estudiante.
                 </Typography>
 
                 {/* El buscador compartido trae su propio ancho máximo; aquí se deja a todo el ancho */}
@@ -141,7 +141,7 @@ export default function ModalAsignarAsesorPar({ open, onClose, asesoresActuales 
                     <InputBuscar
                         value={busqueda}
                         onChange={(e) => setBusqueda(e.target.value)}
-                        placeholder="Buscar por nombre, cuenta o licenciatura..."
+                        placeholder="Buscar por nombre, correo o número de cuenta..."
                     />
                 </Box>
 
@@ -155,14 +155,14 @@ export default function ModalAsignarAsesorPar({ open, onClose, asesoresActuales 
                 >
                     {cargando ? (
                         <Typography variant="body2" color="text.secondary" align="center" sx={{ p: 3 }}>
-                            Cargando estudiantes...
+                            Buscando estudiantes...
                         </Typography>
-                    ) : candidatosFiltrados.length === 0 ? (
+                    ) : candidatos.length === 0 ? (
                         <Typography variant="body2" color="text.secondary" align="center" sx={{ p: 3 }}>
                             No hay estudiantes disponibles para asignar.
                         </Typography>
                     ) : (
-                        candidatosFiltrados.map((est) => {
+                        candidatos.map((est) => {
                             const activo = seleccionado?.id === est.id;
 
                             return (
@@ -202,6 +202,12 @@ export default function ModalAsignarAsesorPar({ open, onClose, asesoresActuales 
                         })
                     )}
                 </Box>
+
+                {candidatos.length >= 10 && (
+                    <Typography variant="caption" color="text.secondary">
+                        Se muestran los primeros 10. Escribe en el buscador para encontrar a otro estudiante.
+                    </Typography>
+                )}
             </DialogContent>
 
             <DialogActions

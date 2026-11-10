@@ -1,19 +1,31 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { useState } from 'react';
 
 /**
- * Confirmación para eliminar un asesor disciplinar.
- * El aviso de éxito lo muestra quien usa el modal (la tabla), no este componente.
+ * Confirmación para dar de baja a un asesor disciplinar.
+ * Pasa a inactivo: ya no puede entrar, se cierran sus sesiones y se rechazan sus solicitudes pendientes.
+ * Su historial y su disponibilidad se conservan.
+ *
+ * Props:
+ *  - onConfirm: regresa una promesa con true si la baja salió bien (el modal se cierra) o false si falló
+ *    (por ejemplo, tiene asesorías en curso; el aviso lo da quien lo usa)
  */
 export default function ModalEliminarAsesorDisciplinar({ open, onClose, onConfirm, data }) {
-    const handleConfirm = () => {
-        if (onConfirm) onConfirm(data);
-        onClose();
+    const [procesando, setProcesando] = useState(false);
+
+    const handleConfirm = async () => {
+        document.activeElement?.blur();
+        setProcesando(true);
+        const ok = await onConfirm?.(data);
+        setProcesando(false);
+        if (ok) onClose();
     };
 
     return (
         <Dialog
             open={Boolean(open)}
             onClose={onClose}
+            disableRestoreFocus
             sx={{
                 '& .MuiPaper-root': {
                     width: '450px',
@@ -23,11 +35,12 @@ export default function ModalEliminarAsesorDisciplinar({ open, onClose, onConfir
                 }
             }}
         >
-            <DialogTitle sx={{ fontWeight: 'bold' }}>Eliminación</DialogTitle>
+            <DialogTitle sx={{ fontWeight: 'bold' }}>Dar de baja</DialogTitle>
 
             <DialogContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 3 }}>
                 <Typography variant="body1" align="center">
-                    ¿Estás seguro de que deseas eliminar a {data?.nombre ? <strong>{data.nombre}</strong> : 'este asesor'}? Esta acción no se puede deshacer.
+                    ¿Estás seguro de que deseas dar de baja a {data?.nombre ? <strong>{data.nombre}</strong> : 'este asesor'}?
+                    {' '}Ya no podrá iniciar sesión y se rechazarán sus solicitudes pendientes. Su historial se conserva.
                 </Typography>
             </DialogContent>
 
@@ -35,8 +48,8 @@ export default function ModalEliminarAsesorDisciplinar({ open, onClose, onConfir
                 <Button variant="outlined" color="inherit" onClick={onClose}>
                     Cancelar
                 </Button>
-                <Button variant="contained" color="error" onClick={handleConfirm}>
-                    Aceptar
+                <Button variant="contained" color="error" disabled={procesando} onClick={handleConfirm}>
+                    Dar de baja
                 </Button>
             </DialogActions>
         </Dialog>

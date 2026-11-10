@@ -1,15 +1,23 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import { useState } from 'react';
 
 /**
- * Confirmación para quitar el rol de Asesor Par a un estudiante.
- * El estudiante no se elimina: solo deja de ser asesor par.
- * El aviso de éxito lo muestra quien usa el modal (la tabla), no este componente.
+ * Confirmación para quitarle el rol de asesor a un asesor par.
+ * Sigue siendo estudiante y conserva su disponibilidad; se rechazan las solicitudes pendientes que le habían pedido.
+ *
+ * Props:
+ *  - onConfirm: regresa una promesa con true si salió bien (el modal se cierra) o false si falló
+ *    (por ejemplo, tiene asesorías en curso como asesor; el aviso lo da quien lo usa)
  */
 export default function ModalQuitarAsesorPar({ open, onClose, onConfirm, data }) {
-    const handleConfirm = () => {
+    const [procesando, setProcesando] = useState(false);
+
+    const handleConfirm = async () => {
         document.activeElement?.blur();
-        onConfirm?.(data);
-        onClose();
+        setProcesando(true);
+        const ok = await onConfirm?.(data);
+        setProcesando(false);
+        if (ok) onClose();
     };
 
     return (
@@ -26,12 +34,13 @@ export default function ModalQuitarAsesorPar({ open, onClose, onConfirm, data })
                 }
             }}
         >
-            <DialogTitle sx={{ fontWeight: 'bold' }}>Quitar rol de Asesor Par</DialogTitle>
+            <DialogTitle sx={{ fontWeight: 'bold' }}>Quitar rol de asesor</DialogTitle>
 
             <DialogContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 3 }}>
                 <Typography variant="body1" align="center">
-                    ¿Deseas quitar el rol de Asesor Par a {data?.nombre ? <strong>{data.nombre}</strong> : 'este estudiante'}?
-                    Seguirá registrado como estudiante.
+                    ¿Estás seguro de que deseas quitar el rol de asesor a {data?.nombre ? <strong>{data.nombre}</strong> : 'este estudiante'}?
+                    {' '}Seguirá siendo estudiante, pero dejará de aparecer como asesor y se rechazarán las solicitudes
+                    pendientes que le habían pedido.
                 </Typography>
             </DialogContent>
 
@@ -39,8 +48,8 @@ export default function ModalQuitarAsesorPar({ open, onClose, onConfirm, data })
                 <Button variant="outlined" color="inherit" onClick={onClose}>
                     Cancelar
                 </Button>
-                <Button variant="contained" color="error" onClick={handleConfirm}>
-                    Aceptar
+                <Button variant="contained" color="error" disabled={procesando} onClick={handleConfirm}>
+                    Quitar rol
                 </Button>
             </DialogActions>
         </Dialog>

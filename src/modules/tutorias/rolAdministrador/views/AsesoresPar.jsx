@@ -1,124 +1,194 @@
-import PersonAddAlt1OutlinedIcon from "@mui/icons-material/PersonAddAlt1Outlined";
-import Button from "@mui/material/Button";
-import CircularProgress from "@mui/material/CircularProgress";
-import Fab from "@mui/material/Fab";
-import { useEffect, useState } from "react";
-import InputBuscar from "../../../../components/ui/InputBuscar";
-import ToastNotification from "../../../../components/ui/ToastNotification";
-import ModalAsignarAsesorPar from "../components/asesoresPar/modales/ModalAsignarAsesorPar";
-import TablaAsesoresPar from "../components/asesoresPar/TablaAsesoresPar";
-import { getAsesoresPar } from "../services/asesoresParService";
+import PersonAddAlt1OutlinedIcon from '@mui/icons-material/PersonAddAlt1Outlined';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Fab from '@mui/material/Fab';
+import MenuItem from '@mui/material/MenuItem';
+import Pagination from '@mui/material/Pagination';
+import TextField from '@mui/material/TextField';
+import { useCallback, useEffect, useState } from 'react';
+import InputBuscar from '../../../../components/ui/InputBuscar';
+import ToastNotification from '../../../../components/ui/ToastNotification';
+import { traerMaterias } from '../../../../Services/asesoriasAsesorService';
+import {
+    asignarParAdmin,
+    guardarDisponibilidadAsesorAdmin,
+    quitarParAdmin,
+    traerParesAdmin
+} from '../../../../Services/asesoresAdminService';
+import { mensajesDeError } from '../../../../Services/errores';
+import ModalAsignarAsesorPar from '../components/asesoresPar/modales/ModalAsignarAsesorPar';
+import TablaAsesoresPar from '../components/asesoresPar/TablaAsesoresPar';
 
 // Color de los botones de asignar
-const AZUL = "#2e7d32";
-const AZUL_OSCURO = "#1b5e20";
+const VERDE = '#2e7d32';
+const VERDE_OSCURO = '#1b5e20';
+// Color del indicador de carga y del botón Reintentar
+const AZUL = '#244B91';
 
-// Unifica la forma de cada asesor sin importar si viene del mock o del backend.
-// Un asesor par es un estudiante con rol de asesor: sus datos personales son los del estudiante.
-// TODO: quitar esta adaptación cuando el servicio entregue directamente estos campos
-const normalizarAsesorPar = (item) => ({
-    ...item,
-    nombre: item.nombre ?? item.estudiante ?? "",
-    correo: item.correo ?? "",
-    telefono: item.telefono ?? "",
-    numeroCuenta: item.numeroCuenta ?? "",
-    licenciatura: item.licenciatura ?? "",
-    grupo: item.grupo ?? "",
-    promedio: item.promedio ?? "",
-    estado: item.estado ?? "ACTIVO",
-    materias: item.materias ?? (item.materia ? [item.materia] : []),
-    horarios: item.horarios ?? (item.horario ? [item.horario] : [])
-});
+// Menú de la lista de materias: con scroll y del mismo ancho que el campo, para que no se desborde ni tape el menú lateral
+const MENU_LISTA = { slotProps: { paper: { sx: { maxHeight: 280, maxWidth: 'min(320px, 90vw)' } } } };
+
+// Estilo de la lista de filtro de materia
+const ESTILO_FILTRO = { width: { xs: '100%', sm: 320 }, flexShrink: 0, backgroundColor: '#FFFFFF' };
 
 export default function AsesoresPar() {
+    // Lo que se escribe en el buscador, y el texto que ya se mandó a la API (con una pausa al escribir)
+    const [busqueda, setBusqueda] = useState('');
+    const [buscar, setBuscar] = useState('');
+
+    // Filtro por materia ('' = todas): deja a los asesores que imparten esa materia
+    const [materiaId, setMateriaId] = useState('');
+    const [materias, setMaterias] = useState([]);
+
+    // La API pagina de 10 en 10: "meta" trae la última página y el total
+    const [pagina, setPagina] = useState(1);
+    const [meta, setMeta] = useState(null);
+
     const [asesores, setAsesores] = useState([]);
     const [cargando, setCargando] = useState(true);
-    const [busqueda, setBusqueda] = useState("");
+    const [error, setError] = useState(false);
+
     const [modalAsignarOpen, setModalAsignarOpen] = useState(false);
 
     // Estado para el toast global de la vista
-    const [toast, setToast] = useState({ open: false, message: "", type: "info" });
+    const [toast, setToast] = useState({ open: false, message: '', type: 'info' });
 
-    const showToast = (message, type = "info") => {
+    const showToast = useCallback((message, type = 'info') => {
         setToast({ open: true, message, type });
-    };
-
-    const handleCloseToast = () => {
-        setToast((prev) => ({ ...prev, open: false }));
-    };
-
-    useEffect(() => {
-        getAsesoresPar()
-            .then((data) => {
-                setAsesores(data.map(normalizarAsesorPar));
-            })
-            .catch((error) => {
-                console.error("Error al obtener los asesores par:", error);
-            })
-            .finally(() => {
-                setCargando(false);
-            });
     }, []);
 
-    // Cambia el rol del estudiante elegido a Asesor Par y lo agrega a la lista
-    const handleAsignarAsesor = async (estudiante) => {
-        // TODO: llamar al backend para cambiar el rol del estudiante a Asesor Par (id_rol 5)
-        setAsesores((prev) => {
-            const nuevoId = prev.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1;
-            return [
-                {
-                    ...normalizarAsesorPar({}),
-                    id: nuevoId,
-                    idEstudiante: estudiante.id,
-                    nombre: estudiante.nombre,
-                    correo: estudiante.correo,
-                    numeroCuenta: estudiante.numeroCuenta,
-                    licenciatura: estudiante.licenciatura,
-                    grupo: estudiante.grupo,
-                    estado: "ACTIVO"
-                },
-                ...prev
-            ];
-        });
+    // Las materias de la facultad solo sirven para el filtro; si fallan, el filtro queda vacío y la vista sigue funcionando
+    useEffect(() => {
+        traerMaterias()
+            .then(setMaterias)
+            .catch((err) => console.error('Error al cargar las materias del filtro:', err));
+    }, []);
+
+    // Al dejar de escribir 400 ms se busca en la API y se vuelve a la página 1
+    useEffect(() => {
+        const temporizador = setTimeout(() => {
+            setBuscar(busqueda.trim());
+            setPagina(1);
+        }, 400);
+
+        return () => clearTimeout(temporizador);
+    }, [busqueda]);
+
+    // silencioso = recarga sin quitar la lista (se usa después de crear, editar, dar de baja o guardar disponibilidad)
+    const cargarAsesores = useCallback(async ({ silencioso = false } = {}) => {
+        try {
+            if (!silencioso) setCargando(true);
+            setError(false);
+
+            const { asesores: lista, meta: metaNueva } = await traerParesAdmin({
+                buscar,
+                page: pagina,
+                materiaId
+            });
+
+            // Si se dio de baja al último de esta página, la página queda vacía:
+            // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)
+            if (lista.length === 0 && pagina > 1) {
+                setPagina(pagina - 1);
+                return;
+            }
+
+            setAsesores(lista);
+            setMeta(metaNueva);
+        } catch (err) {
+            console.error('Error al obtener los asesores par:', err);
+            if (!silencioso) {
+                setError(true);
+                showToast(mensajesDeError(err)[0], 'error');
+            }
+        } finally {
+            setCargando(false);
+        }
+    }, [buscar, pagina, materiaId, showToast]);
+
+    useEffect(() => {
+        cargarAsesores();
+    }, [cargarAsesores]);
+
+    // Las acciones regresan true si salió bien (el modal se cierra) y false si falló (el modal sigue abierto).
+    // Aquí caen los errores de la API, por ejemplo 422 (correo o cuenta repetidos) o 409 (asesorías en curso).
+    const ejecutar = async (accion, mensajeExito) => {
+        try {
+            await accion();
+            showToast(mensajeExito, 'success');
+            cargarAsesores({ silencioso: true });
+            return true;
+        } catch (err) {
+            showToast(mensajesDeError(err)[0], 'error');
+            return false;
+        }
     };
 
-    // Actualiza en la lista el asesor editado desde el modal de información
-    const actualizarAsesor = (asesorActualizado) => {
-        setAsesores((prev) =>
-            prev.map((item) => (item.id === asesorActualizado.id ? { ...item, ...asesorActualizado } : item))
-        );
-    };
+    // Le agrega el rol de asesor al estudiante elegido (sigue siendo estudiante)
+    const handleAsignarAsesor = (estudiante) =>
+        ejecutar(() => asignarParAdmin(estudiante.id), `${estudiante.nombre} ahora es Asesor Par. Falta armar su disponibilidad.`);
 
-    // Quita el rol de asesor par: el estudiante sigue existiendo, solo sale de esta lista
-    const quitarAsesor = (id) => {
-        setAsesores((prev) => prev.filter((item) => item.id !== id));
+    const handleQuitarAsesor = (asesor) =>
+        ejecutar(() => quitarParAdmin(asesor.id), 'Se le quitó el rol de asesor');
+
+    const handleGuardarDisponibilidad = (asesor, cuerpo) =>
+        ejecutar(() => guardarDisponibilidadAsesorAdmin(asesor.id, cuerpo), 'Disponibilidad actualizada');
+
+    const handleCambiarMateria = (e) => {
+        setMateriaId(e.target.value);
+        setPagina(1);
     };
 
     // Quita el foco del elemento activo antes de abrir un modal
-    const handleOpenModalAsignar = (event) => {
+    const clearFocus = (event) => {
         if (event?.currentTarget) event.currentTarget.blur();
         document.activeElement?.blur();
+    };
+
+    const handleOpenModalAsignar = (event) => {
+        clearFocus(event);
         setModalAsignarOpen(true);
     };
 
-    // Filtro por búsqueda en tiempo real (nombre, correo o número de cuenta)
-    const filasFiltradas = asesores.filter((row) => {
-        const texto = busqueda.toLowerCase().trim();
-        if (!texto) return true;
-
-        return (
-            (row.nombre || "").toLowerCase().includes(texto) ||
-            (row.correo || "").toLowerCase().includes(texto) ||
-            (row.numeroCuenta || "").toLowerCase().includes(texto)
-        );
-    });
+    const total = meta?.total ?? asesores.length;
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
             <p className="text-2xl font-bold">Asesores Par</p>
 
-            {/* Barra de herramientas: buscador y botón de asignar (en celular el botón pasa a ser flotante) */}
+            {/* Filtro por materia */}
             <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
+                <TextField
+                    select
+                    size="small"
+                    label="Materia"
+                    value={materiaId}
+                    onChange={handleCambiarMateria}
+                    sx={ESTILO_FILTRO}
+                    slotProps={{ select: {
+                            displayEmpty: true,
+                            MenuProps: MENU_LISTA,
+                            // En el campo solo va el nombre; la licenciatura se ve en la lista
+                            renderValue: (valor) => (valor === '' ? <em>Todas</em> : materias.find((m) => m.id === valor)?.nombre ?? '')
+                        }, inputLabel: { shrink: true } }}
+                >
+                    <MenuItem value="">
+                        <em>Todas</em>
+                    </MenuItem>
+                    {materias.map((m) => (
+                        <MenuItem key={m.id} value={m.id} sx={{ whiteSpace: 'normal' }}>
+                            {/* Hay materias con el mismo nombre en varias licenciaturas: se distinguen con la carrera */}
+                            <div className="flex flex-col">
+                                <span>{m.nombre}</span>
+                                {m.licenciatura && <span className="text-xs text-gray-500">{m.licenciatura}</span>}
+                            </div>
+                        </MenuItem>
+                    ))}
+                </TextField>
+            </div>
+
+            {/* Barra de herramientas: buscador y botón de asignar (en celular el botón pasa a ser flotante) */}
+            <div className="-mt-3 w-full flex flex-col items-start gap-3 sm:-mt-4 sm:flex-row sm:items-center sm:gap-4">
                 <div className="w-full min-w-0 sm:flex-1">
                     <InputBuscar
                         value={busqueda}
@@ -134,12 +204,12 @@ export default function AsesoresPar() {
                     startIcon={<PersonAddAlt1OutlinedIcon />}
                     onClick={handleOpenModalAsignar}
                     sx={{
-                        borderRadius: "5px",
-                        textTransform: "none",
-                        backgroundColor: AZUL,
-                        "&:hover": { backgroundColor: AZUL_OSCURO },
+                        borderRadius: '5px',
+                        textTransform: 'none',
+                        backgroundColor: VERDE,
+                        '&:hover': { backgroundColor: VERDE_OSCURO },
                         flexShrink: 0,
-                        display: { xs: "none", sm: "inline-flex" }
+                        display: { xs: 'none', sm: 'inline-flex' }
                     }}
                 >
                     Asignar Asesor Par
@@ -152,15 +222,15 @@ export default function AsesoresPar() {
                 aria-label="Asignar asesor par"
                 onClick={handleOpenModalAsignar}
                 sx={{
-                    position: "fixed",
+                    position: 'fixed',
                     right: 16,
                     bottom: 16,
                     zIndex: 10,
-                    textTransform: "none",
-                    color: "#ffffff",
-                    backgroundColor: AZUL,
-                    "&:hover": { backgroundColor: AZUL_OSCURO },
-                    display: { xs: "inline-flex", sm: "none" }
+                    textTransform: 'none',
+                    color: '#ffffff',
+                    backgroundColor: VERDE,
+                    '&:hover': { backgroundColor: VERDE_OSCURO },
+                    display: { xs: 'inline-flex', sm: 'none' }
                 }}
             >
                 <PersonAddAlt1OutlinedIcon sx={{ mr: 1 }} />
@@ -170,30 +240,62 @@ export default function AsesoresPar() {
             <ModalAsignarAsesorPar
                 open={modalAsignarOpen}
                 onClose={() => setModalAsignarOpen(false)}
-                asesoresActuales={asesores}
                 onAsignar={handleAsignarAsesor}
                 showToast={showToast}
             />
+
+            {/* Leyenda de resultados */}
+            {!cargando && !error && (
+                <p className="-mt-3 text-sm text-gray-600 md:-mt-4">
+                    {total} {total === 1 ? 'asesor par' : 'asesores par'}
+                    {buscar || materiaId ? ' encontrados' : ''}
+                </p>
+            )}
 
             {/* Contenido: en celular se deja espacio abajo para que el botón flotante no tape la paginación */}
             <div className="w-full flex flex-1 flex-col pb-24 sm:pb-5">
                 {cargando ? (
                     <div className="flex flex-1 flex-col items-center justify-center gap-3 pb-20">
-                        <CircularProgress sx={{ color: '#244B91' }} />
+                        <CircularProgress sx={{ color: AZUL }} />
                         <p className="text-sm text-gray-600">Cargando asesores par...</p>
                     </div>
+                ) : error ? (
+                    <div className="flex flex-1 flex-col items-center justify-center gap-3 pb-20">
+                        <p className="text-sm text-gray-600">No se pudieron cargar los asesores par.</p>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => cargarAsesores()}
+                            sx={{ textTransform: 'none', borderRadius: '5px', backgroundColor: AZUL }}
+                        >
+                            Reintentar
+                        </Button>
+                    </div>
                 ) : (
-                    <TablaAsesoresPar
-                        rows={filasFiltradas}
-                        onUpdate={actualizarAsesor}
-                        onRemove={quitarAsesor}
-                    />
+                    <>
+                        <TablaAsesoresPar
+                            rows={asesores}
+                            onQuitar={handleQuitarAsesor}
+                            onGuardarDisponibilidad={handleGuardarDisponibilidad}
+                        />
+
+                        {/* Paginación: solo aparece si hay más de una página */}
+                        {meta && meta.last_page > 1 && (
+                            <div className="mt-6 flex w-full justify-center">
+                                <Pagination
+                                    count={meta.last_page}
+                                    page={pagina}
+                                    onChange={(_, nueva) => setPagina(nueva)}
+                                />
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
             <ToastNotification
                 open={toast.open}
-                onClose={handleCloseToast}
+                onClose={() => setToast((prev) => ({ ...prev, open: false }))}
                 message={toast.message}
                 type={toast.type}
             />

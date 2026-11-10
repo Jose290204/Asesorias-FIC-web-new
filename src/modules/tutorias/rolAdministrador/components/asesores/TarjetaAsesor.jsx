@@ -1,0 +1,136 @@
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Card from '@mui/material/Card';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
+import Chip from '@mui/material/Chip';
+import Typography from '@mui/material/Typography';
+
+// Línea con ícono y texto (correo, número de cuenta, teléfono)
+function LineaDato({ icono, texto }) {
+    if (!texto) return null;
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            <Box sx={{ display: 'flex', color: '#08338F', mt: '1px', flexShrink: 0 }}>{icono}</Box>
+            <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere', minWidth: 0 }}>
+                {texto}
+            </Typography>
+        </Box>
+    );
+}
+
+// Versión móvil de una fila de la tabla de asesores (disciplinares y par).
+// Mismo diseño que las demás tarjetas del admin: borde azul, datos y botones.
+// Solo muestra; las acciones las maneja quien la usa (TablaAsesores).
+// onEditar es opcional: los asesores par no se editan aquí (sus datos personales se editan en Estudiantes).
+export default function TarjetaAsesor({ row, onInfo, onEditar, onBaja, textoBaja = 'Dar de baja', etiquetaId = 'Asesor' }) {
+    return (
+        <Card
+            sx={{
+                width: '100%',
+                maxWidth: '400px',
+                background: '#FFFFFF',
+                borderLeft: '20px solid #08338F',
+                borderRadius: '5px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                boxShadow: '0px 4px 12.3px rgba(0, 0, 0, 0.20)'
+            }}
+        >
+            <CardContent sx={{ padding: '24px 24px 15px' }}>
+                <Typography sx={{ fontSize: '18px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', marginBottom: '16px' }}>
+                    {row.nombre}
+                </Typography>
+
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <LineaDato icono={<MailOutlinedIcon sx={{ fontSize: 20 }} />} texto={row.correo} />
+                    <LineaDato icono={<BadgeOutlinedIcon sx={{ fontSize: 20 }} />} texto={row.numeroCuenta} />
+                    <LineaDato icono={<PhoneOutlinedIcon sx={{ fontSize: 20 }} />} texto={row.telefono} />
+
+                    {/* Chips: estado de la disponibilidad e identificador */}
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mt: '4px' }}>
+                        <Chip
+                            size="small"
+                            label={row.disponibilidad.vacia ? 'Sin disponibilidad' : 'Disponibilidad lista'}
+                            sx={
+                                row.disponibilidad.vacia
+                                    ? { backgroundColor: '#FFF4D6', color: '#8A6D2B', fontWeight: 600 }
+                                    : { backgroundColor: '#E6F2E7', color: '#1b5e20', fontWeight: 600 }
+                            }
+                        />
+                        <Chip
+                            size="small"
+                            variant="outlined"
+                            label={`${etiquetaId} #${row.id}`}
+                            sx={{ borderColor: '#BDBDBD', color: '#555555', fontWeight: 600 }}
+                        />
+                    </Box>
+                </Box>
+            </CardContent>
+
+            {/* Botones: dos columnas iguales (Información y Editar); la baja ocupa todo el ancho */}
+            <CardActions
+                sx={{
+                    padding: '0px 24px 20px 24px',
+                    display: 'grid',
+                    gridTemplateColumns: onEditar ? '1fr 1fr' : '1fr',
+                    gap: '10px',
+                    // CardActions mete margen izquierdo a los botones; aquí se anula por el grid
+                    '& > :not(:first-of-type)': { marginLeft: 0 }
+                }}
+            >
+                <Button
+                    variant="outlined"
+                    sx={{
+                        minHeight: 40,
+                        color: '#8A6D2B',
+                        borderColor: '#C49E0D',
+                        borderRadius: '5px',
+                        textTransform: 'none',
+                        '&:hover': { borderColor: '#8A6D2B', backgroundColor: 'rgba(196, 158, 13, 0.08)' }
+                    }}
+                    startIcon={<InfoOutlinedIcon />}
+                    onClick={(e) => onInfo(row, e)}
+                >
+                    Información
+                </Button>
+
+                {onEditar && (
+                    <Button
+                        variant="outlined"
+                        sx={{
+                            minHeight: 40,
+                            color: '#08338F',
+                            borderColor: '#08338F',
+                            borderRadius: '5px',
+                            textTransform: 'none',
+                            '&:hover': { borderColor: '#08338F', backgroundColor: 'rgba(8, 51, 143, 0.08)' }
+                        }}
+                        startIcon={<EditOutlinedIcon />}
+                        onClick={(e) => onEditar(row, e)}
+                    >
+                        Editar
+                    </Button>
+                )}
+
+                <Button
+                    variant="contained"
+                    color="error"
+                    sx={{ gridColumn: '1 / -1', minHeight: 40, color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
+                    startIcon={<DeleteOutlinedIcon />}
+                    onClick={(e) => onBaja(row, e)}
+                >
+                    {textoBaja}
+                </Button>
+            </CardActions>
+        </Card>
+    );
+}

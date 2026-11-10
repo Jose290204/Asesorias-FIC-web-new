@@ -28,6 +28,12 @@ export const ACCIONES = {
   'estudiante.editado': { etiqueta: 'Estudiante editado', tono: 'azul', grupo: 'Estudiantes' },
   'estudiante.baja': { etiqueta: 'Estudiante dado de baja', tono: 'rojo', grupo: 'Estudiantes' },
 
+  'asesor.creado': { etiqueta: 'Asesor creado', tono: 'verde', grupo: 'Asesores' },
+  'asesor.editado': { etiqueta: 'Asesor editado', tono: 'azul', grupo: 'Asesores' },
+  'asesor.baja': { etiqueta: 'Asesor dado de baja', tono: 'rojo', grupo: 'Asesores' },
+  'asesor_par.asignado': { etiqueta: 'Asesor par asignado', tono: 'verde', grupo: 'Asesores' },
+  'asesor_par.quitado': { etiqueta: 'Asesor par quitado', tono: 'naranja', grupo: 'Asesores' },
+
   'solicitud.creada': { etiqueta: 'Solicitud creada', tono: 'verde', grupo: 'Solicitudes' },
   'solicitud.editada': { etiqueta: 'Solicitud editada', tono: 'azul', grupo: 'Solicitudes' },
   'solicitud.cancelada': { etiqueta: 'Solicitud cancelada', tono: 'naranja', grupo: 'Solicitudes' },
