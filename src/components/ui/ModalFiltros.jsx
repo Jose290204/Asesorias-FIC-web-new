@@ -3,16 +3,20 @@ import DialogContent from '@mui/material/DialogContent';
 
 export default function ModalFiltros({ open, onClose, onApply, onClear, children }) {
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={onClose}
-      PaperProps={{
-        style: {
-          borderRadius: '16px',
-          border: '2px solid #0091ff',
-          padding: '25px',
-          maxWidth: '600px',
-          width: '100%'
+      disableAutoFocus 
+      slotProps={{
+        paper: {
+          style: {
+            borderRadius: '16px',
+            padding: '25px',
+            maxWidth: '450px',
+            width: '100%',
+            maxHeight: '85vh',
+            margin: '16px'
+          }
         }
       }}
     >
@@ -23,15 +27,15 @@ export default function ModalFiltros({ open, onClose, onApply, onClear, children
           <button
             type="button"
             onClick={onApply}
-            className="w-full bg-[#0088ff] hover:bg-[#0070e0] text-white font-semibold py-2 rounded-lg transition-colors"
+            className="w-full bg-[#244b91] hover:bg-[#244b91] text-white font-semibold py-2 rounded-lg transition-colors cursor-pointer"
           >
             Aplicar Filtros
           </button>
-          
+
           <button
             type="button"
             onClick={onClear}
-            className="font-bold text-black hover:underline text-sm"
+            className="font-bold text-black hover:underline text-sm cursor-pointer"
           >
             Limpiar Filtros
           </button>

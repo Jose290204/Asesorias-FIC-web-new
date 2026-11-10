@@ -1,10 +1,17 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
 import App from './App.jsx'
+import { AuthProvider } from './context/AuthContext.jsx'
+import { FacultadActivaProvider } from './context/FacultadActivaContext.jsx'
+import './index.css'
+
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
-  </StrictMode>,
+        <AuthProvider>
+            <FacultadActivaProvider>
+                <App />
+            </FacultadActivaProvider>
+        </AuthProvider>
+    </StrictMode>
 )

@@ -1,0 +1,109 @@
+import CloseIcon from '@mui/icons-material/Close';
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    IconButton,
+    TextField
+} from '@mui/material';
+import dayjs from 'dayjs';
+import { useState } from 'react';
+
+import { CAMPO_BLOQUEADO } from '../../compartidos/estilosModales';
+import ModalSesionesAsesor from '../../compartidos/ModalSesionesAsesor';
+import useMediaQuery from '@mui/material/useMediaQuery';
+
+const ETIQUETA_ESTATUS = { completada: 'Completada', cancelada: 'Cancelada', en_curso: 'En curso' };
+
+// Una asesoría del historial ya está cerrada (completada o cancelada) y la API no deja editarla,
+// así que este modal es solo de consulta. Desde aquí se pueden ver sus sesiones.
+export default function ModalInfoHistorialAsesoria({ open, onClose, data, showToast }) {
+    const esCelular = useMediaQuery('(max-width:599.95px)');
+    const [sesionesOpen, setSesionesOpen] = useState(false);
+
+    if (!data) return null;
+
+    const finalizada = data.finalizada_en ? dayjs(data.finalizada_en).format('DD/MM/YYYY') : '';
+
+    return (
+        <>
+            <Dialog
+                open={Boolean(open)}
+                onClose={onClose}
+                fullScreen={esCelular}
+                sx={{
+                    '& .MuiPaper-root': esCelular ? { borderRadius: 0 } : {
+                        width: '550px',
+                        maxWidth: '90vw',
+                        maxHeight: '90dvh',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        p: 1.5
+                    }
+                }}
+            >
+                <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.2rem' }}>
+                    Información Asesoría
+                    <IconButton
+                        aria-label="close"
+                        onClick={onClose}
+                        sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+
+                <DialogContent dividers>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
+                        <TextField label="Nombre del Estudiante" size="small" fullWidth value={data.estudiante ?? ''} {...CAMPO_BLOQUEADO} />
+                        <TextField label="Materia" size="small" fullWidth value={data.materia ?? ''} {...CAMPO_BLOQUEADO} />
+                        <TextField label="Estatus" size="small" fullWidth value={ETIQUETA_ESTATUS[data.estatus] ?? data.estatus ?? ''} {...CAMPO_BLOQUEADO} />
+                        <TextField label="Fecha de Inicio" size="small" fullWidth value={data.fecha_inicio_formateada ?? ''} {...CAMPO_BLOQUEADO} />
+                        {finalizada && (
+                            <TextField label="Fecha de finalización" size="small" fullWidth value={finalizada} {...CAMPO_BLOQUEADO} />
+                        )}
+                        <TextField label="Horario" size="small" fullWidth value={data.horario ?? ''} {...CAMPO_BLOQUEADO} />
+                        <TextField label="Modalidad" size="small" fullWidth value={data.modalidad ?? ''} {...CAMPO_BLOQUEADO} />
+                        <TextField label="Razón de Asesoría" size="small" fullWidth value={data.razon ?? ''} {...CAMPO_BLOQUEADO} />
+                        <TextField label="Sesiones registradas" size="small" fullWidth value={String(data.sesiones_count ?? 0)} {...CAMPO_BLOQUEADO} />
+                        {data.estatus === 'cancelada' && data.motivo_cancelacion && (
+                            <TextField
+                                label="Motivo de la cancelación"
+                                size="small"
+                                fullWidth
+                                multiline
+                                rows={3}
+                                value={data.motivo_cancelacion}
+                                {...CAMPO_BLOQUEADO}
+                            />
+                        )}
+                        {data.observaciones && (
+                            <TextField label="Observaciones" size="small" fullWidth multiline rows={3} value={data.observaciones} {...CAMPO_BLOQUEADO} />
+                        )}
+                    </Box>
+                </DialogContent>
+
+                <DialogActions sx={{ p: 2, pt: 1.5, gap: 1 }}>
+                    <Button variant="outlined" onClick={() => setSesionesOpen(true)} sx={{ textTransform: 'none' }}>
+                        Ver sesiones
+                    </Button>
+                    <Button variant="contained" onClick={onClose} sx={{ textTransform: 'none' }}>
+                        Cerrar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <ModalSesionesAsesor
+                open={sesionesOpen}
+                onClose={() => setSesionesOpen(false)}
+                data={data}
+                soloLectura
+                showToast={showToast}
+            />
+        </>
+    );
+}

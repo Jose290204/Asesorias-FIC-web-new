@@ -1,0 +1,362 @@
+import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
+import { Autocomplete, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, InputAdornment, MenuItem, TextField, createFilterOptions } from '@mui/material';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import 'dayjs/locale/es';
+import { useEffect, useState } from 'react';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { accionesModal, botonCerrarEncabezado, botonDorado, botonSecundario, campoModal, contenidoModal, encabezadoModal, paperModal } from '../../../../../../components/ui/estilosModal';
+
+// --- HELPERS ---
+const claveNombre = (texto) => String(texto ?? '').trim().toLowerCase();
+
+const sinDuplicados = (lista, obtenerClave) => {
+    const vistos = new Set();
+    return lista.filter((item) => {
+        const clave = obtenerClave(item);
+        if (!clave || vistos.has(clave)) return false;
+        vistos.add(clave);
+        return true;
+    });
+};
+
+// Lista desplegable de los select: altura máxima con scroll interno
+const MENU_CON_SCROLL = {
+    slotProps: { paper: { sx: { maxHeight: 240 } } }
+};
+
+const filtrarAsesores = createFilterOptions({
+    stringify: (asesor) => `${asesor.asesor || asesor.nombre || ''} ${asesor.email ?? ''}`
+});
+
+// Convierte el día del enum ("lunes".."viernes") al número que usa dayjs (lunes=1 ... viernes=5)
+const DIA_A_NUMERO = { lunes: 1, martes: 2, miercoles: 3, jueves: 4, viernes: 5 };
+
+const FORMULARIO_CREAR_INICIAL = {
+    asesor: null,
+    materiaId: '',
+    horarioKey: '',   // "dia|horarioId", identifica un día y horario único dentro de la disponibilidad
+    inicio: null,
+    modalidadId: '',  // valor de la modalidad (ej. "presencial")
+    razon: '',
+    nota: ''
+};
+
+// ==========================================
+// 1. MODAL CREAR SOLICITUD (buscador global o, con asesorFijo, desde la tarjeta)
+// Flujo: asesor -> materia -> horario -> fecha (restringida al día del horario) -> modalidad -> nota
+// ==========================================
+export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, asesores = [], asesorFijo = null, razones = []}) {
+    const esCelular = useMediaQuery('(max-width:599.95px)');
+    // asesorFijo: si viene (desde la tarjeta), el asesor ya está elegido y bloqueado
+    const [formData, setFormData] = useState({ ...FORMULARIO_CREAR_INICIAL, asesor: asesorFijo });
+    const [calendarioOpen, setCalendarioOpen] = useState(false);
+    const [guardando, setGuardando] = useState(false);
+
+    useEffect(() => {
+        if (!open) return;
+        setFormData({ ...FORMULARIO_CREAR_INICIAL, asesor: asesorFijo });
+        setCalendarioOpen(false);
+    }, [open, asesorFijo]);
+
+    const asesoresList = sinDuplicados(asesores, (item) => item.email || claveNombre(item.asesor));
+
+    // Disponibilidad real del asesor elegido (viene en asesor.disponibilidad, armada por el adaptador)
+    const asesorElegido = formData.asesor;
+    const disponibilidad = asesorElegido?.disponibilidad;
+
+    const materiasList = disponibilidad?.materias ?? [];
+
+    // Cada fila es un día y horario concretos, por ejemplo "Lunes 7:00-8:00 AM"
+    const horariosList = (disponibilidad?.horarios ?? []).flatMap((diaGrupo) =>
+        diaGrupo.horarios.map((h) => ({
+            key: `${diaGrupo.dia}|${h.id}`,
+            dia: diaGrupo.dia,
+            etiqueta: `${diaGrupo.etiqueta} ${h.etiqueta}`
+        }))
+    );
+
+    const modalidadesList = disponibilidad?.modalidades ?? [];
+
+    // Cadena: asesor -> materia -> horario -> fecha/modalidad/nota
+    const sinAsesor = !formData.asesor;
+    const sinMateria = !formData.materiaId;
+    const sinHorario = !formData.horarioKey;
+    const leyendaMateria = sinAsesor ? 'Elige primero al asesor' : '';
+    const leyendaHorario = !sinAsesor && sinMateria ? 'Elige primero una materia' : '';
+    const leyendaFecha = !sinMateria && sinHorario ? 'Elige primero un horario' : '';
+    const leyendaResto = !sinMateria && !sinHorario ? '' : (leyendaHorario || leyendaFecha);
+
+    // Día (lunes..viernes) del horario elegido, usado para bloquear el calendario
+    const diaElegido = horariosList.find((h) => h.key === formData.horarioKey)?.dia;
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    // Al cambiar de horario, una fecha ya elegida puede quedar en un día que ya no corresponde
+    const handleChangeHorario = (e) => {
+        setFormData((prev) => ({ ...prev, horarioKey: e.target.value, inicio: null }));
+    };
+
+    const abrirCalendario = () => {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
+        setCalendarioOpen(true);
+    };
+
+    const soloEseDia = (fecha) => !diaElegido || fecha.day() !== DIA_A_NUMERO[diaElegido];
+
+    const formularioCompleto =
+        Boolean(formData.asesor) &&
+        Boolean(formData.materiaId) &&
+        Boolean(formData.horarioKey) &&
+        Boolean(formData.inicio?.isValid()) &&
+        Boolean(formData.modalidadId) &&
+        Boolean(formData.razon);
+
+
+    const handleCrear = async () => {
+        if (!formularioCompleto || guardando) return;
+
+        setGuardando(true);
+        try {
+            const { asesor } = formData;
+            const [, horarioIdTexto] = formData.horarioKey.split('|');
+
+            const nuevaSolicitud = {
+                asesorId: asesor.id,
+                materiaId: Number(formData.materiaId),
+                horarioId: Number(horarioIdTexto),
+                dia: diaElegido,
+                fecha: formData.inicio.format('YYYY-MM-DD'),
+                modalidad: formData.modalidadId,
+                razon: formData.razon,
+                nota: formData.nota.trim()
+            };
+
+            if (onSave) await onSave(nuevaSolicitud);
+            if (showToast) showToast('Solicitud creada correctamente', 'success');
+            if (onClose) onClose();
+        } catch (error) {
+            if (showToast) showToast('Ocurrió un error al crear la solicitud', 'error');
+        } finally {
+            setGuardando(false);
+        }
+    };
+
+    return (
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
+            <Dialog
+                open={Boolean(open)}
+                onClose={onClose}
+                fullScreen={esCelular}
+                sx={paperModal(esCelular, '560px')}
+            >
+                <DialogTitle sx={encabezadoModal}>
+                    Solicitar Asesoría
+                    <IconButton
+                        aria-label="close"
+                        onClick={onClose}
+                        sx={botonCerrarEncabezado}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+
+                <DialogContent sx={contenidoModal}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, ...campoModal }}>
+                        {/* 1. ASESOR: lo primero que se elige */}
+                        <Autocomplete
+                            fullWidth
+                            size="small"
+                            openOnFocus
+                            disabled={Boolean(asesorFijo)}
+                            options={asesoresList}
+                            value={formData.asesor}
+                            onChange={(_, nuevoAsesor) =>
+                                // Al cambiar de asesor se limpia todo (menos la nota)
+                                setFormData((prev) => ({ ...FORMULARIO_CREAR_INICIAL, nota: prev.nota, asesor: asesorFijo ?? nuevoAsesor }))
+                            }
+                            getOptionLabel={(option) => option.asesor || option.nombre || ''}
+                            getOptionKey={(option) => option.id}
+                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                            filterOptions={filtrarAsesores}
+                            noOptionsText="No se encontraron asesores"
+                            renderInput={(params) => {
+                                const inputProps = params.slotProps?.input ?? params.InputProps;
+                                return (
+                                    <TextField
+                                        {...params}
+                                        label="Asesor"
+                                        placeholder="Escribe nombre del asesor"
+                                        slotProps={{
+                                            ...params.slotProps,
+                                            input: {
+                                                ...inputProps,
+                                                startAdornment: (
+                                                    <>
+                                                        <InputAdornment position="start">
+                                                            <SearchIcon fontSize="small" />
+                                                        </InputAdornment>
+                                                        {inputProps?.startAdornment}
+                                                    </>
+                                                )
+                                            }
+                                        }}
+                                    />
+                                );
+                            }}
+                        />
+
+                        {/* 2. MATERIA: se habilita al elegir asesor */}
+                        <Box>
+                            <TextField
+                                select
+                                slotProps={{ select: { MenuProps: MENU_CON_SCROLL } }}
+                                label="Materia"
+                                name="materiaId"
+                                size="small"
+                                fullWidth
+                                disabled={sinAsesor}
+                                helperText={leyendaMateria}
+                                value={formData.materiaId}
+                                onChange={handleChange}
+                            >
+                                {materiasList.map((item) => (
+                                    <MenuItem key={item.id} value={String(item.id)}>
+                                        {item.nombre}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        </Box>
+
+                        {/* 3. HORARIO: se habilita al elegir materia. Cada opción ya trae su día */}
+                        <Box>
+                            <TextField
+                                select
+                                slotProps={{ select: { MenuProps: MENU_CON_SCROLL } }}
+                                label="Horario"
+                                name="horarioKey"
+                                size="small"
+                                fullWidth
+                                disabled={sinMateria}
+                                helperText={leyendaHorario}
+                                value={formData.horarioKey}
+                                onChange={handleChangeHorario}
+                            >
+                                {horariosList.map((item) => (
+                                    <MenuItem key={item.key} value={item.key}>
+                                        {item.etiqueta}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        </Box>
+
+                        {/* 4. FECHA: se habilita al elegir horario; el calendario solo permite ese día de la semana */}
+                        <Box>
+                            <DatePicker
+                                label="Fecha"
+                                value={formData.inicio}
+                                onChange={(nuevaFecha) => setFormData((prev) => ({ ...prev, inicio: nuevaFecha }))}
+                                format="DD/MM/YYYY"
+                                disabled={sinHorario}
+                                disablePast
+                                shouldDisableDate={soloEseDia}
+                                open={calendarioOpen && !sinHorario}
+                                onOpen={() => { if (!sinHorario) abrirCalendario(); }}
+                                onClose={() => setCalendarioOpen(false)}
+                                slotProps={{
+                                    textField: {
+                                        size: 'small',
+                                        helperText: leyendaFecha,
+                                        fullWidth: true,
+                                        InputLabelProps: { shrink: true },
+                                        onClick: () => { if (!sinHorario) abrirCalendario(); }
+                                    }
+                                }}
+                            />
+                        </Box>
+
+                        {/* 5. MODALIDAD */}
+                        <Box>
+                            <TextField
+                                select
+                                slotProps={{ select: { MenuProps: MENU_CON_SCROLL } }}
+                                label="Modalidad"
+                                name="modalidadId"
+                                size="small"
+                                fullWidth
+                                disabled={sinMateria}
+                                helperText={leyendaResto}
+                                value={formData.modalidadId}
+                                onChange={handleChange}
+                            >
+                                {modalidadesList.map((item) => (
+                                    <MenuItem key={item.valor} value={item.valor}>
+                                        {item.etiqueta}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        </Box>
+
+                        {/* 6. RAZÓN */}
+                        <Box>
+                            <TextField
+                                select
+                                slotProps={{ select: { MenuProps: MENU_CON_SCROLL } }}
+                                label="Razón"
+                                name="razon"
+                                size="small"
+                                fullWidth
+                                disabled={sinMateria}
+                                value={formData.razon}
+                                onChange={handleChange}
+                            >
+                                {razones.map((item) => (
+                                    <MenuItem key={item.valor} value={item.valor}>
+                                        {item.etiqueta}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        </Box>
+
+                        {/*76. NOTA */}
+                        <Box>
+                            <TextField
+                                label="Nota para el asesor (opcional)"
+                                name="nota"
+                                placeholder="Agrega un comentario..."
+                                size="small"
+                                fullWidth
+                                multiline
+                                rows={3}
+                                disabled={sinMateria}
+                                value={formData.nota}
+                                onChange={handleChange}
+                            />
+                        </Box>
+                    </Box>
+                </DialogContent>
+
+                <DialogActions sx={accionesModal}>
+                    <Button variant="outlined" onClick={onClose} sx={botonSecundario}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        variant="contained"
+                        sx={botonDorado}
+                        onClick={handleCrear}
+                        disabled={!formularioCompleto || guardando}
+                    >
+                        Confirmar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </LocalizationProvider>
+    );
+}

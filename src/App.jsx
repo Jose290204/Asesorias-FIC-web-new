@@ -1,44 +1,171 @@
-import { useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import AdminLayout from './layouts/AdminLayout';
+import fondoInicio from './assets/fondo_inicio.jpeg';
+import { useAuth } from './context/AuthContext';
+import AdminLayout from './layouts/moduloTutorias/AdminLayout';
+import AsesorLayout from './layouts/moduloTutorias/AsesorLayout';
+import EstudianteLayout from './layouts/moduloTutorias/EstudianteLayout';
 
-// vistas 
+import SkeletonApp from './components/ui/SkeletonApp';
+import { ROL } from './constants/roles';
+import { useFacultadActiva } from './context/FacultadActivaContext';
+import SuperAdminLayout from './layouts/moduloTutorias/SuperAdminLayout';
+
+// vistas
 import Login from './modules/auth/view/Login';
+import RecuperarContrasena from './modules/auth/view/RecuperarContrasena';
+
+// Vistas del super admin
+import Administradores from './modules/superAdmin/views/Administradores';
+import Bitacora from './modules/superAdmin/views/Bitacora';
+import Facultades from './modules/superAdmin/views/Facultades';
+import PerfilSuperAdmin from './modules/superAdmin/views/PerfilSuperAdmin';
 
 // Vistas del Dashboard admin
-import AsesoresDisci from './modules/tutorias/rolAdministrador/views/AsesoresDisci';
+import Conocenos from './modules/paginasInicio/Conocenos';
+import AsesoresDisciplinares from './modules/tutorias/rolAdministrador/views/AsesoresDisciplinares';
 import AsesoresPar from './modules/tutorias/rolAdministrador/views/AsesoresPar';
 import Asesorias from './modules/tutorias/rolAdministrador/views/Asesorias';
 import Catalogos from './modules/tutorias/rolAdministrador/views/Catalogos';
 import Estudiantes from './modules/tutorias/rolAdministrador/views/Estudiantes';
+import PerfilAdministrador from './modules/tutorias/rolAdministrador/views/PerfilAdministrador';
+import ReportePorAsesor from './modules/tutorias/rolAdministrador/views/ReportePorAsesor';
+import ReportePorMateria from './modules/tutorias/rolAdministrador/views/ReportePorMateria';
 import Reportes from './modules/tutorias/rolAdministrador/views/Reportes';
 import Solicitudes from './modules/tutorias/rolAdministrador/views/Solicitudes';
+import UsuariosEnLinea from './modules/tutorias/rolAdministrador/views/UsuariosEnLinea';
+
+// Vistas de asesor
+import AsesoriasEnCurso from './modules/tutorias/rolAsesor/views/AsesoriasEnCurso';
+import DisponibilidadAsesor from './modules/tutorias/rolAsesor/views/DisponibilidadAsesor';
+import HistorialAsesorias from './modules/tutorias/rolAsesor/views/HistorialAsesorias';
+import PerfilAsesor from './modules/tutorias/rolAsesor/views/PerfilAsesor';
+import SolicitudesPendientes from './modules/tutorias/rolAsesor/views/SolicitudesPendientes';
+
+// Vistas de Estudiante
+import AsesoriasEstudiante from './modules/tutorias/rolEstudiante/views/AsesoriasEstudiante';
+import HistorialAsesoriasEstudiante from './modules/tutorias/rolEstudiante/views/HistorialAsesoriasEstudiante';
+import PerfilEstudiante from './modules/tutorias/rolEstudiante/views/PerfilEstudiante';
+import SolicitarAsesoria from './modules/tutorias/rolEstudiante/views/SolicitarAsesoria';
+import SolicitudesEnRevision from './modules/tutorias/rolEstudiante/views/SolicitudesEnRevision';
+
+const precargaFondoLogin = new Image();
+precargaFondoLogin.src = fondoInicio;
+// IDs `roles`
+const ROLES_ASESOR = [3];
+const ROL_ESTUDIANTE = 4;
+
+// Decide a qué pantalla mandar según el rol. Va directo a la vista final:
+// si apuntara al layout, se haría una segunda redirección (la del "index") y se vería un destello.
+function getRutaPorRol(rol) {
+  if (rol === ROL.SUPER_ADMIN) return '/superadmin/facultades';
+  if (rol === ROL.ADMIN) return '/admin/asesorias';
+  if (ROLES_ASESOR.includes(rol)) return '/asesor/solicitudes-pendientes';
+  if (rol === ROL_ESTUDIANTE) return '/estudiante/solicitar-asesorias';
+  return '/';
+}
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const { usuario, rol, loading } = useAuth();
+  const { facultadActiva } = useFacultadActiva();
+
+  // Al panel de una facultad entra el admin de esa facultad, o el super admin si ya eligió una
+  const puedeVerPanelAdmin = rol === ROL.ADMIN || (rol === ROL.SUPER_ADMIN && Boolean(facultadActiva));
+
+ if (loading && localStorage.getItem('_uix')) {
+    return <SkeletonApp />;
+  }
 
   return (
     <BrowserRouter>
       <Routes>
-        {/* Ruta del Login */}
-        <Route path="/" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
+        {/* Login */}
+        <Route
+          path="/"
+          element={usuario ? <Navigate to={getRutaPorRol(rol)} replace /> : <Login />}
+        />
 
-        {/* Rutas del Administrador protegidas */}
-        <Route 
-          path="/admin" 
-          element={isAuthenticated ? <AdminLayout setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/" />}
+        {/* Ruta pública */}
+        <Route path="/conocenos" element={<Conocenos />} />
+
+        <Route path="/recuperar-contrasena" element={<RecuperarContrasena />} />
+
+        {/* Panel principal del Super administrador */}
+        <Route
+          path="/superadmin"
+          element={
+            usuario && rol === ROL.SUPER_ADMIN
+              ? <SuperAdminLayout />
+              : <Navigate to="/" replace />
+          }
         >
-          {/* Redirección por defecto */}
+          <Route index element={<Navigate to="/superadmin/facultades" replace />} />
+          <Route path="facultades" element={<Facultades />} />
+          <Route path="administradores" element={<Administradores />} />
+          <Route path="bitacora" element={<Bitacora />} />
+          <Route path="perfil" element={<PerfilSuperAdmin />} />
+        </Route>
+
+        {/* Rutas del Administrador (también las usa el super admin dentro de una facultad) */}
+        <Route
+          path="/admin"
+          element={
+            !usuario
+              ? <Navigate to="/" replace />
+              : puedeVerPanelAdmin
+                ? <AdminLayout />
+                // Super admin sin facultad elegida: primero debe escoger una
+                : <Navigate to={rol === ROL.SUPER_ADMIN ? '/superadmin' : '/'} replace />
+          }
+        >
           <Route index element={<Navigate to="/admin/asesorias" replace />} />
-          
-          {/* Subrutas */}
           <Route path="asesorias" element={<Asesorias />} />
           <Route path="solicitudes" element={<Solicitudes />} />
-          <Route path="reportes" element={<Reportes />} />
+         <Route path="reportes" element={<Navigate to="/admin/reportes/asesor" replace />} />
+          <Route path="reportes/materia" element={<ReportePorMateria />} />
+          <Route path="reportes/asesor" element={<ReportePorAsesor/>} />
+          <Route path="reportes/estudiante" element={<Reportes tipo="estudiante" />} />
+          <Route path="reportes/grupo" element={<Reportes tipo="grupo" />} />
+          <Route path="reportes/licenciatura" element={<Reportes tipo="licenciatura" />} />
           <Route path="estudiantes" element={<Estudiantes />} />
-          <Route path="asesores-disciplinares" element={<AsesoresDisci />} />
+          <Route path="asesores-disciplinares" element={<AsesoresDisciplinares />} />
           <Route path="asesores-par" element={<AsesoresPar />} />
           <Route path="catalogos" element={<Catalogos />} />
+          <Route path="perfil-administrador" element={<PerfilAdministrador />} />
+          <Route path="usuarios-en-linea" element={<UsuariosEnLinea />} />
+        </Route>
+
+        {/* Rutas de Asesor (disciplinar y par comparten layout) */}
+        <Route
+          path="/asesor"
+          element={
+            usuario && ROLES_ASESOR.includes(rol)
+              ? <AsesorLayout />
+              : <Navigate to="/" replace />
+          }
+        >
+          <Route index element={<Navigate to="/asesor/solicitudes-pendientes" replace />} />
+          <Route path="solicitudes-pendientes" element={<SolicitudesPendientes />} />
+          <Route path="disponibilidad" element={<DisponibilidadAsesor />} />
+          <Route path="asesorias-en-curso" element={<AsesoriasEnCurso />} />
+          <Route path="historial-de-asesorias" element={<HistorialAsesorias />} />
+          <Route path="perfil-asesor" element={<PerfilAsesor />} />
+        </Route>
+
+        {/* Rutas de Estudiante */}
+        <Route
+          path="/estudiante"
+          element={
+            usuario && rol === ROL_ESTUDIANTE
+              ? <EstudianteLayout />
+              : <Navigate to="/" replace />
+          }
+        >
+          <Route index element={<Navigate to="/estudiante/solicitar-asesorias" replace />} />
+          <Route path="solicitar-asesorias" element={<SolicitarAsesoria />} />
+          <Route path="asesorias-estudiante" element={<AsesoriasEstudiante />} />
+          <Route path="solicitudes-en-revision" element={<SolicitudesEnRevision />} />
+          <Route path="historial-de-asesorias" element={<HistorialAsesoriasEstudiante />} />
+          <Route path="perfil-estudiante" element={<PerfilEstudiante />} />
         </Route>
       </Routes>
     </BrowserRouter>
