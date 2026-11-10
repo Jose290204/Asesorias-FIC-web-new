@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import LogoBienestar from '../assets/dependencias/bienestar.png';
 import LogoFicFooter from '../assets/dependencias/logofic.png';
 import fondoInicio from '../assets/fondo_inicio.jpeg';
+import LogoAsesorias from '../assets/logo_asesorias.png';
 import LogoUas from '../assets/logo_uas.png';
+import LogoUas2029 from '../assets/logo_uas_2029.png';
 
 // Encabezado + fondo + footer de las pantallas públicas (login, recuperar contraseña).
 // mostrarFooter={false} oculta el footer (lo usa la recuperación).
@@ -14,27 +16,32 @@ export default function LayoutPublico({ children, mostrarFooter = true }) {
     <div className="min-h-screen bg-slate-100 flex flex-col">
 
       {/* Barra de navegación superior (AppBar) */}
-      <header className="sticky top-0 z-50 bg-[#244B91] text-white h-[70px] pr-[35px] sm:pr-[90px] flex items-center justify-between shadow-md relative">
+      <header className="sticky top-0 z-50 bg-[linear-gradient(90deg,#2a529b_0%,#244B91_50%,#1c3a75_100%)] text-white h-[70px] pr-[35px] sm:pr-[90px] flex items-center justify-between border-b-[3px] border-[#D4A017] shadow-[0_4px_18px_rgba(0,0,0,0.2)] relative">
 
         {/* Lado Izquierdo: Logo UAS */}
-        <div className="flex items-center">
+        <div className="flex items-center gap-3 sm:gap-5 ml-7 sm:ml-12">
           <img
             src={LogoUas}
             alt="Logo Institucional"
-            className="h-12 sm:h-[55px] ml-4 sm:ml-6 w-auto object-contain"
+            className="h-12 sm:h-[55px] w-auto object-contain drop-shadow-[0_0_8px_rgba(212,176,60,0.45)]"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = 'https://placehold.co/48x48/2b3a55/FFFFFF?text=UAS';
             }}
+          />
+          <img
+            src={LogoUas2029}
+            alt="UAS con visión de futuro 2029"
+            className="h-12 sm:h-[55px] w-auto object-contain"
           />
         </div>
 
         {/* Lado Derecho: Título y Subtítulo de la Facultad */}
         <div className="flex flex-col items-center">
           <h1 className="text-[17px] sm:text-[18px] font-bold text-white">
-            Tutorias FIC
+            Asesorías FIC
           </h1>
-          <p className="text-[14px] sm:text-[15px] text-white">
+          <p className="text-[14px] sm:text-[15px] text-blue-100">
             Facultad de Informática Culiacán
           </p>
         </div>
@@ -49,11 +56,16 @@ export default function LayoutPublico({ children, mostrarFooter = true }) {
       </main>
 
       {mostrarFooter && (
-        <footer className="bg-[#244B91] text-white rounded-t-[30px] px-6 sm:px-16 py-8 w-full mt-auto">
+        <footer className="bg-[linear-gradient(180deg,#244B91_0%,#162f66_100%)] text-white rounded-t-[30px] border-t-[3px] border-[#D4A017] shadow-[0_-6px_24px_rgba(0,0,0,0.15)] px-6 sm:px-16 py-8 w-full mt-auto">
           <div className="max-w-[1200px] mx-auto">
 
             {/* Contenedor de Logos */}
-            <div className="flex justify-center items-center gap-6 sm:gap-12 mb-8">
+            <div className="flex justify-center items-center gap-6 sm:gap-12 mb-8 pb-8 border-b border-white/15">
+              <img
+                src={LogoAsesorias}
+                alt="Logo Asesorías FIC"
+                className="w-[50px] h-[50px] sm:w-[70px] sm:h-[70px] rounded-full bg-white p-0.5 object-contain shadow-[0_0_14px_rgba(212,176,60,0.4)]"
+              />
               <img
                 src={LogoFicFooter}
                 alt="Logo FIC"
@@ -71,7 +83,7 @@ export default function LayoutPublico({ children, mostrarFooter = true }) {
 
               {/* Desarrollado por */}
               <div className="flex flex-col items-center lg:items-start space-y-0.5">
-                <h3 className="font-bold mb-1.5 text-[12px] sm:text-[14px]">Desarrollado por:</h3>
+                <h3 className="font-bold text-[#e6c65a] tracking-wide mb-1.5 text-[12px] sm:text-[14px]">Desarrollado por:</h3>
                 <p>Astorga Mejia Jose Angel</p>
                 <p>Barrera Rodriguez Leslie Mayram</p>
                 <p>Tizoc Lopez Jenifer Guadalupe</p>
@@ -79,7 +91,7 @@ export default function LayoutPublico({ children, mostrarFooter = true }) {
 
               {/* Colaboradores */}
               <div className="flex flex-col items-center lg:items-start space-y-0.5">
-                <h3 className="font-bold mb-1.5 text-[12px] sm:text-[14px]">Colaboradores:</h3>
+                <h3 className="font-bold text-[#e6c65a] tracking-wide mb-1.5 text-[12px] sm:text-[14px]">Colaboradores:</h3>
                 <p>MC. Alejandro Yahir Sicairos Ochoa</p>
                 <p>MGTI. Oscar Mejia Quintero</p>
                 <p>MC. Evelia Inzunza García</p>
@@ -89,7 +101,7 @@ export default function LayoutPublico({ children, mostrarFooter = true }) {
 
               {/* Contacto */}
               <div className="flex flex-col items-center lg:items-start space-y-1">
-                <h3 className="font-bold mb-0.5 text-[12px] sm:text-[14px]">Contacto:</h3>
+                <h3 className="font-bold text-[#e6c65a] tracking-wide mb-0.5 text-[12px] sm:text-[14px]">Contacto:</h3>
                 <a href="mailto:contacto@correo.mx" className="hover:underline">
                   contacto@correo.mx
                 </a>

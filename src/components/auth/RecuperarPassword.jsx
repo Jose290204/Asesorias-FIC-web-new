@@ -21,14 +21,14 @@ const mensajeDeError = (error) => {
 };
 
 const claseInput =
-  'w-full h-[45px] pl-[45px] pr-[15px] bg-[#F0F0F0] text-[14px] text-slate-700 placeholder-[#A8A7A7] rounded-[5px] border border-[#C7C6C6] focus:border-[#A5A5A5] focus:outline-none transition-colors';
+  'w-full h-[45px] pl-[45px] pr-[15px] bg-slate-50 text-[14px] text-slate-700 placeholder-[#A8A7A7] rounded-[8px] border border-slate-300 focus:border-[#244B91] focus:bg-white focus:ring-4 focus:ring-[#244B91]/15 focus:outline-none transition-all';
 // Igual que claseInput pero con más espacio a la derecha para el ojo.
 // Va como clase aparte porque dos clases de padding en el mismo elemento
 // se pisan según el orden del CSS, no el del texto.
 const claseInputPassword =
-  'w-full h-[45px] pl-[45px] pr-[45px] bg-[#F0F0F0] text-[14px] text-slate-700 placeholder-[#A8A7A7] rounded-[5px] border border-[#C7C6C6] focus:border-[#A5A5A5] focus:outline-none transition-colors';
+  'w-full h-[45px] pl-[45px] pr-[45px] bg-slate-50 text-[14px] text-slate-700 placeholder-[#A8A7A7] rounded-[8px] border border-slate-300 focus:border-[#244B91] focus:bg-white focus:ring-4 focus:ring-[#244B91]/15 focus:outline-none transition-all';
 const claseBoton =
-  'bg-[#D4A017] hover:bg-[#c29115] disabled:bg-gray-400 text-white text-[15px] font-bold rounded-[8px] w-[180px] h-[45px] transition-colors flex items-center justify-center';
+  'w-full h-[46px] cursor-pointer rounded-[8px] bg-[linear-gradient(135deg,#e0b63a,#D4A017_55%,#bf8f12)] text-[15px] font-bold tracking-wide text-white shadow-[0_6px_16px_rgba(212,160,23,0.4)] transition-all hover:-translate-y-px hover:shadow-[0_8px_20px_rgba(212,160,23,0.5)] active:translate-y-0 disabled:cursor-not-allowed disabled:bg-none disabled:bg-gray-400 disabled:shadow-none flex items-center justify-center';
 const claseLeyenda = 'text-[14px] font-semibold text-[#244B91] text-center';
 
 // onVolver: regresa al login. onExito: se llama al cambiar la contraseña.
@@ -114,19 +114,23 @@ export default function RecuperarPassword({ onVolver, onExito, showToast }) {
       type="button"
       onClick={() => setMostrarPassword((v) => !v)}
       aria-label={mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-      className="absolute right-[10px] p-[5px] text-slate-500 hover:text-slate-700"
+      className="absolute right-[10px] cursor-pointer p-[5px] text-slate-500 hover:text-slate-700"
     >
       {mostrarPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
     </button>
   );
 
   return (
-    <div className="bg-white rounded-[15px] shadow-[0_0_7px_4px_rgba(158,158,158,0.3)] w-[300px] sm:w-[380px] min-h-[450px] sm:min-h-[530px] p-[25px] sm:p-[40px] flex flex-col items-center">
+    <div className="relative overflow-hidden bg-white/95 backdrop-blur-sm rounded-[16px] shadow-[0_12px_40px_rgba(18,42,136,0.28)] w-[300px] sm:w-[380px] p-[25px] sm:p-[40px] pt-[30px] sm:pt-[44px] flex flex-col items-center">
+      {/* Franja de acento azul-dorado (igual que el login) */}
+      <div className="absolute inset-x-0 top-0 h-[5px] bg-[linear-gradient(90deg,#244B91,#D4A017)]" />
 
       {/* Logo Asesorías (igual que el login) */}
       <LogoFicAsesorias />
 
-      <div className="h-[30px] sm:h-[45px]"></div>
+      <div className="mt-[18px] mb-[22px] text-center sm:mt-[26px] sm:mb-[30px]">
+        <h1 className="text-[20px] font-bold text-[#122a88] sm:text-[22px]">Recuperar contraseña</h1>
+      </div>
 
       {paso === 1 && (
         <form onSubmit={pedirCodigo} className="w-full flex flex-col gap-[25px]">
@@ -180,7 +184,7 @@ export default function RecuperarPassword({ onVolver, onExito, showToast }) {
             type="button"
             onClick={() => pedirCodigo()}
             disabled={segundos > 0 || loading}
-            className="text-[13px] text-[#244B91] disabled:text-gray-400"
+            className="cursor-pointer text-[13px] font-medium text-[#244B91] hover:underline disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline"
           >
             {segundos > 0 ? `Reenviar código en ${segundos} s` : 'Reenviar código'}
           </button>
@@ -193,7 +197,7 @@ export default function RecuperarPassword({ onVolver, onExito, showToast }) {
             Elige tu nueva contraseña (mínimo 8 caracteres)
           </p>
           <div className="relative flex items-center">
-            <Lock className="absolute left-[15px] w-[18px] h-[18px] text-[#D4A017]" />
+            <Lock className="absolute left-[15px] w-[18px] h-[18px] text-[#244B91]" />
             <input
               // type cambia entre "text" y "password" según el ojo
               type={mostrarPassword ? 'text' : 'password'}
@@ -206,7 +210,7 @@ export default function RecuperarPassword({ onVolver, onExito, showToast }) {
             {botonOjo}
           </div>
           <div className="relative flex items-center">
-            <Lock className="absolute left-[15px] w-[18px] h-[18px] text-[#D4A017]" />
+            <Lock className="absolute left-[15px] w-[18px] h-[18px] text-[#244B91]" />
             <input
               type={mostrarPassword ? 'text' : 'password'}
               autoComplete="new-password"
@@ -228,7 +232,7 @@ export default function RecuperarPassword({ onVolver, onExito, showToast }) {
       <button
         type="button"
         onClick={onVolver}
-        className="mt-[25px] text-[13px] text-slate-500 hover:text-slate-700"
+        className="mt-[25px] cursor-pointer text-[13px] font-medium text-slate-500 hover:text-[#244B91] hover:underline"
       >
         ← Volver al inicio de sesión
       </button>

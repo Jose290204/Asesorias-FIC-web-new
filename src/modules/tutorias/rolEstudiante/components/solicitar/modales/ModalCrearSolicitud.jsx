@@ -7,6 +7,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import 'dayjs/locale/es';
 import { useEffect, useState } from 'react';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { accionesModal, botonCerrarEncabezado, botonDorado, botonSecundario, campoModal, contenidoModal, encabezadoModal, paperModal } from '../../../../../../components/ui/estilosModal';
 
 // --- HELPERS ---
 const claveNombre = (texto) => String(texto ?? '').trim().toLowerCase();
@@ -154,31 +155,21 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                 open={Boolean(open)}
                 onClose={onClose}
                 fullScreen={esCelular}
-                sx={{
-                    '& .MuiPaper-root': esCelular ? { borderRadius: 0 } : {
-                        width: '550px',
-                        maxWidth: '90vw',
-                        maxHeight: '90vh',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        p: 1.5
-                    }
-                }}
+                sx={paperModal(esCelular, '560px')}
             >
-                <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.2rem' }}>
+                <DialogTitle sx={encabezadoModal}>
                     Solicitar Asesoría
                     <IconButton
                         aria-label="close"
                         onClick={onClose}
-                        sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
+                        sx={botonCerrarEncabezado}
                     >
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
 
-                <DialogContent dividers>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
+                <DialogContent sx={contenidoModal}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, ...campoModal }}>
                         {/* 1. ASESOR: lo primero que se elige */}
                         <Autocomplete
                             fullWidth
@@ -352,13 +343,13 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                     </Box>
                 </DialogContent>
 
-                <DialogActions sx={{ p: 2, pt: 1.5, justifyContent: 'flex-end', gap: 1 }}>
-                    <Button variant="outlined" color="inherit" onClick={onClose}>
+                <DialogActions sx={accionesModal}>
+                    <Button variant="outlined" onClick={onClose} sx={botonSecundario}>
                         Cancelar
                     </Button>
                     <Button
                         variant="contained"
-                        color="primary"
+                        sx={botonDorado}
                         onClick={handleCrear}
                         disabled={!formularioCompleto || guardando}
                     >

@@ -1,6 +1,10 @@
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 import CloseIcon from '@mui/icons-material/Close';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Typography } from '@mui/material';
+import LaptopMacOutlinedIcon from '@mui/icons-material/LaptopMacOutlined';
+import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
+import { Avatar, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Typography } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { accionesModal, botonCerrarEncabezado, botonSecundario, contenidoModal, encabezadoModal, paperModal } from '../../../../../../components/ui/estilosModal';
 
 // Convierte ["A, B", "C"] o "A / B" en ["A", "B", "C"]
 const aLista = (valor) =>
@@ -9,72 +13,83 @@ const aLista = (valor) =>
         .map((v) => v.trim())
         .filter(Boolean);
 
+// Sección con ícono, título y las etiquetas (chips) de su lista. Sin datos muestra "N/A"
+function Seccion({ icono, titulo, items, estiloChip }) {
+    return (
+        <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1, color: '#244B91' }}>
+                {icono}
+                <Typography variant="caption" sx={{ fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                    {titulo}
+                </Typography>
+            </Box>
+            {items.length === 0 ? (
+                <Typography variant="body2" sx={{ color: '#6A6A6A' }}>N/A</Typography>
+            ) : (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                    {items.map((item) => (
+                        <Chip key={item} label={item} size="small" sx={{ fontWeight: 600, ...estiloChip }} />
+                    ))}
+                </Box>
+            )}
+        </Box>
+    );
+}
+
 // ==========================================
-// 2. MODAL INFORMACIÓN
+// MODAL INFORMACIÓN DEL ASESOR
 // ==========================================
 export default function ModalInfoAsesor({ open, onClose, asesor }) {
     const esCelular = useMediaQuery('(max-width:599.95px)');
     if (!asesor) return null;
 
-    // Lo que trae el objeto del asesor (una línea por materia / horario)
-    const materiasAsesor = aLista(asesor.materias);
-    const horariosAsesor = aLista(asesor.horarios ?? asesor.horario);
-    const modalidadesAsesor = aLista(asesor.modalidad ?? asesor.modalidades);
-    const materias = materiasAsesor.join('\n') || 'N/A';
-    const horarios = horariosAsesor.join('\n') || 'N/A';
-    const modalidades = modalidadesAsesor.join('\n') || 'N/A';
+    const nombre = asesor.asesor || asesor.nombre || '';
+    const materias = aLista(asesor.materias);
+    const horarios = aLista(asesor.horarios ?? asesor.horario);
+    const modalidades = aLista(asesor.modalidad ?? asesor.modalidades);
 
     return (
-        <Dialog
-            open={Boolean(open)}
-            onClose={onClose}
-            fullScreen={esCelular}
-            sx={{
-                '& .MuiPaper-root': esCelular ? { borderRadius: 0 } : {
-                    width: '450px',
-                    maxWidth: '90vw',
-                    borderRadius: '12px',
-                    p: 1.5
-                }
-            }}
-        >
-            <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.25rem', textAlign: 'center', }}>
-                {asesor.asesor || asesor.nombre}
-                <IconButton
-                    aria-label="close"
-                    onClick={onClose}
-                    sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
-                >
+        <Dialog open={Boolean(open)} onClose={onClose} fullScreen={esCelular} sx={paperModal(esCelular, '480px')}>
+            <DialogTitle component="div" sx={{ ...encabezadoModal, display: 'flex', alignItems: 'center', gap: 1.75 }}>
+                <Avatar sx={{ width: 44, height: 44, bgcolor: '#EBD9B4', color: '#8A6D2B', fontWeight: 'bold', boxShadow: '0 0 0 2px #D4A017' }}>
+                    {nombre ? nombre.charAt(0).toUpperCase() : ''}
+                </Avatar>
+                <Box sx={{ minWidth: 0 }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', lineHeight: 1.25 }}>{nombre}</Typography>
+                    <Typography variant="body2" sx={{ color: '#dbe7ff', overflowWrap: 'anywhere' }}>
+                        {asesor.email || asesor.correo || 'N/A'}
+                    </Typography>
+                </Box>
+                <IconButton aria-label="close" onClick={onClose} sx={botonCerrarEncabezado}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent dividers sx={{ py: 2 }}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                    <Box>
-                        <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#6A6A6A' }}>Correo:</Typography>
-                        <Typography variant="body2">{asesor.email || asesor.correo || 'N/A'}</Typography>
-                    </Box>
-
-                    <Box>
-                        <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#6A6A6A' }}>Materias:</Typography>
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{materias}</Typography>
-                    </Box>
-
-                    <Box>
-                        <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#6A6A6A' }}>Horarios:</Typography>
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{horarios}</Typography>
-                    </Box>
-
-                    <Box>
-                        <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#6A6A6A' }}>Modalidad:</Typography>
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{modalidades}</Typography>
-                    </Box>
+            <DialogContent sx={contenidoModal}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                    <Seccion
+                        icono={<MenuBookOutlinedIcon fontSize="small" />}
+                        titulo="Materias"
+                        items={materias}
+                        estiloChip={{ backgroundColor: '#eef2fb', color: '#244B91' }}
+                    />
+                    <Seccion
+                        icono={<AccessTimeOutlinedIcon fontSize="small" />}
+                        titulo="Horarios"
+                        items={horarios}
+                        estiloChip={{ backgroundColor: '#fbf4dc', color: '#7a5d0f', border: '1px solid #e6cf85' }}
+                    />
+                    <Seccion
+                        icono={<LaptopMacOutlinedIcon fontSize="small" />}
+                        titulo="Modalidad"
+                        items={modalidades}
+                        estiloChip={{ backgroundColor: '#e8f5ec', color: '#1b6b3a' }}
+                    />
                 </Box>
             </DialogContent>
 
-            <DialogActions sx={{ p: 2, justifyContent: 'flex-end' }}>
-                <Button variant="contained" onClick={onClose} sx={{ backgroundColor: '#08338F', '&:hover': { backgroundColor: '#062568' } }}>
+            <DialogActions sx={accionesModal}>
+                <Button variant="outlined" onClick={onClose} sx={botonSecundario}>
                     Cerrar
                 </Button>
             </DialogActions>

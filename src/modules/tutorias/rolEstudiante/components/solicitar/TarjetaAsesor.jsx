@@ -135,4 +135,4 @@ export default function TarjetaAsesor({ asesor, onSaveSolicitud, showToast, razo
             />
         </>
     );
-}
+}

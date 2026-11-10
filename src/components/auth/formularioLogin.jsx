@@ -72,13 +72,20 @@ export default function FormularioLogin() {
   }
 
   return (
-    <div className="bg-white rounded-[15px] shadow-[0_0_7px_4px_rgba(158,158,158,0.3)] w-[300px] sm:w-[380px] h-[450px] sm:h-[530px] p-[25px] sm:p-[40px] flex flex-col items-center">
+    <>
+    <div className="relative overflow-hidden bg-white/95 backdrop-blur-sm rounded-[16px] shadow-[0_12px_40px_rgba(18,42,136,0.28)] w-[300px] sm:w-[380px] p-[25px] sm:p-[40px] pt-[30px] sm:pt-[44px] flex flex-col items-center">
+
+      {/* Franja de acento azul-dorado arriba de la tarjeta */}
+      <div className="absolute inset-x-0 top-0 h-[5px] bg-[linear-gradient(90deg,#244B91,#D4A017)]" />
 
       {/* Logo Asesorías */}
       <LogoFicAsesorias />
 
-      {/* Espaciado responsivo antes del formulario */}
-      <div className="h-[35px] sm:h-[80px]"></div>
+      {/* Título de bienvenida */}
+      <div className="mt-[18px] mb-[22px] text-center sm:mt-[26px] sm:mb-[30px]">
+        <h1 className="text-[20px] font-bold text-[#122a88] sm:text-[22px]">Bienvenido</h1>
+        <p className="mt-1 text-[13px] text-slate-500">Inicia sesión con tu correo institucional</p>
+      </div>
 
       <form onSubmit={handleSubmit} className="w-full flex flex-col">
 
@@ -91,16 +98,16 @@ export default function FormularioLogin() {
             placeholder="Correo institucional"
             value={correo}
             onChange={(e) => setCorreo(e.target.value)}
-            className="w-full h-[45px] pl-[45px] pr-[15px] bg-[#F0F0F0] text-[14px] text-slate-700 placeholder-[#A8A7A7] rounded-[5px] border border-[#C7C6C6] focus:border-[#A5A5A5] focus:outline-none transition-colors"
+            className="w-full h-[45px] pl-[45px] pr-[15px] bg-slate-50 text-[14px] text-slate-700 placeholder-[#A8A7A7] rounded-[8px] border border-slate-300 focus:border-[#244B91] focus:bg-white focus:ring-4 focus:ring-[#244B91]/15 focus:outline-none transition-all"
           />
         </div>
 
         {/* Separación exacta entre inputs */}
-        <div className="h-[27px]"></div>
+        <div className="h-[18px]"></div>
 
         {/* Input Contraseña con ojito */}
         <div className="relative flex items-center">
-          <Lock className="absolute left-[15px] w-[18px] h-[18px] text-[#D4A017]" />
+          <Lock className="absolute left-[15px] w-[18px] h-[18px] text-[#244B91]" />
           <input
             // type cambia entre "text" y "password" según el ojo
             type={mostrarPassword ? 'text' : 'password'}
@@ -109,7 +116,7 @@ export default function FormularioLogin() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             // pr-[45px] deja espacio a la derecha para que el texto no quede bajo el ojo
-            className="w-full h-[45px] pl-[45px] pr-[45px] bg-[#F0F0F0] text-[14px] text-slate-700 placeholder-[#A8A7A7] rounded-[5px] border border-[#C7C6C6] focus:border-[#A5A5A5] focus:outline-none transition-colors"
+            className="w-full h-[45px] pl-[45px] pr-[45px] bg-slate-50 text-[14px] text-slate-700 placeholder-[#A8A7A7] rounded-[8px] border border-slate-300 focus:border-[#244B91] focus:bg-white focus:ring-4 focus:ring-[#244B91]/15 focus:outline-none transition-all"
           />
           {/* type="button" evita que el ojo envíe el formulario */}
           <button
@@ -128,7 +135,7 @@ export default function FormularioLogin() {
           <button
             type="button"
             onClick={() => navigate('/recuperar-contrasena')}
-            className="text-[13px] text-[#244B91] hover:underline"
+            className="cursor-pointer text-[13px] font-medium text-[#244B91] hover:underline"
           >
             Olvidé mi contraseña
           </button>
@@ -142,20 +149,22 @@ export default function FormularioLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-[#D4A017] hover:bg-[#c29115] disabled:bg-gray-400 text-white text-[15px] font-bold rounded-[8px] w-[160px] h-[45px] transition-colors flex items-center justify-center"
+            className="w-full h-[46px] cursor-pointer rounded-[8px] bg-[linear-gradient(135deg,#e0b63a,#D4A017_55%,#bf8f12)] text-[15px] font-bold tracking-wide text-white shadow-[0_6px_16px_rgba(212,160,23,0.4)] transition-all hover:-translate-y-px hover:shadow-[0_8px_20px_rgba(212,160,23,0.5)] active:translate-y-0 disabled:cursor-not-allowed disabled:bg-none disabled:bg-gray-400 disabled:shadow-none flex items-center justify-center"
           >
             {loading ? 'INGRESANDO...' : 'INGRESAR'}
           </button>
         </div>
       </form>
 
-      {/* renderización del Toast */}
-      <ToastNotification
-        open={toast.open}
-        onClose={handleCloseToast}
-        message={toast.message}
-        type={toast.type}
-      />
     </div>
+
+    {/* Toast fuera de la tarjeta: ahí lo recortaban el overflow y el blur */}
+    <ToastNotification
+      open={toast.open}
+      onClose={handleCloseToast}
+      message={toast.message}
+      type={toast.type}
+    />
+    </>
   );
 }
