@@ -1,14 +1,5 @@
-
+// rolAdministrador/services/reportesService.js
 import api from '../../../../Services/api';
-import {
-    ASESORES_REPORTE_PRUEBA,
-    ASESORIAS_REPORTE_PRUEBA,
-    CICLOS_REPORTE_PRUEBA,
-    MATERIAS_REPORTE_PRUEBA,
-    USAR_DATOS_PRUEBA_ADMIN
-} from '../datosPrueba';
-import { getAsesoresDisciplinares } from './asesoresDisciplinaresService';
-import { getAsesoresPar } from './asesoresParService';
 
 const MESES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
 
@@ -19,48 +10,69 @@ const formatearFecha = (valor) => {
     return `${dia}/${MESES[Number(mes) - 1] || mes}/${anio}`;
 };
 
-// Quita acentos, espacios repetidos y mayúsculas para comparar nombres ("José Ángel" == "Jose Angel")
-const normalizar = (texto) =>
-    String(texto ?? '')
-        .normalize('NFD')
-        .replace(/[̀-ͯ]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toLowerCase();
-
-const desplazarDias = (fechaIso, dias) => {
-    const fecha = new Date(`${String(fechaIso).slice(0, 10)}T00:00:00Z`);
-    fecha.setUTCDate(fecha.getUTCDate() + dias);
-    return fecha.toISOString().slice(0, 10);
-};
-
-// Adapta un renglón del resumen por asesor a la forma que usa la UI
-const adaptarResumenAsesor = (item) => {
-    const enCurso = Number(item.en_curso) || 0;
-    const completadas = Number(item.completadas) || 0;
-    const canceladas = Number(item.canceladas) || 0;
-
-    return {
-        id: item.id,
-        nombre: item.nombre,
-        tipo: item.tipo,
-        solicitudes: Number(item.solicitudes) || 0,
-        enCurso,
-        completadas,
-        canceladas,
-        total: enCurso + completadas + canceladas,
-        sesiones: Number(item.sesiones) || 0
-    };
-};
+const quitarLicenciatura = (texto) => String(texto || '').replace(/^Licenciatura en /i, '');
 
 // Texto de la columna "Fin" cuando la asesoría no tiene fecha de término
 const LEYENDA_SIN_FIN = { 'En curso': 'En seguimiento', Cancelada: 'No concluyó' };
 
+// Rutas del backend de los reportes por estudiante, grupo y licenciatura
+const RUTAS_AGRUPADO = {
+    estudiante: 'estudiantes',
+    grupo: 'grupos',
+    licenciatura: 'licenciaturas'
+};
+
+// Convierte los conteos del backend en los números que usa la UI
+const contarEstatus = (item) => {
+    const enCurso = Number(item.en_curso) || 0;
+    const completadas = Number(item.completadas) || 0;
+    const canceladas = Number(item.canceladas) || 0;
+
+    return { enCurso, completadas, canceladas, total: enCurso + completadas + canceladas };
+};
+
+// Adapta un renglón del resumen por asesor a la forma que usa la UI
+const adaptarResumenAsesor = (item) => ({
+    id: item.id,
+    nombre: item.nombre,
+    tipo: item.tipo,
+    solicitudes: Number(item.solicitudes) || 0,
+    ...contarEstatus(item),
+    sesiones: Number(item.sesiones) || 0
+});
+
+// Adapta un renglón del resumen por materia a la forma que usa la UI
+const adaptarResumenMateria = (item) => ({
+    id: item.id,
+    nombre: item.nombre,
+    licenciatura: quitarLicenciatura(item.licenciatura),
+    solicitudes: Number(item.solicitudes) || 0,
+    ...contarEstatus(item),
+    asesores: Number(item.asesores) || 0,
+    estudiantes: Number(item.estudiantes) || 0,
+    sesiones: Number(item.sesiones) || 0
+});
+
+// Adapta un renglón del resumen por estudiante, grupo o licenciatura
+const adaptarResumenAgrupado = (tipo) => (item) => ({
+    key: `${tipo}-${item.id}`,
+    id: item.id,
+    nombre: item.nombre,
+    grupo: item.grupo ?? '',
+    grupos: Number(item.grupos) || 0,
+    licenciatura: quitarLicenciatura(item.licenciatura),
+    solicitudes: Number(item.solicitudes) || 0,
+    ...contarEstatus(item),
+    asesores: Number(item.asesores) || 0,
+    materias: Number(item.materias) || 0,
+    estudiantes: Number(item.estudiantes) || 0,
+    sesiones: Number(item.sesiones) || 0
+});
+
 // Adapta una asesoría del reporte a la forma que usa la UI
 const adaptarAsesoria = (item) => {
-    const licenciaturaCorta = String(item.licenciatura || '').replace(/^Licenciatura en /i, '');
-    // TODO: confirmar con el backend el nombre del campo de término (fecha_fin o finalizada_en)
-    const fin = item.fecha_fin ?? item.finalizada_en ?? null;
+    const licenciaturaCorta = quitarLicenciatura(item.licenciatura);
+    const fin = item.fecha_fin ?? null;
 
     return {
         id: item.id,
@@ -80,332 +92,99 @@ const adaptarAsesoria = (item) => {
     };
 };
 
-// Adapta una materia del catálogo a la forma que usa el buscador
-const adaptarMateria = (item) => ({
-    key: `materia-${item.id}`,
-    id: item.id,
-    nombre: item.nombre,
-    licenciatura: item.licenciatura || '',
-    semestre: item.semestre
-});
-
-// Adapta un renglón del resumen por materia a la forma que usa la UI
-const adaptarResumenMateria = (item) => {
-    const enCurso = Number(item.en_curso) || 0;
-    const completadas = Number(item.completadas) || 0;
-    const canceladas = Number(item.canceladas) || 0;
-
-    return {
-        id: item.id,
-        nombre: item.nombre,
-        licenciatura: String(item.licenciatura || '').replace(/^Licenciatura en /i, ''),
-        solicitudes: Number(item.solicitudes) || 0,
-        enCurso,
-        completadas,
-        canceladas,
-        total: enCurso + completadas + canceladas,
-        asesores: Number(item.asesores) || 0,
-        estudiantes: Number(item.estudiantes) || 0,
-        sesiones: Number(item.sesiones) || 0
-    };
-};
-
-// Asesoría de una materia: igual que la de un asesor, pero con el nombre del asesor
-const adaptarAsesoriaDeMateria = (item) => ({ ...adaptarAsesoria(item), asesor: item.asesor });
-
-// Asesorías de prueba de un semestre. El anterior simula otros datos para probar el cambio de filtro.
-const asesoriasPrueba = (cicloId) => {
-    if (cicloId !== CICLOS_REPORTE_PRUEBA[1].id) return ASESORIAS_REPORTE_PRUEBA;
-
-    return ASESORIAS_REPORTE_PRUEBA.filter((_, i) => i % 10 < 7).map((item) => ({
-        ...item,
-        estatus: item.estatus === 'En curso' ? 'Completada' : item.estatus,
-        fecha_inicio: desplazarDias(item.fecha_inicio, -200),
-        // las que estaban en curso se vuelven completadas y reciben fecha de término
-        fecha_fin: item.fecha_fin
-            ? desplazarDias(item.fecha_fin, -200)
-            : item.estatus === 'En curso'
-                ? desplazarDias(item.fecha_inicio, -190)
-                : null
-    }));
-};
-
-// ===== Reportes por estudiante, grupo y licenciatura =====
-// Los tres comparten la misma base: la lista de asesorías del semestre, de la que se calculan los totales.
-
-const quitarLicenciatura = (texto) => String(texto || '').replace(/^Licenciatura en /i, '');
-
-// Asesoría con todos sus datos (asesor, estudiante, grupo y licenciatura), para armar cualquiera de los tres reportes
-const adaptarAsesoriaCompleta = (item) => ({
+// Asesoría con el nombre del asesor (reportes por materia, estudiante, grupo y licenciatura)
+const adaptarAsesoriaConAsesor = (item) => ({
     ...adaptarAsesoria(item),
     asesor: item.asesor,
     grupoNombre: item.grupo,
     licenciatura: quitarLicenciatura(item.licenciatura)
 });
 
-// Cómo se identifica y se muestra cada tipo de reporte
-const ENTIDADES_REPORTE = {
-    estudiante: {
-        ruta: 'estudiantes',
-        clave: (a) => a.estudiante,
-        datos: (lista) => ({
-            nombre: lista[0].estudiante,
-            // En las pruebas un alumno aparece en varios grupos; se muestra el que más se repite
-            grupo: masFrecuente(lista.map((a) => a.grupoNombre)),
-            licenciatura: masFrecuente(lista.map((a) => a.licenciatura))
-        })
-    },
-    grupo: {
-        ruta: 'grupos',
-        clave: (a) => `${a.grupoNombre}|${a.licenciatura}`,
-        datos: (lista) => ({ nombre: lista[0].grupoNombre, licenciatura: lista[0].licenciatura })
-    },
-    licenciatura: {
-        ruta: 'licenciaturas',
-        clave: (a) => a.licenciatura,
-        datos: (lista) => ({
-            nombre: lista[0].licenciatura,
-            grupos: new Set(lista.map((a) => a.grupoNombre)).size
-        })
-    }
-};
-
-// El valor que más se repite de una lista
-const masFrecuente = (valores) => {
-    const conteo = new Map();
-    valores.forEach((v) => conteo.set(v, (conteo.get(v) || 0) + 1));
-    return [...conteo.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
-};
-
-// Totales de un conjunto de asesorías
-const totalesDeAsesorias = (lista) => {
-    const contar = (estatus) => lista.filter((a) => a.estatus === estatus).length;
-
-    return {
-        // TODO: las solicitudes vendrán del backend; aquí se inventan a partir de las asesorías de prueba
-        solicitudes: lista.length ? lista.length + 2 : 0,
-        enCurso: contar('En curso'),
-        completadas: contar('Completada'),
-        canceladas: contar('Cancelada'),
-        total: lista.length,
-        sesiones: lista.reduce((total, a) => total + a.sesiones, 0),
-        asesores: new Set(lista.map((a) => a.asesor)).size,
-        materias: new Set(lista.map((a) => a.materia)).size,
-        estudiantes: new Set(lista.map((a) => a.estudiante)).size
-    };
-};
-
-// Resumen (un renglón por estudiante, grupo o licenciatura) a partir de las asesorías de prueba
-const resumenDePrueba = (tipo, cicloId) => {
-    const entidad = ENTIDADES_REPORTE[tipo];
-    const porClave = new Map();
-
-    asesoriasPrueba(cicloId).map(adaptarAsesoriaCompleta).forEach((a) => {
-        const clave = entidad.clave(a);
-        porClave.set(clave, [...(porClave.get(clave) || []), a]);
-    });
-
-    return [...porClave.entries()]
-        .map(([clave, lista]) => ({ key: clave, ...entidad.datos(lista), ...totalesDeAsesorias(lista) }))
-        .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
-        .map((fila, i) => ({ id: i + 1, ...fila }));
-};
-
-// Adapta un renglón del resumen que entregue el backend a la forma que usa la UI
-const adaptarResumenAgrupado = (tipo) => (item) => {
-    const enCurso = Number(item.en_curso) || 0;
-    const completadas = Number(item.completadas) || 0;
-    const canceladas = Number(item.canceladas) || 0;
-
-    return {
-        key: `${tipo}-${item.id}`,
-        id: item.id,
-        nombre: item.nombre,
-        grupo: item.grupo ?? '',
-        grupos: Number(item.grupos) || 0,
-        licenciatura: quitarLicenciatura(item.licenciatura),
-        solicitudes: Number(item.solicitudes) || 0,
-        enCurso,
-        completadas,
-        canceladas,
-        total: enCurso + completadas + canceladas,
-        asesores: Number(item.asesores) || 0,
-        materias: Number(item.materias) || 0,
-        estudiantes: Number(item.estudiantes) || 0,
-        sesiones: Number(item.sesiones) || 0
-    };
-};
+const ordenarPorNombre = (a, b) => a.nombre.localeCompare(b.nombre, 'es');
 
 export const reportesService = {
-    // Semestres (ciclos escolares) para el filtro de los reportes
+    // Semestres (ciclos escolares) para el filtro de los reportes: { id, nombre, periodo, vigente }
     obtenerCiclos: async () => {
-        if (USAR_DATOS_PRUEBA_ADMIN) return CICLOS_REPORTE_PRUEBA;
-
-        // TODO: confirmar la ruta y el formato cuando exista el endpoint de admin en el backend
         const response = await api.get('/admin/ciclos');
         return response.data.data;
     },
 
     // Lista de asesores (par + disciplinares) para el buscador: { key, id, tipo, nombre }
+    // El resumen del backend ya trae a todos los asesores de la facultad, con o sin actividad
     obtenerAsesores: async () => {
-        const [resPar, resDisciplinares] = await Promise.allSettled([getAsesoresPar(), getAsesoresDisciplinares()]);
+        const ciclos = await reportesService.obtenerCiclos();
+        if (ciclos.length === 0) return [];
 
-        // Si fallan las dos fuentes no hay nada que mostrar
-        if (resPar.status === 'rejected' && resDisciplinares.status === 'rejected') {
-            throw resPar.reason;
-        }
-
-        const pares = resPar.status === 'fulfilled'
-            ? resPar.value.map((item) => ({
-                key: `par-${item.id}`,
+        const response = await api.get('/admin/reportes/asesores', { params: { ciclo_id: ciclos[0].id } });
+        return response.data.data
+            .map((item) => ({
+                key: `asesor-${item.id}`,
                 id: item.id,
-                tipo: 'Par',
-                nombre: item.asesor ?? item.nombre
-            }))
-            : [];
-
-        const disciplinares = resDisciplinares.status === 'fulfilled'
-            ? resDisciplinares.value.map((item) => ({
-                key: `disciplinar-${item.id}`,
-                id: item.id,
-                tipo: 'Disciplinar',
+                tipo: item.tipo,
                 nombre: item.nombre
             }))
-            : [];
-
-        // Sin nombres repetidos y en orden alfabético
-        const vistos = new Set();
-        return [...pares, ...disciplinares]
-            .filter((item) => {
-                const clave = normalizar(item.nombre);
-                if (!clave || vistos.has(clave)) return false;
-                vistos.add(clave);
-                return true;
-            })
-            .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+            .sort(ordenarPorNombre);
     },
 
     // Resumen de todos los asesores en un semestre (un renglón por asesor)
     obtenerResumenAsesores: async (cicloId) => {
-        if (USAR_DATOS_PRUEBA_ADMIN) {
-            const asesorias = asesoriasPrueba(cicloId);
-
-            return ASESORES_REPORTE_PRUEBA.map((asesor) => {
-                const propias = asesorias.filter((item) => item.asesor_id === asesor.id);
-                const contar = (estatus) => propias.filter((item) => item.estatus === estatus).length;
-
-                return adaptarResumenAsesor({
-                    ...asesor,
-                    solicitudes: propias.length ? propias.length + 2 : 0,
-                    en_curso: contar('En curso'),
-                    completadas: contar('Completada'),
-                    canceladas: contar('Cancelada'),
-                    sesiones: propias.reduce((total, item) => total + item.sesiones, 0)
-                });
-            });
-        }
-
-        // TODO: confirmar la ruta y el formato cuando exista el endpoint de admin en el backend
         const response = await api.get('/admin/reportes/asesores', { params: { ciclo_id: cicloId } });
         return response.data.data.map(adaptarResumenAsesor);
     },
 
     // Todas las asesorías de un asesor en un semestre; de ellas la pantalla calcula materias, grupos y totales
-    // asesor: { id, tipo, nombre }
+    // asesor: { id }
     obtenerAsesoriasDeAsesor: async ({ asesor, cicloId }) => {
-        if (USAR_DATOS_PRUEBA_ADMIN) {
-            const nombre = normalizar(asesor.nombre);
-            return asesoriasPrueba(cicloId)
-                .filter((item) => normalizar(item.asesor) === nombre)
-                .map(adaptarAsesoria);
-        }
-
-        // TODO: confirmar la ruta y los parámetros cuando exista el endpoint de admin en el backend
         const response = await api.get(`/admin/reportes/asesores/${asesor.id}/asesorias`, {
-            params: { ciclo_id: cicloId, tipo: asesor.tipo }
+            params: { ciclo_id: cicloId }
         });
         return response.data.data.map(adaptarAsesoria);
     },
 
-    // Lista de materias para el buscador: { key, id, nombre, licenciatura, semestre }
+    // Lista de materias para el buscador: { key, id, nombre, licenciatura }
+    // El resumen del backend ya trae todas las materias de la facultad, con o sin actividad
     obtenerMaterias: async () => {
-        if (USAR_DATOS_PRUEBA_ADMIN) {
-            return MATERIAS_REPORTE_PRUEBA.map(adaptarMateria).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-        }
+        const ciclos = await reportesService.obtenerCiclos();
+        if (ciclos.length === 0) return [];
 
-        // TODO: confirmar que GET /materias entrega todas las materias de la facultad (no paginadas)
-        const response = await api.get('/materias');
-        return response.data.data.map(adaptarMateria).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+        const response = await api.get('/admin/reportes/materias', { params: { ciclo_id: ciclos[0].id } });
+        return response.data.data
+            .map((item) => ({
+                key: `materia-${item.id}`,
+                id: item.id,
+                nombre: item.nombre,
+                licenciatura: item.licenciatura || ''
+            }))
+            .sort(ordenarPorNombre);
     },
 
     // Resumen de todas las materias en un semestre (un renglón por materia)
     obtenerResumenMaterias: async (cicloId) => {
-        if (USAR_DATOS_PRUEBA_ADMIN) {
-            const asesorias = asesoriasPrueba(cicloId);
-
-            return MATERIAS_REPORTE_PRUEBA.map((materia) => {
-                const nombre = normalizar(materia.nombre);
-                const propias = asesorias.filter((item) => normalizar(item.materia) === nombre);
-                const contar = (estatus) => propias.filter((item) => item.estatus === estatus).length;
-
-                return adaptarResumenMateria({
-                    ...materia,
-                    solicitudes: propias.length ? propias.length + 2 : 0,
-                    en_curso: contar('En curso'),
-                    completadas: contar('Completada'),
-                    canceladas: contar('Cancelada'),
-                    asesores: new Set(propias.map((item) => item.asesor_id)).size,
-                    estudiantes: new Set(propias.map((item) => item.estudiante)).size,
-                    sesiones: propias.reduce((total, item) => total + item.sesiones, 0)
-                });
-            });
-        }
-
-        // TODO: confirmar la ruta y el formato cuando exista el endpoint de admin en el backend
         const response = await api.get('/admin/reportes/materias', { params: { ciclo_id: cicloId } });
         return response.data.data.map(adaptarResumenMateria);
     },
 
     // Todas las asesorías de una materia en un semestre; de ellas la pantalla calcula asesores, grupos y totales
-    // materia: { id, nombre, licenciatura }
+    // materia: { id }
     obtenerAsesoriasDeMateria: async ({ materia, cicloId }) => {
-        if (USAR_DATOS_PRUEBA_ADMIN) {
-            const nombre = normalizar(materia.nombre);
-            return asesoriasPrueba(cicloId)
-                .filter((item) => normalizar(item.materia) === nombre)
-                .map(adaptarAsesoriaDeMateria);
-        }
-
-        // TODO: confirmar la ruta y los parámetros cuando exista el endpoint de admin en el backend
         const response = await api.get(`/admin/reportes/materias/${materia.id}/asesorias`, {
             params: { ciclo_id: cicloId }
         });
-        return response.data.data.map(adaptarAsesoriaDeMateria);
-    }
-    ,
+        return response.data.data.map(adaptarAsesoriaConAsesor);
+    },
 
     // Resumen del semestre: un renglón por estudiante, grupo o licenciatura. tipo: 'estudiante' | 'grupo' | 'licenciatura'
     obtenerResumenAgrupado: async (tipo, cicloId) => {
-        if (USAR_DATOS_PRUEBA_ADMIN) return resumenDePrueba(tipo, cicloId);
-
-        // TODO: confirmar la ruta y el formato cuando exista el endpoint de admin en el backend
-        const response = await api.get(`/admin/reportes/${ENTIDADES_REPORTE[tipo].ruta}`, { params: { ciclo_id: cicloId } });
+        const response = await api.get(`/admin/reportes/${RUTAS_AGRUPADO[tipo]}`, { params: { ciclo_id: cicloId } });
         return response.data.data.map(adaptarResumenAgrupado(tipo));
     },
 
     // Todas las asesorías de un estudiante, grupo o licenciatura en un semestre; la pantalla calcula de ellas los desgloses
-    // entidad: un renglón del resumen (trae key, id y nombre)
+    // entidad: un renglón del resumen (trae id y nombre)
     obtenerAsesoriasAgrupado: async ({ tipo, entidad, cicloId }) => {
-        if (USAR_DATOS_PRUEBA_ADMIN) {
-            return asesoriasPrueba(cicloId)
-                .map(adaptarAsesoriaCompleta)
-                .filter((a) => ENTIDADES_REPORTE[tipo].clave(a) === entidad.key);
-        }
-
-        // TODO: confirmar la ruta y los parámetros cuando exista el endpoint de admin en el backend
-        const response = await api.get(`/admin/reportes/${ENTIDADES_REPORTE[tipo].ruta}/${entidad.id}/asesorias`, {
+        const response = await api.get(`/admin/reportes/${RUTAS_AGRUPADO[tipo]}/${entidad.id}/asesorias`, {
             params: { ciclo_id: cicloId }
         });
-        return response.data.data.map(adaptarAsesoriaCompleta);
+        return response.data.data.map(adaptarAsesoriaConAsesor);
     }
 };
