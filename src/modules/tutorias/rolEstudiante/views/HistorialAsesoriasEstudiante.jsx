@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import ToastNotification from "../../../../components/ui/ToastNotification";
 import { traerAsesorias } from "../../../../Services/asesoriasEstudianteService";
 import { mensajesDeError } from "../../../../Services/errores";
+import TituloVista from "../../../../components/ui/TituloVista";
 import ListaHistorialEstudiante from "../components/historial/ListaHistorialEstudiante";
 
 export default function HistorialAsesoriasEstudiante() {
@@ -44,15 +45,10 @@ export default function HistorialAsesoriasEstudiante() {
 
     return (
         <div className="min-h-[calc(100dvh-4.5rem)] w-full px-4 py-6 md:px-17 md:py-10 flex flex-col items-start justify-start gap-6 md:gap-11 bg-transparent">
-            <div>
-                <p className="text-2xl font-bold">Historial de asesorias</p>
-                {!loading && !error && (
-                    <p className="mt-1 text-sm text-gray-600">
-                        <span className="font-bold">{total}</span>{" "}
-                        {total === 1 ? "resultado" : "resultados"}
-                    </p>
-                )}
-            </div>
+            <TituloVista
+                titulo="Historial de asesorías"
+                subtitulo={!loading && !error ? `${total} ${total === 1 ? "resultado" : "resultados"}` : null}
+            />
 
             {/* Contenedor de las tarjetas (el scroll lo hace la página, no este contenedor) */}
             <div className="w-full pb-5">

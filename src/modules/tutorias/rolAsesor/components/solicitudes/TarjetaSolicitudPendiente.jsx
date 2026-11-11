@@ -1,13 +1,32 @@
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
+import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import LaptopOutlinedIcon from '@mui/icons-material/LaptopOutlined';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import TagOutlinedIcon from '@mui/icons-material/TagOutlined';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
+
+// Línea con ícono, etiqueta en negritas y valor (Estudiante:, Razón:, Fecha...). Si no hay valor, no se muestra.
+function LineaDato({ icono, etiqueta, children }) {
+    if (!children) return null;
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            <Box sx={{ display: 'flex', color: '#08338F', mt: '1px', flexShrink: 0 }}>{icono}</Box>
+            <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere', minWidth: 0 }}>
+                <span className="font-bold">{etiqueta}: </span>
+                {children}
+            </Typography>
+        </Box>
+    );
+}
 
 // Tarjeta de una solicitud pendiente para la vista móvil. Recibe la solicitud y qué hacer al aceptarla o rechazarla.
 export default function TarjetaSolicitudPendiente({ solicitud, onAceptar, onRechazar }) {
@@ -33,39 +52,12 @@ export default function TarjetaSolicitudPendiente({ solicitud, onAceptar, onRech
                 </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere' }}>
-                        <span className="font-bold">Estudiante: </span> {solicitud.nombre_estudiante}
-                    </Typography>
-                    <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere' }}>
-                        <span className="font-bold">Razón: </span> {solicitud.razon}
-                    </Typography>
-
-                    {/* Fecha y horario solicitados en una sola línea */}
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                        <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: '#08338F', mt: '1px', flexShrink: 0 }} />
-                        <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                            {solicitud.fecha_inicio_formateada}
-                            {solicitud.horario_con_dia && ` · ${solicitud.horario_con_dia}`}
-                        </Typography>
-                    </Box>
-
-                    {/* Chips: modalidad y número de solicitud */}
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {solicitud.modalidad && (
-                            <Chip
-                                size="small"
-                                variant="outlined"
-                                label={solicitud.modalidad}
-                                sx={{ borderColor: '#08338F', color: '#08338F', fontWeight: 600 }}
-                            />
-                        )}
-                        <Chip
-                            size="small"
-                            variant="outlined"
-                            label={`Solicitud #${solicitud.id_solicitud}`}
-                            sx={{ borderColor: '#BDBDBD', color: '#555555', fontWeight: 600 }}
-                        />
-                    </Box>
+                    <LineaDato icono={<PersonOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Estudiante">{solicitud.nombre_estudiante}</LineaDato>
+                    <LineaDato icono={<HelpOutlineOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Razón">{solicitud.razon}</LineaDato>
+                    <LineaDato icono={<CalendarMonthOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Fecha">{solicitud.fecha_inicio_formateada}</LineaDato>
+                    <LineaDato icono={<AccessTimeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Horario">{solicitud.horario_con_dia}</LineaDato>
+                    <LineaDato icono={<LaptopOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Modalidad">{solicitud.modalidad}</LineaDato>
+                    <LineaDato icono={<TagOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Solicitud">{`#${solicitud.id_solicitud}`}</LineaDato>
                 </Box>
             </CardContent>
 

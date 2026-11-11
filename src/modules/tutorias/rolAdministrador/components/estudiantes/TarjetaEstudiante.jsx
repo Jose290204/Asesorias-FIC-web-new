@@ -1,35 +1,53 @@
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import TagOutlinedIcon from '@mui/icons-material/TagOutlined';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
+import { useState } from 'react';
 
-// Línea con ícono y texto (correo, número de cuenta, licenciatura)
-function LineaDato({ icono, texto }) {
-    if (!texto) return null;
+// Línea con ícono, etiqueta en negritas y valor (Correo:, Cuenta:, Licenciatura:...). Si no hay valor, no se muestra.
+function LineaDato({ icono, etiqueta, valor }) {
+    if (!valor) return null;
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
             <Box sx={{ display: 'flex', color: '#08338F', mt: '1px', flexShrink: 0 }}>{icono}</Box>
             <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere', minWidth: 0 }}>
-                {texto}
+                <span className="font-bold">{etiqueta}: </span>
+                {valor}
             </Typography>
         </Box>
     );
 }
 
 // Versión móvil de una fila de la tabla de estudiantes.
-// Mismo diseño que las demás tarjetas del admin: borde azul, datos y tres botones (Información, Editar y Dar de baja).
+// Mismo diseño que las demás tarjetas del admin: borde azul, datos con su etiqueta y un menú ⋮ con las acciones
+// (Información, Editar y Dar de baja).
 // Solo muestra; las acciones las maneja quien la usa (TablaEstudiantes).
 export default function TarjetaEstudiante({ row, onInfo, onEditar, onEliminar }) {
+    const [menuAnchor, setMenuAnchor] = useState(null);
+    const cerrarMenu = () => setMenuAnchor(null);
+
+    // Cierra el menú y ejecuta la acción que corresponda
+    const handleAccion = (accion) => (event) => {
+        cerrarMenu();
+        accion(row, event);
+    };
+
     return (
         <Card
             sx={{
@@ -44,86 +62,58 @@ export default function TarjetaEstudiante({ row, onInfo, onEditar, onEliminar })
                 boxShadow: '0px 4px 12.3px rgba(0, 0, 0, 0.20)'
             }}
         >
-            <CardContent sx={{ padding: '24px 24px 15px' }}>
-                <Typography sx={{ fontSize: '18px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', marginBottom: '16px' }}>
-                    {row.nombre}
-                </Typography>
+            <CardContent sx={{ padding: '24px 24px 20px' }}>
+                <Box sx={{ marginBottom: '16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px', minWidth: 0 }}>
+                        <PersonOutlinedIcon sx={{ fontSize: 24, color: '#08338F', flexShrink: 0 }} />
+                        <Typography sx={{ fontSize: '18px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', minWidth: 0 }}>
+                            {row.nombre}
+                        </Typography>
+                    </Box>
+
+                    {/* Un solo botón ⋮ con todas las acciones */}
+                    <IconButton
+                        aria-label="Más acciones"
+                        aria-haspopup="true"
+                        onClick={(e) => setMenuAnchor(e.currentTarget)}
+                        sx={{ flexShrink: 0, mr: '-12px', mt: '-10px', color: '#555555' }}
+                    >
+                        <MoreVertIcon />
+                    </IconButton>
+                </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <LineaDato icono={<MailOutlinedIcon sx={{ fontSize: 20 }} />} texto={row.correo} />
-                    <LineaDato icono={<BadgeOutlinedIcon sx={{ fontSize: 20 }} />} texto={row.numeroCuenta} />
-                    <LineaDato icono={<SchoolOutlinedIcon sx={{ fontSize: 20 }} />} texto={row.licenciatura} />
-
-                    {/* Chips: grupo e identificador */}
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mt: '4px' }}>
-                        {row.grupo && (
-                            <Chip
-                                size="small"
-                                label={`Grupo ${row.grupo}`}
-                                sx={{ backgroundColor: '#E8EEF9', color: '#08338F', fontWeight: 600 }}
-                            />
-                        )}
-                        <Chip
-                            size="small"
-                            variant="outlined"
-                            label={`Estudiante #${row.id}`}
-                            sx={{ borderColor: '#BDBDBD', color: '#555555', fontWeight: 600 }}
-                        />
-                    </Box>
+                    <LineaDato icono={<MailOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Correo" valor={row.correo} />
+                    <LineaDato icono={<BadgeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Cuenta" valor={row.numeroCuenta} />
+                    <LineaDato icono={<SchoolOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Licenciatura" valor={row.licenciatura} />
+                    <LineaDato icono={<GroupsOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Grupo" valor={row.grupo} />
+                    <LineaDato icono={<TagOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Estudiante" valor={`#${row.id}`} />
                 </Box>
             </CardContent>
 
-            {/* Botones: dos columnas iguales; Información con borde y Eliminar con relleno */}
-            <CardActions
-                sx={{
-                    padding: '0px 24px 20px 24px',
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '10px',
-                    // CardActions mete margen izquierdo a los botones; aquí se anula por el grid
-                    '& > :not(:first-of-type)': { marginLeft: 0 }
-                }}
+            {/* Menú ⋮ de esta tarjeta */}
+            <Menu
+                disableScrollLock
+                anchorEl={menuAnchor}
+                open={Boolean(menuAnchor)}
+                onClose={cerrarMenu}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
             >
-                <Button
-                    variant="outlined"
-                    sx={{
-                        minHeight: 40,
-                        color: '#8A6D2B',
-                        borderColor: '#C49E0D',
-                        borderRadius: '5px',
-                        textTransform: 'none',
-                        '&:hover': { borderColor: '#8A6D2B', backgroundColor: 'rgba(196, 158, 13, 0.08)' }
-                    }}
-                    startIcon={<InfoOutlinedIcon />}
-                    onClick={(e) => onInfo(row, e)}
-                >
+                <MenuItem onClick={handleAccion(onInfo)} sx={{ minHeight: 44 }}>
+                    <ListItemIcon><InfoOutlinedIcon fontSize="small" sx={{ color: '#08338F' }} /></ListItemIcon>
                     Información
-                </Button>
-                <Button
-                    variant="outlined"
-                    sx={{
-                        minHeight: 40,
-                        color: '#08338F',
-                        borderColor: '#08338F',
-                        borderRadius: '5px',
-                        textTransform: 'none',
-                        '&:hover': { borderColor: '#08338F', backgroundColor: 'rgba(8, 51, 143, 0.08)' }
-                    }}
-                    startIcon={<EditOutlinedIcon />}
-                    onClick={(e) => onEditar(row, e)}
-                >
+                </MenuItem>
+                <MenuItem onClick={handleAccion(onEditar)} sx={{ minHeight: 44 }}>
+                    <ListItemIcon><EditOutlinedIcon fontSize="small" sx={{ color: '#08338F' }} /></ListItemIcon>
                     Editar
-                </Button>
-                <Button
-                    variant="contained"
-                    color="error"
-                    sx={{ gridColumn: '1 / -1', minHeight: 40, color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-                    startIcon={<DeleteOutlinedIcon />}
-                    onClick={(e) => onEliminar(row, e)}
-                >
+                </MenuItem>
+                <Divider />
+                <MenuItem onClick={handleAccion(onEliminar)} sx={{ minHeight: 44, color: '#C42525' }}>
+                    <ListItemIcon><DeleteOutlinedIcon fontSize="small" sx={{ color: '#C42525' }} /></ListItemIcon>
                     Dar de baja
-                </Button>
-            </CardActions>
+                </MenuItem>
+            </Menu>
         </Card>
     );
 }

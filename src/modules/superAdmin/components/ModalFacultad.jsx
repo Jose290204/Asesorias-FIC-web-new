@@ -6,6 +6,14 @@ import { mensajesDeError } from '../../../Services/errores';
 const VACIO = { nombre: '', siglas: '' };
 const TIPOS_LOGO = ['image/png', 'image/jpeg', 'image/webp'];
 const MAX_LOGO_MB = 2;
+// Extensiones (no tipos MIME): en el celular con "image/*" solo abre la galería de fotos; con extensiones abre el explorador de archivos.
+const EXTENSIONES_LOGO = '.png,.jpg,.jpeg,.webp';
+
+// Limpia lo que se escribe en cada campo: el nombre solo letras, números y espacios; las siglas solo letras.
+const LIMPIAR = {
+  nombre: (v) => v.replace(/[^\p{L}\p{N}\s]/gu, ''),
+  siglas: (v) => v.replace(/[^\p{L}]/gu, ''),
+};
 
 // Crear o editar una facultad. Si recibe `facultad` es edición.
 // Logo: se adjunta un archivo de imagen (PNG, JPG o WEBP, máx. 2 MB).
@@ -25,7 +33,7 @@ export default function ModalFacultad({ open, onClose, onGuardar, facultad = nul
   const inputArchivo = useRef(null);
 
   const cambiar = (campo) => (e) => {
-    setForm((f) => ({ ...f, [campo]: e.target.value }));
+    setForm((f) => ({ ...f, [campo]: LIMPIAR[campo](e.target.value) }));
     setErrores((er) => ({ ...er, [campo]: undefined, general: undefined }));
   };
 
@@ -111,7 +119,7 @@ export default function ModalFacultad({ open, onClose, onGuardar, facultad = nul
           value={form.nombre}
           onChange={cambiar('nombre')}
           error={Boolean(errores.nombre)}
-          helperText={errores.nombre}
+          helperText={errores.nombre ?? 'Solo letras y números.'}
           fullWidth
           autoFocus
         />
@@ -120,7 +128,7 @@ export default function ModalFacultad({ open, onClose, onGuardar, facultad = nul
           value={form.siglas}
           onChange={cambiar('siglas')}
           error={Boolean(errores.siglas)}
-          helperText={errores.siglas ?? 'Deben ser únicas. Ej.: FIC'}
+          helperText={errores.siglas ?? 'Solo letras. Deben ser únicas. Ej.: FIC'}
           fullWidth
         />
 
@@ -162,7 +170,7 @@ export default function ModalFacultad({ open, onClose, onGuardar, facultad = nul
             <input
               ref={inputArchivo}
               type="file"
-              accept={TIPOS_LOGO.join(',')}
+              accept={EXTENSIONES_LOGO}
               onChange={handleArchivo}
               hidden
             />

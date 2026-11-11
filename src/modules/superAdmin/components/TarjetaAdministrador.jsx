@@ -1,22 +1,50 @@
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
-import { Box, Button, Card, CardActions, CardContent, Chip, Typography } from '@mui/material';
+import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import { Box, Card, CardContent, Divider, IconButton, ListItemIcon, Menu, MenuItem, Typography } from '@mui/material';
+import { useState } from 'react';
 
-const estiloEstatus = {
-  activo: { backgroundColor: '#E6F4EA', color: '#1B5E20' },
-  pendiente: { backgroundColor: '#FFF4E0', color: '#8A5A00' },
-  inactivo: { backgroundColor: '#F1F3F4', color: '#5F6368' },
+// Color del punto y del texto de cada estatus
+const colorEstatus = {
+  activo: '#1B5E20',
+  pendiente: '#8A5A00',
+  inactivo: '#5F6368',
 };
 
+// Línea con ícono, etiqueta en negritas y valor (Nombre:, Correo:, Facultad:, Estatus:)
+function LineaDato({ icono, etiqueta, children }) {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+      <Box sx={{ display: 'flex', color: '#08338F', mt: '1px', flexShrink: 0 }}>{icono}</Box>
+      <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere', minWidth: 0 }}>
+        <span className="font-bold">{etiqueta}: </span>
+        {children}
+      </Typography>
+    </Box>
+  );
+}
+
 // Versión móvil de una fila de la tabla de administradores.
-// Mismo diseño que las demás tarjetas del admin: borde azul, datos y tres botones:
-// Editar y Desactivar/Activar en dos columnas, y Eliminar a todo lo ancho debajo.
+// Mismo diseño que las demás tarjetas del admin: borde azul, nombre arriba con el menú ⋮
+// (Editar, Desactivar/Activar y Eliminar) y los datos con su etiqueta.
 // Solo muestra; las acciones las maneja quien la usa (la vista).
 export default function TarjetaAdministrador({ administrador, siglasFacultad, onEditar, onCambiarEstado, onEliminar }) {
-  const { id, nombreCompleto, correo, estatus } = administrador;
+  const { nombreCompleto, correo, estatus } = administrador;
   const inactivo = estatus === 'inactivo';
+
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const cerrarMenu = () => setMenuAnchor(null);
+
+  // Cierra el menú y ejecuta la acción que corresponda
+  const handleAccion = (accion) => () => {
+    cerrarMenu();
+    accion(administrador);
+  };
 
   return (
     <Card
@@ -32,80 +60,65 @@ export default function TarjetaAdministrador({ administrador, siglasFacultad, on
         boxShadow: '0px 4px 12.3px rgba(0, 0, 0, 0.20)',
       }}
     >
-      <CardContent sx={{ padding: '24px 24px 15px' }}>
-        <Typography sx={{ fontSize: '18px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', marginBottom: '16px' }}>
-          {nombreCompleto}
-        </Typography>
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-            <Box sx={{ display: 'flex', color: '#08338F', mt: '1px', flexShrink: 0 }}>
-              <MailOutlinedIcon sx={{ fontSize: 20 }} />
-            </Box>
-            <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere', minWidth: 0 }}>
-              {correo}
+      <CardContent sx={{ padding: '24px 24px 20px' }}>
+        <Box sx={{ marginBottom: '16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px', minWidth: 0 }}>
+            <PersonOutlinedIcon sx={{ fontSize: 24, color: '#08338F', flexShrink: 0 }} />
+            <Typography sx={{ fontSize: '18px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', minWidth: 0 }}>
+              {nombreCompleto}
             </Typography>
           </Box>
 
-          {/* Chips: facultad, estado e identificador */}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mt: '4px' }}>
-            <Chip size="small" label={siglasFacultad} sx={{ backgroundColor: '#E8EEF9', color: '#08338F', fontWeight: 600 }} />
-            <Chip size="small" label={estatus.toUpperCase()} sx={{ ...estiloEstatus[estatus], fontWeight: 600 }} />
-            <Chip
-              size="small"
-              variant="outlined"
-              label={`Administrador #${id}`}
-              sx={{ borderColor: '#BDBDBD', color: '#555555', fontWeight: 600 }}
-            />
-          </Box>
+          {/* Un solo botón ⋮ con todas las acciones */}
+          <IconButton
+            aria-label="Más acciones"
+            aria-haspopup="true"
+            onClick={(e) => setMenuAnchor(e.currentTarget)}
+            sx={{ flexShrink: 0, mr: '-12px', mt: '-10px', color: '#555555' }}
+          >
+            <MoreVertIcon />
+          </IconButton>
+        </Box>
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <LineaDato icono={<MailOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Correo">{correo}</LineaDato>
+          <LineaDato icono={<SchoolOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Facultad">{siglasFacultad}</LineaDato>
+          <LineaDato
+            icono={<FiberManualRecordIcon sx={{ fontSize: 20, color: colorEstatus[estatus] ?? '#5F6368' }} />}
+            etiqueta="Estatus"
+          >
+            <span className="font-semibold" style={{ color: colorEstatus[estatus] ?? '#5F6368' }}>
+              {estatus.charAt(0).toUpperCase() + estatus.slice(1)}
+            </span>
+          </LineaDato>
         </Box>
       </CardContent>
 
-      {/* Botones: dos columnas iguales (Editar con borde, Desactivar/Activar con relleno) y Eliminar debajo */}
-      <CardActions
-        sx={{
-          padding: '0px 24px 20px 24px',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '10px',
-          '& > :not(:first-of-type)': { marginLeft: 0 },
-        }}
+      {/* Menú ⋮ de esta tarjeta */}
+      <Menu
+        disableScrollLock
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={cerrarMenu}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <Button
-          variant="outlined"
-          sx={{
-            minHeight: 40,
-            color: '#8A6D2B',
-            borderColor: '#C49E0D',
-            borderRadius: '5px',
-            textTransform: 'none',
-            '&:hover': { borderColor: '#8A6D2B', backgroundColor: 'rgba(196, 158, 13, 0.08)' },
-          }}
-          startIcon={<EditOutlinedIcon />}
-          onClick={() => onEditar(administrador)}
-        >
+        <MenuItem onClick={handleAccion(onEditar)} sx={{ minHeight: 44 }}>
+          <ListItemIcon><EditOutlinedIcon fontSize="small" sx={{ color: '#08338F' }} /></ListItemIcon>
           Editar
-        </Button>
-        {/* Verde = activo (botón Desactivar); rojo = inactivo (botón Activar) */}
-        <Button
-          variant="contained"
-          color={inactivo ? 'error' : 'success'}
-          sx={{ minHeight: 40, color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
-          startIcon={<PowerSettingsNewIcon />}
-          onClick={() => onCambiarEstado(administrador)}
-        >
+        </MenuItem>
+        <MenuItem onClick={handleAccion(onCambiarEstado)} sx={{ minHeight: 44 }}>
+          <ListItemIcon>
+            <PowerSettingsNewIcon fontSize="small" sx={{ color: inactivo ? '#2E7D32' : '#C42525' }} />
+          </ListItemIcon>
           {inactivo ? 'Activar' : 'Desactivar'}
-        </Button>
-        <Button
-          variant="outlined"
-          color="error"
-          sx={{ gridColumn: '1 / -1', minHeight: 40, borderRadius: '5px', textTransform: 'none' }}
-          startIcon={<DeleteOutlinedIcon />}
-          onClick={() => onEliminar(administrador)}
-        >
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={handleAccion(onEliminar)} sx={{ minHeight: 44, color: '#C42525' }}>
+          <ListItemIcon><DeleteOutlinedIcon fontSize="small" sx={{ color: '#C42525' }} /></ListItemIcon>
           Eliminar
-        </Button>
-      </CardActions>
+        </MenuItem>
+      </Menu>
     </Card>
   );
 }

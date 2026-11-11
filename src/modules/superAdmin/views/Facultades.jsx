@@ -1,5 +1,5 @@
 import AddIcon from '@mui/icons-material/Add';
-import { Button, CircularProgress } from '@mui/material';
+import { Button, CircularProgress, Fab } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ToastNotification } from '../../../components/ui/ToastNotification';
@@ -117,10 +117,37 @@ export default function Facultades() {
     <div className="mx-auto max-w-6xl p-4 sm:p-6">
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <h1 className="flex-1 text-2xl font-bold text-[#08338F]">Facultades</h1>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => abrirModal()} sx={{ textTransform: 'none' }}>
+        {/* Botón normal: solo tablet y escritorio */}
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => abrirModal()}
+          sx={{ textTransform: 'none', display: { xs: 'none', sm: 'inline-flex' } }}
+        >
           Nueva facultad
         </Button>
       </div>
+
+      {/* Botón flotante: solo celular */}
+      <Fab
+        variant="extended"
+        aria-label="Nueva facultad"
+        onClick={() => abrirModal()}
+        sx={{
+          position: 'fixed',
+          right: 16,
+          bottom: 16,
+          zIndex: 10,
+          textTransform: 'none',
+          color: '#ffffff',
+          backgroundColor: '#08338F',
+          '&:hover': { backgroundColor: '#1B3A73' },
+          display: { xs: 'inline-flex', sm: 'none' },
+        }}
+      >
+        <AddIcon sx={{ mr: 1 }} />
+        Nueva facultad
+      </Fab>
 
       {!cargando && !error && (
         <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -147,7 +174,7 @@ export default function Facultades() {
       )}
 
       {!cargando && !error && (
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-5 pb-24 sm:pb-0 md:grid-cols-2">
           {facultades.map((f) => (
             <TarjetaFacultad
               key={f.id}

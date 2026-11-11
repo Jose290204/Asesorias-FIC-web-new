@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useEffect, useRef, useState } from 'react';
+import TituloVista from '../../../../components/ui/TituloVista';
 import ChipAccion from '../../../superAdmin/components/ChipAccion';
 import TarjetaBitacora from '../../../superAdmin/components/TarjetaBitacora';
 import { GRUPOS_ACCIONES_ADMIN, listarBitacoraAdmin } from '../services/bitacoraAdminService';
@@ -97,14 +98,13 @@ export default function Bitacora() {
 
     return (
         <div className="mx-auto max-w-6xl p-4 sm:p-6">
-            <h1 className="mb-1 text-2xl font-bold text-[#08338F]">Bitácora</h1>
-            <p className="mb-5 text-sm text-gray-600">
-                Registro de las acciones importantes de esta facultad. Solo lectura.
-            </p>
+            <div className="mb-5">
+                <TituloVista titulo="Bitácora" subtitulo="Registro de las acciones importantes de esta facultad. Solo lectura." />
+            </div>
 
             {/* Filtros: en celular uno debajo del otro; en escritorio en una cuadrícula */}
             <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))]">
-                <TextField {...campoFiltro} label="Buscar" placeholder="Usuario, registro, IP…" value={textoBuscar} onChange={(e) => setTextoBuscar(e.target.value)} />
+                <TextField {...campoFiltro} label="Buscar" placeholder="Usuario, registro…" value={textoBuscar} onChange={(e) => setTextoBuscar(e.target.value)} />
                 <TextField {...campoFiltro} select label="Acción" value={filtros.accion} onChange={cambiarFiltro('accion')} slotProps={{ select: { MenuProps: PROPS_MENU } }}>
                     <MenuItem value="">Todas</MenuItem>
                     {GRUPOS_ACCIONES_ADMIN.flatMap(({ grupo, acciones }) => [
@@ -114,8 +114,11 @@ export default function Bitacora() {
                         ))
                     ])}
                 </TextField>
-                <TextField {...campoFiltro} type="date" label="Desde" value={filtros.desde} onChange={cambiarFiltro('desde')} slotProps={{ inputLabel: { shrink: true } }} />
-                <TextField {...campoFiltro} type="date" label="Hasta" value={filtros.hasta} onChange={cambiarFiltro('hasta')} slotProps={{ inputLabel: { shrink: true } }} />
+                {/* Desde y Hasta: en celular van en la misma fila, mitad y mitad; desde sm se acomodan como los demás filtros */}
+                <div className="grid grid-cols-2 gap-3 sm:contents">
+                    <TextField {...campoFiltro} type="date" label="Desde" value={filtros.desde} onChange={cambiarFiltro('desde')} slotProps={{ inputLabel: { shrink: true } }} />
+                    <TextField {...campoFiltro} type="date" label="Hasta" value={filtros.hasta} onChange={cambiarFiltro('hasta')} slotProps={{ inputLabel: { shrink: true } }} />
+                </div>
             </div>
 
             {hayFiltros && (
@@ -154,7 +157,7 @@ export default function Bitacora() {
                         <Table size="small">
                             <TableHead>
                                 <TableRow sx={{ bgcolor: '#08338F' }}>
-                                    {['Fecha', 'Usuario', 'Acción', 'Registro', 'Detalle', 'IP'].map((h) => (
+                                    {['Fecha', 'Usuario', 'Acción', 'Registro', 'Detalle'].map((h) => (
                                         <TableCell key={h} sx={{ color: '#fff', fontWeight: 700 }}>{h}</TableCell>
                                     ))}
                                 </TableRow>
@@ -167,7 +170,6 @@ export default function Bitacora() {
                                         <TableCell><ChipAccion accion={r.accion} /></TableCell>
                                         <TableCell sx={{ maxWidth: 220, overflowWrap: 'anywhere' }}>{r.entidad}</TableCell>
                                         <TableCell sx={{ color: '#555', maxWidth: 320, overflowWrap: 'anywhere' }}>{r.detalle}</TableCell>
-                                        <TableCell sx={{ color: '#555', whiteSpace: 'nowrap' }}>{r.ip || '—'}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>

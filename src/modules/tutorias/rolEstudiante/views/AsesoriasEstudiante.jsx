@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import ToastNotification from "../../../../components/ui/ToastNotification";
 import { traerAsesorias } from "../../../../Services/asesoriasEstudianteService";
 import { mensajesDeError } from "../../../../Services/errores";
+import TituloVista from "../../../../components/ui/TituloVista";
 import ListaAsesoriasEstudiante from "../components/asesorias/ListaAsesoriasEstudiante";
 
 export default function AsesoriasEstudiante() {
@@ -61,15 +62,10 @@ export default function AsesoriasEstudiante() {
 
     return (
         <div className="min-h-[calc(100dvh-4.5rem)] w-full px-4 py-6 md:px-17 md:py-10 flex flex-col items-start justify-start gap-6 md:gap-11 bg-transparent">
-            <div>
-                <p className="text-2xl font-bold">Asesorias En Curso</p>
-                {!loading && !error && (
-                    <p className="mt-1 text-sm text-gray-600">
-                        <span className="font-bold">{total}</span>{" "}
-                        {total === 1 ? "asesoría en curso" : "asesorías en curso"}
-                    </p>
-                )}
-            </div>
+            <TituloVista
+                titulo="Asesorías en curso"
+                subtitulo={!loading && !error ? `${total} ${total === 1 ? "asesoría en curso" : "asesorías en curso"}` : null}
+            />
 
             <div className="w-full pb-5">
                 {loading ? (

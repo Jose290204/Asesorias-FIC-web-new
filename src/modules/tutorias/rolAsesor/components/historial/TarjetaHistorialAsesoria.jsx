@@ -1,20 +1,47 @@
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
+import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import LaptopOutlinedIcon from '@mui/icons-material/LaptopOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import TagOutlinedIcon from '@mui/icons-material/TagOutlined';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
-import ChipEstatus from './ChipEstatus';
+// El historial son asesorías cerradas: completadas o canceladas
+const ESTILO_ESTATUS = {
+    completada: { label: 'Completada', color: '#2E7D32' },
+    cancelada: { label: 'Cancelada', color: '#C62828' }
+};
+
+// Línea con ícono, etiqueta en negritas y valor (Estudiante:, Razón:, Fecha...). Si no hay valor, no se muestra.
+function LineaDato({ icono, etiqueta, children }) {
+    if (!children) return null;
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            <Box sx={{ display: 'flex', color: '#08338F', mt: '1px', flexShrink: 0 }}>{icono}</Box>
+            <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere', minWidth: 0 }}>
+                <span className="font-bold">{etiqueta}: </span>
+                {children}
+            </Typography>
+        </Box>
+    );
+}
 
 // Tarjeta de una asesoría del historial para la vista móvil. Recibe la asesoría y qué hacer al tocar cada botón.
 export default function TarjetaHistorialAsesoria({ asesoria, onMenu, onMaterial, onChat }) {
+    const estatus = ESTILO_ESTATUS[asesoria.estatus] ?? { label: asesoria.estatus, color: '#555555' };
+
     return (
         <Card
             sx={{
@@ -47,41 +74,16 @@ export default function TarjetaHistorialAsesoria({ asesoria, onMenu, onMaterial,
                 </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere' }}>
-                        <span className="font-bold">Estudiante: </span> {asesoria.estudiante}
-                    </Typography>
-                    <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere' }}>
-                        <span className="font-bold">Razón: </span> {asesoria.razon}
-                    </Typography>
-
-                    {/* Fecha de inicio y horario en una sola línea */}
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                        <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: '#08338F', mt: '1px', flexShrink: 0 }} />
-                        <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                            {asesoria.fecha_inicio_formateada}
-                            {asesoria.fecha_fin_formateada && ` – ${asesoria.fecha_fin_formateada}`}
-                            {asesoria.horario_con_dia && ` · ${asesoria.horario_con_dia}`}
-                        </Typography>
-                    </Box>
-
-                    {/* Chips: estatus, modalidad y número de asesoría */}
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        <ChipEstatus estatus={asesoria.estatus} />
-                        {asesoria.modalidad && (
-                            <Chip
-                                size="small"
-                                variant="outlined"
-                                label={asesoria.modalidad}
-                                sx={{ borderColor: '#08338F', color: '#08338F', fontWeight: 600 }}
-                            />
-                        )}
-                        <Chip
-                            size="small"
-                            variant="outlined"
-                            label={`Asesoría #${asesoria.id}`}
-                            sx={{ borderColor: '#BDBDBD', color: '#555555', fontWeight: 600 }}
-                        />
-                    </Box>
+                    <LineaDato icono={<PersonOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Estudiante">{asesoria.estudiante}</LineaDato>
+                    <LineaDato icono={<HelpOutlineOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Razón">{asesoria.razon}</LineaDato>
+                    <LineaDato icono={<CalendarMonthOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Fecha de inicio">{asesoria.fecha_inicio_formateada}</LineaDato>
+                    <LineaDato icono={<EventAvailableOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Fecha de fin">{asesoria.fecha_fin_formateada}</LineaDato>
+                    <LineaDato icono={<AccessTimeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Horario">{asesoria.horario_con_dia}</LineaDato>
+                    <LineaDato icono={<LaptopOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Modalidad">{asesoria.modalidad}</LineaDato>
+                    <LineaDato icono={<FiberManualRecordIcon sx={{ fontSize: 20, color: estatus.color }} />} etiqueta="Estatus">
+                        <span className="font-semibold" style={{ color: estatus.color }}>{estatus.label}</span>
+                    </LineaDato>
+                    <LineaDato icono={<TagOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Asesoría">{`#${asesoria.id}`}</LineaDato>
                 </Box>
             </CardContent>
 

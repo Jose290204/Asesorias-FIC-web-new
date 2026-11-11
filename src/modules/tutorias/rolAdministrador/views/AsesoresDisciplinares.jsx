@@ -7,6 +7,7 @@ import Pagination from '@mui/material/Pagination';
 import TextField from '@mui/material/TextField';
 import { useCallback, useEffect, useState } from 'react';
 import InputBuscar from '../../../../components/ui/InputBuscar';
+import TituloVista from '../../../../components/ui/TituloVista';
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import { traerMaterias } from '../../../../Services/asesoriasAsesorService';
 import {
@@ -29,7 +30,7 @@ const AZUL_OSCURO = '#1B3A73';
 const MENU_LISTA = { slotProps: { paper: { sx: { maxHeight: 280, maxWidth: 'min(320px, 90vw)' } } } };
 
 // Estilo de la lista de filtro de materia
-const ESTILO_FILTRO = { width: { xs: '100%', sm: 320 }, flexShrink: 0, backgroundColor: '#FFFFFF' };
+const ESTILO_FILTRO = { width: { xs: 230, sm: 320 }, maxWidth: '100%', flexShrink: 0, backgroundColor: '#FFFFFF' };
 
 export default function AsesoresDisciplinares() {
     // Lo que se escribe en el buscador, y el texto que ya se mandó a la API (con una pausa al escribir)
@@ -167,7 +168,10 @@ export default function AsesoresDisciplinares() {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <p className="text-2xl font-bold">Asesores Disciplinares</p>
+            <TituloVista
+                titulo="Asesores Disciplinares"
+                subtitulo={!cargando && !error ? `${total} ${total === 1 ? 'asesor disciplinar' : 'asesores disciplinares'}${buscar || materiaId ? ' encontrados' : ''}` : null}
+            />
 
             {/* Filtro por materia */}
             <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -273,13 +277,6 @@ export default function AsesoresDisciplinares() {
                 onSave={handleCrearAsesor}
             />
 
-            {/* Leyenda de resultados */}
-            {!cargando && !error && (
-                <p className="-mt-3 text-sm text-gray-600 md:-mt-4">
-                    {total} {total === 1 ? 'asesor disciplinar' : 'asesores disciplinares'}
-                    {buscar || materiaId ? ' encontrados' : ''}
-                </p>
-            )}
 
             {/* Contenido: en celular se deja espacio abajo para que el botón flotante no tape la paginación */}
             <div className="w-full flex flex-1 flex-col pb-24 sm:pb-5">

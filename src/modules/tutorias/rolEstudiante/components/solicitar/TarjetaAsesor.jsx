@@ -8,10 +8,27 @@ import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import LaptopOutlinedIcon from '@mui/icons-material/LaptopOutlined';
+import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
 import SendIcon from '@mui/icons-material/Send';
 
 import ModalCrearSolicitud from './modales/ModalCrearSolicitud';
 import ModalInfoAsesor from './modales/ModalInfoAsesor';
+
+// Línea con ícono, etiqueta en negritas y valor (Materias:, Modalidad:). Si no hay valor, no se muestra.
+function LineaDato({ icono, etiqueta, children }) {
+    if (!children) return null;
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            <Box sx={{ display: 'flex', color: '#08338F', mt: '1px', flexShrink: 0 }}>{icono}</Box>
+            <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere', minWidth: 0 }}>
+                <span className="font-bold">{etiqueta}: </span>
+                {children}
+            </Typography>
+        </Box>
+    );
+}
 
 export default function TarjetaAsesor({ asesor, onSaveSolicitud, showToast, razones = [] }) {
     const [openInfo, setOpenInfo] = useState(false);
@@ -72,12 +89,8 @@ export default function TarjetaAsesor({ asesor, onSaveSolicitud, showToast, razo
                     </Box>
 
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', mb: '5px' }}>
-                        <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                            <span className="font-bold">Materias: </span> {materias}
-                        </Typography>
-                        <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                            <span className="font-bold">Modalidad: </span> {asesor.modalidad || "N/A"}
-                        </Typography>
+                        <LineaDato icono={<MenuBookOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Materias">{materias}</LineaDato>
+                        <LineaDato icono={<LaptopOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Modalidad">{asesor.modalidad || "N/A"}</LineaDato>
                     </Box>
                 </CardContent>
 

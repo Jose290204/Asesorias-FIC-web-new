@@ -122,7 +122,7 @@ export default function Administradores() {
 
   return (
     <div className="mx-auto max-w-6xl p-4 sm:p-6">
-      {/* En celular: título, filtro a todo el ancho y el botón de crear flotante abajo */}
+      {/* En celular: título, filtro chico a la izquierda y el botón de crear flotante abajo */}
       <div className="mb-5 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
         <h1 className="text-2xl font-bold text-[#08338F] sm:flex-1">Administradores</h1>
         <TextField
@@ -131,7 +131,7 @@ export default function Administradores() {
           label="Facultad"
           value={filtro}
           onChange={(e) => setFiltro(e.target.value)}
-          sx={{ minWidth: { sm: 200 }, width: { xs: '100%', sm: 'auto' }, bgcolor: '#fff' }}
+          sx={{ minWidth: { xs: 150, sm: 200 }, width: { xs: 170, sm: 'auto' }, bgcolor: '#fff' }}
         >
           <MenuItem value="">Todas</MenuItem>
           {facultades.map((f) => (

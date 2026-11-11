@@ -1,37 +1,42 @@
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 import ComputerOutlinedIcon from '@mui/icons-material/ComputerOutlined';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import PhoneIphoneOutlinedIcon from '@mui/icons-material/PhoneIphoneOutlined';
+import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 
 import { estaEnLinea, textoHace } from './tiempo';
 
-// Línea con ícono y texto
-function LineaDato({ icono, texto }) {
-    if (!texto) return null;
+// Línea con ícono, etiqueta en negritas y valor (Correo:, Rol:, Dispositivo:...). Si no hay valor, no se muestra.
+function LineaDato({ icono, etiqueta, children }) {
+    if (!children) return null;
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
             <Box sx={{ display: 'flex', color: '#08338F', mt: '1px', flexShrink: 0 }}>{icono}</Box>
             <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere', minWidth: 0 }}>
-                {texto}
+                <span className="font-bold">{etiqueta}: </span>
+                {children}
             </Typography>
         </Box>
     );
 }
 
 // Versión móvil de una fila de la tabla de usuarios en línea.
+// Mismo diseño que las demás tarjetas del admin: datos con su etiqueta y el botón de cerrar sesión abajo.
 // Solo muestra; la acción de cerrar sesión la maneja quien la usa (TablaUsuariosEnLinea).
 export default function TarjetaUsuarioEnLinea({ row, onCerrarSesion }) {
     const enLinea = estaEnLinea(row.ultimaActividad);
     const IconoDispositivo = row.tipo === 'web' ? ComputerOutlinedIcon : PhoneIphoneOutlinedIcon;
+    const colorEstado = enLinea ? '#1B5E20' : '#8A5A00';
 
     return (
         <Card
@@ -48,34 +53,28 @@ export default function TarjetaUsuarioEnLinea({ row, onCerrarSesion }) {
             }}
         >
             <CardContent sx={{ padding: '24px 24px 15px' }}>
-                <Typography sx={{ fontSize: '18px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', marginBottom: '16px' }}>
-                    {row.nombre}
-                </Typography>
+                <Box sx={{ marginBottom: '16px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <PersonOutlinedIcon sx={{ fontSize: 24, color: '#08338F', flexShrink: 0 }} />
+                    <Typography sx={{ fontSize: '18px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', minWidth: 0 }}>
+                        {row.nombre}
+                    </Typography>
+                </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <LineaDato icono={<MailOutlinedIcon sx={{ fontSize: 20 }} />} texto={row.correo} />
-                    <LineaDato icono={<IconoDispositivo sx={{ fontSize: 20 }} />} texto={row.dispositivo} />
-                    <LineaDato icono={<AccessTimeOutlinedIcon sx={{ fontSize: 20 }} />} texto={`Última actividad: ${textoHace(row.ultimaActividad)}`} />
-
-                    {/* Chips: estado de conexión y rol */}
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px', mt: '4px' }}>
-                        <Chip
-                            size="small"
-                            label={enLinea ? 'EN LÍNEA' : 'AUSENTE'}
-                            sx={{
-                                fontWeight: 600,
-                                ...(enLinea
-                                    ? { backgroundColor: '#E6F4EA', color: '#1B5E20' }
-                                    : { backgroundColor: '#FFF4E5', color: '#8A5A00' })
-                            }}
-                        />
-                        <Chip
-                            size="small"
-                            variant="outlined"
-                            label={row.rol}
-                            sx={{ borderColor: '#BDBDBD', color: '#555555', fontWeight: 600 }}
-                        />
-                    </Box>
+                    <LineaDato icono={<MailOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Correo">{row.correo}</LineaDato>
+                    <LineaDato icono={<ShieldOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Rol">{row.rol}</LineaDato>
+                    <LineaDato icono={<IconoDispositivo sx={{ fontSize: 20 }} />} etiqueta="Dispositivo">{row.dispositivo}</LineaDato>
+                    <LineaDato icono={<AccessTimeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Última actividad">
+                        {textoHace(row.ultimaActividad)}
+                    </LineaDato>
+                    <LineaDato
+                        icono={<FiberManualRecordIcon sx={{ fontSize: 20, color: colorEstado }} />}
+                        etiqueta="Estado"
+                    >
+                        <span className="font-semibold" style={{ color: colorEstado }}>
+                            {enLinea ? 'En línea' : 'Ausente'}
+                        </span>
+                    </LineaDato>
                 </Box>
             </CardContent>
 

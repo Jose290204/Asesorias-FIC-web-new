@@ -1,13 +1,18 @@
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
+import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
 import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import LaptopOutlinedIcon from '@mui/icons-material/LaptopOutlined';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
@@ -17,6 +22,21 @@ const ESTILO_ESTATUS = {
     completada: { label: 'Completada', color: '#2E7D32', fondo: '#E8F5E9' },
     cancelada: { label: 'Cancelada', color: '#C62828', fondo: '#FDECEA' }
 };
+
+// Línea con ícono, etiqueta en negritas y valor (Asesor:, Correo:, Fecha...). Si no hay valor, no se muestra.
+function LineaDato({ icono, etiqueta, children }) {
+    if (!children) return null;
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            <Box sx={{ display: 'flex', color: '#08338F', mt: '1px', flexShrink: 0 }}>{icono}</Box>
+            <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere', minWidth: 0 }}>
+                <span className="font-bold">{etiqueta}: </span>
+                {children}
+            </Typography>
+        </Box>
+    );
+}
 
 // Tarjeta de una asesoría del historial. Recibe la asesoría y qué hacer al tocar cada botón.
 export default function TarjetaHistorialEstudiante({ asesoria, onInfo, onMaterial, onSesiones }) {
@@ -65,39 +85,15 @@ export default function TarjetaHistorialEstudiante({ asesoria, onInfo, onMateria
                 </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere' }}>
-                        <span className="font-bold">Asesor: </span> {asesoria.asesor}
-                    </Typography>
-                    <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere' }}>
-                        <span className="font-bold">Razón: </span> {asesoria.razon}
-                    </Typography>
-
-                    {/* Fecha de inicio (y de finalización, si la hay) con su horario */}
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                        <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: '#08338F', mt: '1px', flexShrink: 0 }} />
-                        <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                            {asesoria.fecha_inicio_formateada}
-                            {asesoria.fecha_fin_formateada && ` – ${asesoria.fecha_fin_formateada}`}
-                            {asesoria.horario_con_dia && ` · ${asesoria.horario_con_dia}`}
-                        </Typography>
-                    </Box>
-
-                    {/* Chips: estatus y modalidad */}
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        <Chip
-                            size="small"
-                            label={estatus.label}
-                            sx={{ backgroundColor: estatus.fondo, color: estatus.color, fontWeight: 600 }}
-                        />
-                        {asesoria.modalidad && (
-                            <Chip
-                                size="small"
-                                variant="outlined"
-                                label={asesoria.modalidad}
-                                sx={{ borderColor: '#08338F', color: '#08338F', fontWeight: 600 }}
-                            />
-                        )}
-                    </Box>
+                    <LineaDato icono={<BadgeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Asesor">{asesoria.asesor}</LineaDato>
+                    <LineaDato icono={<HelpOutlineOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Razón">{asesoria.razon}</LineaDato>
+                    <LineaDato icono={<CalendarMonthOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Fecha de inicio">{asesoria.fecha_inicio_formateada}</LineaDato>
+                    <LineaDato icono={<EventAvailableOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Fecha de fin">{asesoria.fecha_fin_formateada}</LineaDato>
+                    <LineaDato icono={<AccessTimeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Horario">{asesoria.horario_con_dia}</LineaDato>
+                    <LineaDato icono={<LaptopOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Modalidad">{asesoria.modalidad}</LineaDato>
+                    <LineaDato icono={<FiberManualRecordIcon sx={{ fontSize: 20, color: estatus.color }} />} etiqueta="Estatus">
+                        <span className="font-semibold" style={{ color: estatus.color }}>{estatus.label}</span>
+                    </LineaDato>
                 </Box>
             </CardContent>
 

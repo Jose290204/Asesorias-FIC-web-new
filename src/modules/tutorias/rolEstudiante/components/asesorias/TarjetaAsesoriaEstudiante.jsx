@@ -1,18 +1,37 @@
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
 import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import Avatar from '@mui/material/Avatar';
+import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import LaptopOutlinedIcon from '@mui/icons-material/LaptopOutlined';
+import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+
+// Línea con ícono, etiqueta en negritas y valor (Asesor:, Correo:, Fecha...). Si no hay valor, no se muestra.
+function LineaDato({ icono, etiqueta, children }) {
+    if (!children) return null;
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            <Box sx={{ display: 'flex', color: '#08338F', mt: '1px', flexShrink: 0 }}>{icono}</Box>
+            <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere', minWidth: 0 }}>
+                <span className="font-bold">{etiqueta}: </span>
+                {children}
+            </Typography>
+        </Box>
+    );
+}
 
 // Tarjeta de una asesoría en curso del estudiante. Recibe la asesoría y qué hacer al tocar cada botón.
 export default function TarjetaAsesoriaEstudiante({ asesoria, onSesiones, onMaterial, onChat }) {
@@ -30,52 +49,15 @@ export default function TarjetaAsesoriaEstudiante({ asesoria, onSesiones, onMate
                 boxShadow: '0px 4px 12.3px rgba(0, 0, 0, 0.20)',
             }}
         >
-            <CardContent sx={{ padding: '24px 24px 16px 24px' }}>
-                {/* Encabezado: avatar, nombre del asesor y botón de sesiones */}
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '16px', mb: 2 }}>
-                    <Avatar
-                        sx={{
-                            backgroundColor: '#EBD9B4',
-                            color: '#8A6D2B',
-                            width: 50,
-                            height: 50,
-                            fontSize: '24px',
-                            fontWeight: 'bold',
-                            flexShrink: 0
-                        }}
+            <CardContent sx={{ padding: '24px 24px 15px 24px' }}>
+                {/* Encabezado: materia y botón de sesiones a la derecha */}
+                <Box sx={{ marginBottom: '16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                    <Typography
+                        title={asesoria.materia}
+                        sx={{ fontSize: '18px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', minWidth: 0 }}
                     >
-                        {asesoria.asesor ? asesoria.asesor.charAt(0) : 'A'}
-                    </Avatar>
-
-                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography sx={{ fontSize: '11px', fontWeight: 700, color: '#08338F', textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1.2 }}>
-                            Asesor
-                        </Typography>
-                        <Typography
-                            title={asesoria.asesor}
-                            sx={{
-                                fontSize: '16px',
-                                fontWeight: '700',
-                                color: '#000000',
-                                lineHeight: 1.2,
-                                display: '-webkit-box',
-                                WebkitLineClamp: 1,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden'
-                            }}
-                        >
-                            {asesoria.asesor}
-                        </Typography>
-                        {/* Correo del asesor, debajo del nombre */}
-                        {asesoria.asesor_correo && (
-                            <Typography
-                                title={asesoria.asesor_correo}
-                                sx={{ fontSize: '13px', color: '#666666', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                            >
-                                {asesoria.asesor_correo}
-                            </Typography>
-                        )}
-                    </Box>
+                        {asesoria.materia}
+                    </Typography>
 
                     {/* Sesiones registradas por el asesor (solo consulta) */}
                     <Tooltip title={`Sesiones (${asesoria.sesiones_count ?? 0})`}>
@@ -90,43 +72,16 @@ export default function TarjetaAsesoriaEstudiante({ asesoria, onSesiones, onMate
                     </Tooltip>
                 </Box>
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', mb: '5px' }}>
-                    <Typography
-                        title={asesoria.materia}
-                        sx={{ fontSize: '15px', color: '#333333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                    >
-                        <span className="font-bold">Materia: </span> {asesoria.materia}
-                    </Typography>
-                    <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere' }}>
-                        <span className="font-bold">Razón: </span> {asesoria.razon}
-                    </Typography>
-
-                    {/* Fecha de inicio y horario */}
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                        <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: '#08338F', mt: '1px', flexShrink: 0 }} />
-                        <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                            {asesoria.fecha_inicio_formateada}
-                            {asesoria.horario_con_dia && ` · ${asesoria.horario_con_dia}`}
-                        </Typography>
-                    </Box>
-
-                    {/* Chips: modalidad y estado */}
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {asesoria.modalidad && (
-                            <Chip
-                                size="small"
-                                variant="outlined"
-                                label={asesoria.modalidad}
-                                sx={{ borderColor: '#08338F', color: '#08338F', fontWeight: 600 }}
-                            />
-                        )}
-                        <Chip
-                            size="small"
-                            variant="outlined"
-                            label="En curso"
-                            sx={{ borderColor: '#2E7D32', color: '#2E7D32', fontWeight: 600 }}
-                        />
-                    </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <LineaDato icono={<BadgeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Asesor">{asesoria.asesor}</LineaDato>
+                    <LineaDato icono={<MailOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Correo">{asesoria.asesor_correo}</LineaDato>
+                    <LineaDato icono={<HelpOutlineOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Razón">{asesoria.razon}</LineaDato>
+                    <LineaDato icono={<CalendarMonthOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Fecha de inicio">{asesoria.fecha_inicio_formateada}</LineaDato>
+                    <LineaDato icono={<AccessTimeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Horario">{asesoria.horario_con_dia}</LineaDato>
+                    <LineaDato icono={<LaptopOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Modalidad">{asesoria.modalidad}</LineaDato>
+                    <LineaDato icono={<FiberManualRecordIcon sx={{ fontSize: 20, color: '#2E7D32' }} />} etiqueta="Estatus">
+                        <span className="font-semibold" style={{ color: '#2E7D32' }}>En curso</span>
+                    </LineaDato>
                 </Box>
             </CardContent>
 

@@ -3,7 +3,7 @@ import logoAsesorias from '../../../assets/logo_asesorias.png';
 import logoUas from '../../../assets/logo_uas.png';
 import UsuarioSidebar from './UsuarioSidebar';
 
-export default function AsesorSidebar({ escritorio = false }) {
+export default function AsesorSidebar() {
 
     const navItems = [
         {
@@ -85,7 +85,7 @@ export default function AsesorSidebar({ escritorio = false }) {
                 </nav>
             </div>
           {/* Perfil y cerrar sesión: al fondo del menú, solo en escritorio */}
-          {escritorio && <UsuarioSidebar rutaPerfil="/asesor/perfil-asesor" />}
+          <UsuarioSidebar rutaPerfil="/asesor/perfil-asesor" />
         </aside>
     );
 }

@@ -8,6 +8,7 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import { useEffect, useMemo, useState } from 'react';
 import ToastNotification from '../../../../components/ui/ToastNotification';
+import TituloVista from '../../../../components/ui/TituloVista';
 import BarrasReporte from '../components/reportes/BarrasReporte';
 import { estiloEstatus } from '../components/reportes/estilosReporte';
 import { exportarPdf, PDF_NO_DISPONIBLE } from '../components/reportes/exportarPdf';
@@ -272,12 +273,10 @@ export default function ReportePorMateria() {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <div className="flex flex-col gap-1">
-                <p className="text-2xl font-bold">Reporte por materia</p>
-                <p className="text-sm text-gray-600">
-                    Elige una materia para ver todas sus asesorías en el semestre, o déjala vacía para compararlas todas. Pulsa Buscar.
-                </p>
-            </div>
+            <TituloVista
+                titulo="Reporte por materia"
+                subtitulo="Elige una materia para ver todas sus asesorías en el semestre, o déjala vacía para compararlas todas. Pulsa Buscar."
+            />
 
             {/* Filtros: en celular van apilados */}
             <div className="w-full flex flex-col items-start gap-3 lg:flex-row lg:items-center lg:gap-4">

@@ -1,6 +1,7 @@
 import DeleteIcon from '@mui/icons-material/Delete';
 import DownloadIcon from '@mui/icons-material/Download';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import PhotoLibraryOutlinedIcon from '@mui/icons-material/PhotoLibraryOutlined';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import {
     Box,
@@ -32,6 +33,13 @@ import {
     traerMaterial
 } from '../../../../../Services/materialAsesorService';
 import useMediaQuery from '@mui/material/useMediaQuery';
+
+// En celular se piden por separado: un selector que mezcla imágenes y documentos abre solo la galería de fotos en Android,
+// así que los documentos (sin imágenes en la lista) abren el explorador de archivos y las fotos abren la galería.
+// "application/*" hace que Android abra el explorador de archivos con todos los documentos visibles (sin fotos);
+// los tipos permitidos se validan por extensión al elegir (validarArchivos)
+const ACCEPT_DOCUMENTOS = 'application/*';
+const ACCEPT_FOTOS = 'image/jpeg,image/png';
 
 const getFileIcon = (tipo) => {
     if (tipo?.includes('pdf')) return <PictureAsPdfIcon color="error" />;
@@ -181,35 +189,65 @@ export default function ModalMaterialAsesoria({ open, onClose, data, soloLectura
 
                 <DialogContent dividers sx={{ overflowY: 'auto' }}>
                     {!soloLectura && (
-                        <Box className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-colors" sx={{ mb: 2 }}>
-                            <input
-                                type="file"
-                                id="file-material-input"
-                                onChange={handleSubir}
-                                className="hidden"
-                                multiple
-                                disabled={subiendo}
-                                accept={MATERIAL_EXTENSIONES.map((e) => `.${e}`).join(',')}
-                            />
-                            <label
-                                htmlFor="file-material-input"
-                                className="cursor-pointer flex flex-col items-center gap-2 w-full text-center"
-                            >
+                        esCelular ? (
+                            <Box className="flex flex-col items-center gap-3 border-2 border-dashed border-gray-300 rounded-lg p-5 bg-gray-50" sx={{ mb: 2 }}>
                                 {subiendo ? (
-                                    <CircularProgress size={32} />
+                                    <>
+                                        <CircularProgress size={32} />
+                                        <Typography variant="body2" color="textSecondary">Subiendo...</Typography>
+                                    </>
                                 ) : (
-                                    <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                    </svg>
+                                    <>
+                                        <Typography variant="body2" color="textSecondary" align="center">
+                                            Elige qué quieres subir
+                                        </Typography>
+                                        <Stack direction="row" spacing={1.5} sx={{ width: '100%' }}>
+                                            <Button component="label" variant="contained" startIcon={<InsertDriveFileIcon />} sx={{ flex: 1, textTransform: 'none', backgroundColor: '#08338F' }}>
+                                                Documento
+                                                <input type="file" hidden multiple onChange={handleSubir} accept={ACCEPT_DOCUMENTOS} />
+                                            </Button>
+                                            <Button component="label" variant="outlined" startIcon={<PhotoLibraryOutlinedIcon />} sx={{ flex: 1, textTransform: 'none', color: '#08338F', borderColor: '#08338F' }}>
+                                                Foto
+                                                <input type="file" hidden multiple onChange={handleSubir} accept={ACCEPT_FOTOS} />
+                                            </Button>
+                                        </Stack>
+                                    </>
                                 )}
-                                <Typography variant="body2" color="textSecondary">
-                                    {subiendo ? 'Subiendo...' : 'Haz clic para seleccionar o cargar un documento'}
-                                </Typography>
-                                <Typography variant="caption" color="textSecondary">
+                                <Typography variant="caption" color="textSecondary" align="center">
                                     Hasta {MATERIAL_MAX_ARCHIVOS} archivos de {MATERIAL_MAX_MB} MB (PDF, Word, PowerPoint, Excel, JPG, PNG, ZIP)
                                 </Typography>
-                            </label>
-                        </Box>
+                            </Box>
+                        ) : (
+                            <Box className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-colors" sx={{ mb: 2 }}>
+                                <input
+                                    type="file"
+                                    id="file-material-input"
+                                    onChange={handleSubir}
+                                    className="hidden"
+                                    multiple
+                                    disabled={subiendo}
+                                    accept={MATERIAL_EXTENSIONES.map((e) => `.${e}`).join(',')}
+                                />
+                                <label
+                                    htmlFor="file-material-input"
+                                    className="cursor-pointer flex flex-col items-center gap-2 w-full text-center"
+                                >
+                                    {subiendo ? (
+                                        <CircularProgress size={32} />
+                                    ) : (
+                                        <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                        </svg>
+                                    )}
+                                    <Typography variant="body2" color="textSecondary">
+                                        {subiendo ? 'Subiendo...' : 'Haz clic para seleccionar o cargar un documento'}
+                                    </Typography>
+                                    <Typography variant="caption" color="textSecondary">
+                                        Hasta {MATERIAL_MAX_ARCHIVOS} archivos de {MATERIAL_MAX_MB} MB (PDF, Word, PowerPoint, Excel, JPG, PNG, ZIP)
+                                    </Typography>
+                                </label>
+                            </Box>
+                        )
                     )}
 
                     {cargando ? (

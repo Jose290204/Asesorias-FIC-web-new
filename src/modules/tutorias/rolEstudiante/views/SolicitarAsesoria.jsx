@@ -2,6 +2,7 @@ import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Fab from '@mui/material/Fab';
+import TituloVista from "../../../../components/ui/TituloVista";
 import Pagination from '@mui/material/Pagination';
 import { useCallback, useEffect, useRef, useState } from "react";
 import BotonFiltro from "../../../../components/ui/BotonFlitro";
@@ -179,7 +180,10 @@ export default function SolicitarAsesoria() {
 
    return (
     <div className="w-full px-4 py-6 md:px-17 md:py-10 flex flex-col items-start justify-start gap-6 md:gap-11">
-        <p className="text-2xl font-bold">Solicitar Asesoria</p>
+        <TituloVista
+            titulo="Solicitar asesoría"
+            subtitulo={!loading && !error && meta ? `Mostrando ${mostrando} de ${meta.total} asesores` : null}
+        />
 
         <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
             {/* FILTRO BOTÓN */}
@@ -196,7 +200,7 @@ export default function SolicitarAsesoria() {
             {/* Botón normal: solo tablet y escritorio */}
             <Button
                 variant="contained"
-                sx={{ borderRadius: '5px', textTransform: 'none', backgroundColor: '#2E7D32', display: { xs: 'none', sm: 'inline-flex' } }}
+                sx={{ borderRadius: '5px', textTransform: 'none', backgroundColor: '#08338F', '&:hover': { backgroundColor: '#1B3A73' }, display: { xs: 'none', sm: 'inline-flex' } }}
                 size="medium"
                 startIcon={<AddOutlinedIcon />}
                 onClick={handleOpenCrear}
@@ -205,21 +209,22 @@ export default function SolicitarAsesoria() {
             </Button>
         </div>
 
-        {/* Contador de resultados */}
-        {!loading && !error && meta && (
-            <p className="-mt-3 md:-mt-6 text-sm text-gray-600">
-                Mostrando <span className="font-bold">{mostrando}</span> de{" "}
-                <span className="font-bold">{meta.total}</span> asesores
-            </p>
-        )}
-
         {/* Botón flotante: solo celular */}
         <Fab
             variant="extended"
-            color="success"
             aria-label="Crear solicitud"
             onClick={handleOpenCrear}
-            sx={{ position: 'fixed', right: 16, bottom: 16, zIndex: 10, textTransform: 'none', display: { xs: 'inline-flex', sm: 'none' } }}
+            sx={{
+                position: 'fixed',
+                right: 16,
+                bottom: 16,
+                zIndex: 10,
+                textTransform: 'none',
+                color: '#ffffff',
+                backgroundColor: '#08338F',
+                '&:hover': { backgroundColor: '#1B3A73' },
+                display: { xs: 'inline-flex', sm: 'none' }
+            }}
         >
             <AddOutlinedIcon sx={{ mr: 1 }} />
             Crear solicitud

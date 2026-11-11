@@ -30,7 +30,7 @@ const NAV_ITEMS = [
 ];
 
 // Mismo menú lateral que admin, asesor y estudiante, con las opciones del super admin.
-export default function SuperAdminSidebar({ escritorio = false }) {
+export default function SuperAdminSidebar() {
   return (
     <aside className="bg-[linear-gradient(180deg,#2a529b_0%,#244B91_55%,#162f66_100%)] text-white flex flex-col justify-between min-h-dvh shrink-0 relative shadow-[4px_0_24px_rgba(0,0,0,0.18)] w-64">
       <div>
@@ -69,7 +69,7 @@ export default function SuperAdminSidebar({ escritorio = false }) {
       </div>
 
       {/* Perfil y cerrar sesión: al fondo del menú, solo en escritorio */}
-      {escritorio && <UsuarioSidebar rutaPerfil={RUTA_PERFIL} />}
+      <UsuarioSidebar rutaPerfil={RUTA_PERFIL} />
     </aside>
   );
 }

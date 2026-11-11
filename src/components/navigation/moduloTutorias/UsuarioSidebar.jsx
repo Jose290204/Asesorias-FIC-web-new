@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 
 // Bloque del fondo del menú lateral (solo escritorio): botón de perfil (ícono + nombre) y cerrar sesión.
-// En celular esto sigue viviendo en el menú de usuario de la cabecera.
+// En celular esto vive en el menú de usuario de la cabecera, por eso aquí se oculta por debajo de lg.
 export default function UsuarioSidebar({ rutaPerfil }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -14,7 +14,7 @@ export default function UsuarioSidebar({ rutaPerfil }) {
   const enPerfil = pathname.startsWith(rutaPerfil);
 
   return (
-    <div className="mt-4 space-y-1.5 border-t border-blue-300/30 px-3 pb-4 pt-3">
+    <div className="mt-4 hidden space-y-1.5 border-t border-blue-300/30 px-3 pb-4 pt-3 lg:block">
       <button
         type="button"
         onClick={() => navigate(rutaPerfil, { replace: true })}

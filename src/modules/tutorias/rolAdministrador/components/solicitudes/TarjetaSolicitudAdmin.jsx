@@ -1,18 +1,38 @@
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import LaptopOutlinedIcon from '@mui/icons-material/LaptopOutlined';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import TagOutlinedIcon from '@mui/icons-material/TagOutlined';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 
 import { formatearFechaVisible } from '../../../rolEstudiante/utils/fechaSolicitud';
 import { COLOR_ESTATUS, ETIQUETA_ESTATUS } from './estatusSolicitud';
+
+// Línea con ícono, etiqueta en negritas y valor (Estudiante:, Asesor:, Fecha:...). Si no hay valor, no se muestra.
+function LineaDato({ icono, etiqueta, children }) {
+    if (!children) return null;
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            <Box sx={{ display: 'flex', color: '#08338F', mt: '1px', flexShrink: 0 }}>{icono}</Box>
+            <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere', minWidth: 0 }}>
+                <span className="font-bold">{etiqueta}: </span>
+                {children}
+            </Typography>
+        </Box>
+    );
+}
 
 // Versión móvil de una fila de la tabla de solicitudes.
 // Mismo diseño que la tarjeta de asesorías: ícono de información arriba a la derecha + botones Rechazar y Aprobar.
@@ -53,47 +73,26 @@ export default function TarjetaSolicitudAdmin({ row, onInfo, onAprobar, onRechaz
                 </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere' }}>
-                        <span className="font-bold">Estudiante: </span> {row.estudiante}
-                    </Typography>
-
-                    {row.asesor && (
-                        <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere' }}>
-                            <span className="font-bold">Asesor: </span> {row.asesor}
-                        </Typography>
-                    )}
-
-                    {/* Fecha y horario solicitados en una sola línea */}
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                        <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: '#08338F', mt: '1px', flexShrink: 0 }} />
-                        <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                            {formatearFechaVisible(fecha)}
-                            {row.horario && ` · ${row.horario_con_dia ?? row.horario}`}
-                        </Typography>
-                    </Box>
-
-                    {/* Chips: modalidad y número de solicitud */}
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {row.modalidad && (
-                            <Chip
-                                size="small"
-                                variant="outlined"
-                                label={row.modalidad}
-                                sx={{ borderColor: '#08338F', color: '#08338F', fontWeight: 600 }}
-                            />
-                        )}
-                        <Chip
-                            size="small"
-                            label={ETIQUETA_ESTATUS[row.estatus] ?? row.estatus}
-                            sx={{ backgroundColor: colorEstatus?.fondo, color: colorEstatus?.texto, fontWeight: 700 }}
-                        />
-                        <Chip
-                            size="small"
-                            variant="outlined"
-                            label={`Solicitud #${row.id_solicitud ?? row.id}`}
-                            sx={{ borderColor: '#BDBDBD', color: '#555555', fontWeight: 600 }}
-                        />
-                    </Box>
+                    <LineaDato icono={<PersonOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Estudiante">{row.estudiante}</LineaDato>
+                    <LineaDato icono={<BadgeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Asesor">{row.asesor}</LineaDato>
+                    <LineaDato icono={<CalendarMonthOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Fecha">
+                        {fecha ? formatearFechaVisible(fecha) : ''}
+                    </LineaDato>
+                    <LineaDato icono={<AccessTimeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Horario">
+                        {row.horario_con_dia || row.horario}
+                    </LineaDato>
+                    <LineaDato icono={<LaptopOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Modalidad">{row.modalidad}</LineaDato>
+                    <LineaDato
+                        icono={<FiberManualRecordIcon sx={{ fontSize: 20, color: colorEstatus?.texto ?? '#5F6368' }} />}
+                        etiqueta="Estatus"
+                    >
+                        <span className="font-semibold" style={{ color: colorEstatus?.texto ?? '#5F6368' }}>
+                            {ETIQUETA_ESTATUS[row.estatus] ?? row.estatus}
+                        </span>
+                    </LineaDato>
+                    <LineaDato icono={<TagOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Solicitud">
+                        {`#${row.id_solicitud ?? row.id}`}
+                    </LineaDato>
                 </Box>
             </CardContent>
 

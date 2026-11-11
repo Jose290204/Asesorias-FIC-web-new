@@ -7,6 +7,7 @@ import Pagination from '@mui/material/Pagination';
 import TextField from '@mui/material/TextField';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import InputBuscar from '../../../../components/ui/InputBuscar';
+import TituloVista from '../../../../components/ui/TituloVista';
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import { useCatalogos } from '../../../../context/CatalogosContext';
 import {
@@ -26,7 +27,7 @@ const AZUL = '#244B91';
 const AZUL_OSCURO = '#1B3A73';
 
 // Estilo de las listas de filtro (licenciatura y grupo)
-const ESTILO_FILTRO = { width: { xs: '100%', sm: 220 }, flexShrink: 0, backgroundColor: '#FFFFFF' };
+const ESTILO_FILTRO = { width: { xs: 230, sm: 220 }, maxWidth: '100%', flexShrink: 0, backgroundColor: '#FFFFFF' };
 
 export default function Estudiantes() {
     const { catalogos } = useCatalogos();
@@ -178,7 +179,10 @@ export default function Estudiantes() {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <p className="text-2xl font-bold">Estudiantes</p>
+            <TituloVista
+                titulo="Estudiantes"
+                subtitulo={!cargando && !error ? `${total} ${total === 1 ? 'estudiante' : 'estudiantes'}${buscar || hayFiltros ? ' encontrados' : ''}` : null}
+            />
 
             {/* Filtros: en celular van arriba, uno bajo otro */}
             <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -294,13 +298,6 @@ export default function Estudiantes() {
                 onDataLoaded={handleExcelData}
             />
 
-            {/* Leyenda de resultados */}
-            {!cargando && !error && (
-                <p className="-mt-3 text-sm text-gray-600 md:-mt-4">
-                    {total} {total === 1 ? 'estudiante' : 'estudiantes'}
-                    {buscar || hayFiltros ? ' encontrados' : ''}
-                </p>
-            )}
 
             {/* Contenido: en celular se deja espacio abajo para que el botón flotante no tape la paginación */}
             <div className="w-full flex flex-1 flex-col pb-24 sm:pb-5">

@@ -7,6 +7,7 @@ import Pagination from '@mui/material/Pagination';
 import TextField from '@mui/material/TextField';
 import { useCallback, useEffect, useState } from 'react';
 import InputBuscar from '../../../../components/ui/InputBuscar';
+import TituloVista from '../../../../components/ui/TituloVista';
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import { traerMaterias } from '../../../../Services/asesoriasAsesorService';
 import {
@@ -19,11 +20,9 @@ import { mensajesDeError } from '../../../../Services/errores';
 import ModalAsignarAsesorPar from '../components/asesoresPar/modales/ModalAsignarAsesorPar';
 import TablaAsesoresPar from '../components/asesoresPar/TablaAsesoresPar';
 
-// Color de los botones de asignar
-const VERDE = '#2e7d32';
-const VERDE_OSCURO = '#1b5e20';
-// Color del indicador de carga y del botón Reintentar
+// Azul de los botones de asignar, del indicador de carga y del botón Reintentar (el mismo de los botones de crear)
 const AZUL = '#244B91';
+const AZUL_OSCURO = '#1B3A73';
 
 // Menú de la lista de materias: con scroll y del mismo ancho que el campo, para que no se desborde ni tape el menú lateral
 const MENU_LISTA = { slotProps: { paper: { sx: { maxHeight: 280, maxWidth: 'min(320px, 90vw)' } } } };
@@ -154,7 +153,10 @@ export default function AsesoresPar() {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <p className="text-2xl font-bold">Asesores Par</p>
+            <TituloVista
+                titulo="Asesores Par"
+                subtitulo={!cargando && !error ? `${total} ${total === 1 ? 'asesor par' : 'asesores par'}${buscar || materiaId ? ' encontrados' : ''}` : null}
+            />
 
             {/* Filtro por materia */}
             <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -206,8 +208,8 @@ export default function AsesoresPar() {
                     sx={{
                         borderRadius: '5px',
                         textTransform: 'none',
-                        backgroundColor: VERDE,
-                        '&:hover': { backgroundColor: VERDE_OSCURO },
+                        backgroundColor: AZUL,
+                        '&:hover': { backgroundColor: AZUL_OSCURO },
                         flexShrink: 0,
                         display: { xs: 'none', sm: 'inline-flex' }
                     }}
@@ -228,8 +230,8 @@ export default function AsesoresPar() {
                     zIndex: 10,
                     textTransform: 'none',
                     color: '#ffffff',
-                    backgroundColor: VERDE,
-                    '&:hover': { backgroundColor: VERDE_OSCURO },
+                    backgroundColor: AZUL,
+                    '&:hover': { backgroundColor: AZUL_OSCURO },
                     display: { xs: 'inline-flex', sm: 'none' }
                 }}
             >
@@ -244,13 +246,6 @@ export default function AsesoresPar() {
                 showToast={showToast}
             />
 
-            {/* Leyenda de resultados */}
-            {!cargando && !error && (
-                <p className="-mt-3 text-sm text-gray-600 md:-mt-4">
-                    {total} {total === 1 ? 'asesor par' : 'asesores par'}
-                    {buscar || materiaId ? ' encontrados' : ''}
-                </p>
-            )}
 
             {/* Contenido: en celular se deja espacio abajo para que el botón flotante no tape la paginación */}
             <div className="w-full flex flex-1 flex-col pb-24 sm:pb-5">

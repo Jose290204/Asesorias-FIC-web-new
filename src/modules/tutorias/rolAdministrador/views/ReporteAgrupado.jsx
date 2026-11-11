@@ -9,6 +9,7 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import { useEffect, useMemo, useState } from 'react';
 import ToastNotification from '../../../../components/ui/ToastNotification';
+import TituloVista from '../../../../components/ui/TituloVista';
 import BarrasReporte from '../components/reportes/BarrasReporte';
 import { estiloEstatus } from '../components/reportes/estilosReporte';
 import { exportarPdf, PDF_NO_DISPONIBLE } from '../components/reportes/exportarPdf';
@@ -346,10 +347,10 @@ export default function ReporteAgrupado({ tipo }) {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <div className="flex flex-col gap-1">
-                <p className="text-2xl font-bold">{config.titulo}</p>
-                <p className="text-sm text-gray-600">{config.descripcion}</p>
-            </div>
+            <TituloVista
+                titulo={config.titulo}
+                subtitulo={config.descripcion}
+            />
 
             {/* Filtros: en celular van apilados */}
             <div className="w-full flex flex-col items-start gap-3 lg:flex-row lg:items-center lg:gap-4">

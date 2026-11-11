@@ -16,7 +16,7 @@ const SUBMENU_REPORTES = [
   { path: `${RUTA_REPORTES}/licenciatura`, label: 'Por licenciatura' }
 ];
 
-export default function AdminSidebar({ escritorio = false }) {
+export default function AdminSidebar() {
   const { pathname } = useLocation();
 
   // El grupo de reportes empieza abierto si ya se está dentro de alguno de sus reportes
@@ -197,7 +197,7 @@ export default function AdminSidebar({ escritorio = false }) {
         </nav>
       </div>
       {/* Perfil y cerrar sesión: al fondo del menú, solo en escritorio */}
-      {escritorio && <UsuarioSidebar rutaPerfil="/admin/perfil-administrador" />}
+      <UsuarioSidebar rutaPerfil="/admin/perfil-administrador" />
     </aside>
   );
 }

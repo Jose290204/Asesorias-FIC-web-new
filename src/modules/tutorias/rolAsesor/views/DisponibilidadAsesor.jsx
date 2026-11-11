@@ -4,6 +4,7 @@ import { Box, Button, Chip, CircularProgress, Typography } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 
 import ToastNotification from '../../../../components/ui/ToastNotification';
+import TituloVista from '../../../../components/ui/TituloVista';
 import { useCatalogos } from '../../../../context/CatalogosContext';
 import {
     guardarDisponibilidad,
@@ -191,15 +192,15 @@ export default function DisponibilidadAsesor() {
 
     return (
         <div className={`min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8 ${hasChanges ? 'pb-28' : ''}`}>
-            <div>
-                <p className="text-2xl font-bold">Disponibilidad</p>
-                {!loading && !error && (
-                    <p className="mt-1 text-sm text-gray-600">
+            <TituloVista
+                titulo="Disponibilidad"
+                subtitulo={!loading && !error ? (
+                    <>
                         {materias.length} {materias.length === 1 ? 'materia' : 'materias'} · {horarios.length} {horarios.length === 1 ? 'horario' : 'horarios'}
                         {hasChanges && <span className="ml-2 font-semibold text-[#C49E0D]">· Cambios sin guardar</span>}
-                    </p>
-                )}
-            </div>
+                    </>
+                ) : null}
+            />
 
             <div className="w-full flex flex-1 flex-col items-center gap-5">
                 {loading ? (

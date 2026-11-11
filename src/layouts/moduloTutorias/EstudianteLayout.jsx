@@ -1,13 +1,12 @@
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
-import PersonIcon from '@mui/icons-material/Person';
-import { Avatar, Button, Divider, Drawer, IconButton, ListItemIcon, Menu, MenuItem } from '@mui/material';
+import { Avatar, Button, Drawer, IconButton } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import LogoUas from '../../assets/logo_uas.png';
+import LogoAsesorias from '../../assets/logo_asesorias.png';
 import EstudianteSidebar from '../../components/navigation/moduloTutorias/EstudianteSidbar';
 import BarraContexto from '../../components/navigation/moduloTutorias/BarraContexto';
+import MenuUsuario from '../../components/navigation/moduloTutorias/MenuUsuario';
 import { useAuth } from '../../context/AuthContext';
 import { traerPerfilEstudiante } from '../../Services/estudiantesService';
 import { CLASES_FONDO_CONTENIDO, FONDO_CONTENIDO } from './fondoContenido';
@@ -19,7 +18,7 @@ const RUTA_SOLICITAR = '/estudiante/solicitar-asesorias';
 export default function EstudianteLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { logout, user } = useAuth();
+  const { logout, usuario } = useAuth();
 
   // El drawer está abierto solo mientras estés en la ruta donde se abrió
   const [openPath, setOpenPath] = useState(null);
@@ -60,7 +59,7 @@ export default function EstudianteLayout() {
   };
 
   return (
-    <div className="flex min-h-dvh bg-[#244B91]">
+    <div className="flex min-h-dvh bg-gray-100 lg:bg-[#244B91]">
       <Drawer
         open={open}
         onClose={closeDrawer}
@@ -72,14 +71,14 @@ export default function EstudianteLayout() {
 
       {/* Escritorio (lg en adelante): el menú siempre visible, pegado a la izquierda */}
       <div className="sticky top-0 hidden h-dvh shrink-0 self-start lg:block">
-        <EstudianteSidebar escritorio />
+        <EstudianteSidebar />
       </div>
 
       {/* Columna derecha: cabecera + contenido */}
       <div className="flex min-w-0 flex-1 flex-col">
 
       <BarraContexto />
-      <header className="lg:hidden sticky top-0 z-10 flex items-center gap-2 bg-[#244B91] px-3 py-2 text-white">
+      <header className="lg:hidden sticky top-0 z-10 flex items-center gap-2 border-b border-[#d4b03c]/50 bg-[linear-gradient(180deg,#2a529b_0%,#244B91_55%,#162f66_100%)] px-3 py-2 text-white shadow-[0_4px_18px_rgba(0,0,0,0.25),0_1px_0_rgba(212,176,60,0.45)]">
         <IconButton
           color="inherit"
           onClick={() => setOpenPath(pathname)}
@@ -93,7 +92,9 @@ export default function EstudianteLayout() {
           onClick={() => navigate(RUTA_SOLICITAR)}
           sx={{ textTransform: 'none', gap: 1, px: 1, minWidth: 0, display: { xs: 'inline-flex', lg: 'none' } }}
         >
-          <img src={LogoUas} alt="Logo UAS" className="h-8 w-auto object-contain" />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-0.5">
+            <img src={LogoAsesorias} alt="Logo Asesorías FIC" className="h-full w-full rounded-full object-contain" />
+          </span>
           <span className="font-semibold">Asesorías FIC</span>
         </Button>
 
@@ -116,25 +117,14 @@ export default function EstudianteLayout() {
           <KeyboardArrowDownIcon fontSize="small" />
         </Button>
 
-        <Menu
-          disableScrollLock
+        <MenuUsuario
           anchorEl={anchorEl}
-          open={userMenuOpen}
           onClose={closeUserMenu}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-          slotProps={{ paper: { sx: { mt: 0.5, minWidth: 180 } } }}
-        >
-          <MenuItem onClick={handleVerPerfil}>
-            <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
-            Ver perfil
-          </MenuItem>
-          <Divider />
-          <MenuItem onClick={handleLogoutDesdeMenu} sx={{ color: 'error.main' }}>
-            <ListItemIcon sx={{ color: 'inherit' }}><LogoutIcon fontSize="small" /></ListItemIcon>
-            Cerrar sesión
-          </MenuItem>
-        </Menu>
+          nombre={nombreUsuario}
+          correo={usuario?.correo}
+          onVerPerfil={handleVerPerfil}
+          onLogout={handleLogoutDesdeMenu}
+        />
       </header>
 
       <main

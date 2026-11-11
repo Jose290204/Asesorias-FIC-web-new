@@ -5,6 +5,7 @@ import Pagination from '@mui/material/Pagination';
 import TextField from '@mui/material/TextField';
 import { useCallback, useEffect, useState } from 'react';
 import InputBuscar from '../../../../components/ui/InputBuscar';
+import TituloVista from '../../../../components/ui/TituloVista';
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import { mensajesDeError } from '../../../../Services/errores';
 import {
@@ -123,7 +124,10 @@ export default function Solicitudes() {
 
   return (
     <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-      <p className="text-2xl font-bold">Solicitudes</p>
+      <TituloVista
+        titulo="Solicitudes"
+        subtitulo={!cargando && !error ? `${total} ${total === 1 ? 'solicitud' : 'solicitudes'}${buscar || hayFiltros ? ' encontradas' : ' pendientes'}` : null}
+      />
 
       {/* Barra de herramientas: en celular el filtro va arriba y el buscador abajo */}
       <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
@@ -133,7 +137,7 @@ export default function Solicitudes() {
           label="Estatus"
           value={estatus}
           onChange={handleCambiarEstatus}
-          sx={{ width: { xs: '100%', sm: 200 }, flexShrink: 0, backgroundColor: '#FFFFFF' }}
+          sx={{ minWidth: { xs: 150, sm: 200 }, width: { xs: 170, sm: 'auto' }, flexShrink: 0, backgroundColor: '#FFFFFF' }}
           slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
         >
           <MenuItem value="">
@@ -155,13 +159,6 @@ export default function Solicitudes() {
         </div>
       </div>
 
-      {/* Leyenda de resultados */}
-      {!cargando && !error && (
-        <p className="-mt-3 text-sm text-gray-600 md:-mt-4">
-          {total} {total === 1 ? 'solicitud' : 'solicitudes'}
-          {buscar || hayFiltros ? ' encontradas' : ' pendientes'}
-        </p>
-      )}
 
       <div className="w-full flex flex-1 flex-col pb-5">
         {cargando ? (

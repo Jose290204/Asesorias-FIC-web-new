@@ -113,7 +113,7 @@ export default function Bitacora() {
 
       {/* Filtros: en celular uno debajo del otro; en escritorio en una cuadrícula */}
       <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(5,minmax(0,1fr))]">
-        <TextField {...campoFiltro} label="Buscar" placeholder="Usuario, registro, IP…" value={textoBuscar} onChange={(e) => setTextoBuscar(e.target.value)} />
+        <TextField {...campoFiltro} label="Buscar" placeholder="Usuario, registro…" value={textoBuscar} onChange={(e) => setTextoBuscar(e.target.value)} />
         <TextField {...campoFiltro} select label="Facultad" value={filtros.facultadId} onChange={cambiarFiltro('facultadId')} slotProps={{ select: { MenuProps: PROPS_MENU } }}>
           <MenuItem value="">Todas</MenuItem>
           {facultades.map((f) => (
@@ -129,8 +129,11 @@ export default function Bitacora() {
             )),
           ])}
         </TextField>
-        <TextField {...campoFiltro} type="date" label="Desde" value={filtros.desde} onChange={cambiarFiltro('desde')} slotProps={{ inputLabel: { shrink: true } }} />
-        <TextField {...campoFiltro} type="date" label="Hasta" value={filtros.hasta} onChange={cambiarFiltro('hasta')} slotProps={{ inputLabel: { shrink: true } }} />
+        {/* Desde y Hasta: en celular van en la misma fila, mitad y mitad; desde sm se acomodan como los demás filtros */}
+        <div className="grid grid-cols-2 gap-3 sm:contents">
+          <TextField {...campoFiltro} type="date" label="Desde" value={filtros.desde} onChange={cambiarFiltro('desde')} slotProps={{ inputLabel: { shrink: true } }} />
+          <TextField {...campoFiltro} type="date" label="Hasta" value={filtros.hasta} onChange={cambiarFiltro('hasta')} slotProps={{ inputLabel: { shrink: true } }} />
+        </div>
       </div>
 
       {hayFiltros && (
@@ -169,7 +172,7 @@ export default function Bitacora() {
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ bgcolor: '#08338F' }}>
-                  {['Fecha', 'Usuario', 'Acción', 'Registro', 'Detalle', 'Facultad', 'IP'].map((h) => (
+                  {['Fecha', 'Usuario', 'Acción', 'Registro', 'Detalle', 'Facultad'].map((h) => (
                     <TableCell key={h} sx={{ color: '#fff', fontWeight: 700 }}>{h}</TableCell>
                   ))}
                 </TableRow>
@@ -183,7 +186,6 @@ export default function Bitacora() {
                     <TableCell sx={{ maxWidth: 220, overflowWrap: 'anywhere' }}>{r.entidad}</TableCell>
                     <TableCell sx={{ color: '#555', maxWidth: 320, overflowWrap: 'anywhere' }}>{r.detalle}</TableCell>
                     <TableCell>{siglas(r.facultadId)}</TableCell>
-                    <TableCell sx={{ color: '#555', whiteSpace: 'nowrap' }}>{r.ip || '—'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

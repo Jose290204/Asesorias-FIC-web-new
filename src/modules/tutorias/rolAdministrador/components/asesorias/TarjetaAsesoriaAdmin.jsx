@@ -1,3 +1,5 @@
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import ChatOutlinedIcon from '@mui/icons-material/ChatOutlined';
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
@@ -5,13 +7,15 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import LaptopOutlinedIcon from '@mui/icons-material/LaptopOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import TagOutlinedIcon from '@mui/icons-material/TagOutlined';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -21,6 +25,21 @@ import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 
 import { formatearFechaVisible } from '../../../rolEstudiante/utils/fechaSolicitud';
+
+// Línea con ícono, etiqueta en negritas y valor (Estudiante:, Asesor:, Fecha de inicio:...). Si no hay valor, no se muestra.
+function LineaDato({ icono, etiqueta, valor }) {
+    if (!valor) return null;
+
+    return (
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            <Box sx={{ display: 'flex', color: '#08338F', mt: '1px', flexShrink: 0 }}>{icono}</Box>
+            <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere', minWidth: 0 }}>
+                <span className="font-bold">{etiqueta}: </span>
+                {valor}
+            </Typography>
+        </Box>
+    );
+}
 
 // Versión móvil de una fila de la tabla de asesorías.
 export default function TarjetaAsesoriaAdmin({ row, onInfo, onMaterial, onChat, onCompletar, onEliminar, onSesiones }) {
@@ -66,39 +85,16 @@ export default function TarjetaAsesoriaAdmin({ row, onInfo, onMaterial, onChat, 
                 </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere' }}>
-                        <span className="font-bold">Estudiante: </span> {row.estudiante}
-                    </Typography>
-                    <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere' }}>
-                        <span className="font-bold">Asesor: </span> {row.asesor}
-                    </Typography>
-
-                    {/* Fecha de inicio y horario en una sola línea */}
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                        <CalendarMonthOutlinedIcon sx={{ fontSize: 20, color: '#08338F', mt: '1px', flexShrink: 0 }} />
-                        <Typography sx={{ fontSize: '15px', color: '#333333' }}>
-                            {formatearFechaVisible(row.fecha_inicio)}
-                            {(row.horario_con_dia || row.horario) && ` · ${row.horario_con_dia || row.horario}`}
-                        </Typography>
-                    </Box>
-
-                    {/* Chips: modalidad y número de asesoría */}
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {row.modalidad && (
-                            <Chip
-                                size="small"
-                                variant="outlined"
-                                label={row.modalidad}
-                                sx={{ borderColor: '#08338F', color: '#08338F', fontWeight: 600 }}
-                            />
-                        )}
-                        <Chip
-                            size="small"
-                            variant="outlined"
-                            label={`Asesoría #${row.id_asesoria ?? row.id}`}
-                            sx={{ borderColor: '#BDBDBD', color: '#555555', fontWeight: 600 }}
-                        />
-                    </Box>
+                    <LineaDato icono={<PersonOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Estudiante" valor={row.estudiante} />
+                    <LineaDato icono={<BadgeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Asesor" valor={row.asesor} />
+                    <LineaDato
+                        icono={<CalendarMonthOutlinedIcon sx={{ fontSize: 20 }} />}
+                        etiqueta="Fecha de inicio"
+                        valor={row.fecha_inicio ? formatearFechaVisible(row.fecha_inicio) : ''}
+                    />
+                    <LineaDato icono={<AccessTimeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Horario" valor={row.horario_con_dia || row.horario} />
+                    <LineaDato icono={<LaptopOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Modalidad" valor={row.modalidad} />
+                    <LineaDato icono={<TagOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Asesoría" valor={`#${row.id_asesoria ?? row.id}`} />
                 </Box>
             </CardContent>
 

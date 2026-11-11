@@ -7,6 +7,7 @@ import { Avatar, Chip } from '@mui/material';
 import { useEffect, useState } from 'react';
 import Estadistica from '../components/perfil/Estadistica';
 import FilaDato from '../components/perfil/FilaDato';
+import TituloVista from '../../../../components/ui/TituloVista';
 import { traerPerfilEstudiante } from '../../../../Services/estudiantesService';
 
 export default function PerfilEstudiante() {
@@ -49,7 +50,7 @@ export default function PerfilEstudiante() {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <p className="text-2xl font-bold">Perfil</p>
+            <TituloVista titulo="Perfil" />
 
             <div className="w-full flex flex-col items-center gap-5">
 
