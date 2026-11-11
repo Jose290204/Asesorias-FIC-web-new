@@ -34,6 +34,8 @@ export const ACCIONES = {
   'asesor_par.asignado': { etiqueta: 'Asesor par asignado', tono: 'verde', grupo: 'Asesores' },
   'asesor_par.quitado': { etiqueta: 'Asesor par quitado', tono: 'naranja', grupo: 'Asesores' },
 
+  'conexion.cerrada': { etiqueta: 'Sesión cerrada por el admin', tono: 'naranja', grupo: 'Conexiones' },
+
   'solicitud.creada': { etiqueta: 'Solicitud creada', tono: 'verde', grupo: 'Solicitudes' },
   'solicitud.editada': { etiqueta: 'Solicitud editada', tono: 'azul', grupo: 'Solicitudes' },
   'solicitud.cancelada': { etiqueta: 'Solicitud cancelada', tono: 'naranja', grupo: 'Solicitudes' },

@@ -31,7 +31,7 @@ function LineaDato({ icono, texto }) {
 // Solo muestra; la acción de cerrar sesión la maneja quien la usa (TablaUsuariosEnLinea).
 export default function TarjetaUsuarioEnLinea({ row, onCerrarSesion }) {
     const enLinea = estaEnLinea(row.ultimaActividad);
-    const IconoDispositivo = row.dispositivo === 'Web' ? ComputerOutlinedIcon : PhoneIphoneOutlinedIcon;
+    const IconoDispositivo = row.tipo === 'web' ? ComputerOutlinedIcon : PhoneIphoneOutlinedIcon;
 
     return (
         <Card

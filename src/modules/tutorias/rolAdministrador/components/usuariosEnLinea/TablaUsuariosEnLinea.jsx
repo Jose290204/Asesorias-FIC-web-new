@@ -79,7 +79,7 @@ export default function TablaUsuariosEnLinea({ rows = [], onCerrarSesion }) {
             showToast('Sesión cerrada con éxito', 'success');
         } catch (error) {
             console.error('Error al cerrar la sesión:', error);
-            showToast('No se pudo cerrar la sesión', 'error');
+            showToast(error.response?.data?.message || 'No se pudo cerrar la sesión', 'error');
         }
     };
 
