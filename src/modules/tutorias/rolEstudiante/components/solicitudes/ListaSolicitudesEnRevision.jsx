@@ -32,13 +32,15 @@ export default function ListaSolicitudesEnRevision({ solicitudes = [], onEditar,
 
     return (
         <>
-            <Box className="w-full grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-4 md:gap-5">
-                {solicitudes.length === 0 ? (
-                    <Typography sx={{ py: 5, color: 'text.secondary', fontWeight: 'bold', gridColumn: '1 / -1' }}>
+            {solicitudes.length === 0 ? (
+                <Box className="w-full text-center py-10">
+                    <Typography sx={{ fontSize: '16px', color: '#666666' }}>
                         No hay solicitudes con este estado.
                     </Typography>
-                ) : (
-                    solicitudes.map((solicitud) => (
+                </Box>
+            ) : (
+                <Box className="w-full grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-4 md:gap-5">
+                    {solicitudes.map((solicitud) => (
                         <TarjetaSolicitud
                             key={solicitud.id}
                             solicitud={solicitud}
@@ -47,9 +49,9 @@ export default function ListaSolicitudesEnRevision({ solicitudes = [], onEditar,
                             onCancelar={handleOpenCancelar}
                             onNota={handleOpenNota}
                         />
-                    ))
-                )}
-            </Box>
+                    ))}
+                </Box>
+            )}
 
             {/* Modales */}
             <ModalInfoSolicitud

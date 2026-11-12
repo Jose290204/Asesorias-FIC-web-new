@@ -54,7 +54,7 @@ export default function TarjetaSolicitudPendiente({ solicitud, onAceptar, onRech
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <LineaDato icono={<PersonOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Estudiante">{solicitud.nombre_estudiante}</LineaDato>
                     <LineaDato icono={<HelpOutlineOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Razón">{solicitud.razon}</LineaDato>
-                    <LineaDato icono={<CalendarMonthOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Fecha">{solicitud.fecha_inicio_formateada}</LineaDato>
+                    <LineaDato icono={<CalendarMonthOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Fecha de inicio">{solicitud.fecha_inicio_formateada}</LineaDato>
                     <LineaDato icono={<AccessTimeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Horario">{solicitud.horario_con_dia}</LineaDato>
                     <LineaDato icono={<LaptopOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Modalidad">{solicitud.modalidad}</LineaDato>
                     <LineaDato icono={<TagOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Solicitud">{`#${solicitud.id_solicitud}`}</LineaDato>

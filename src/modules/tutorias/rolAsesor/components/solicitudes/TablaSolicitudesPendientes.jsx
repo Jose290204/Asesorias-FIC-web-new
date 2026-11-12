@@ -99,7 +99,7 @@ export default function TablaSolicitudesPendientes({ solicitudes = [], onAceptar
                                     <TableCell sx={{ width: '70px' }} align="center">ID</TableCell>
                                     <TableCell align="left">Materia</TableCell>
                                     <TableCell align="left">Estudiante</TableCell>
-                                    <TableCell align="center">Fecha</TableCell>
+                                    <TableCell align="center">Fecha de inicio</TableCell>
                                     <TableCell align="center">Horario</TableCell>
                                     <TableCell align="left">Razón</TableCell>
                                     <TableCell align="center">Modalidad</TableCell>

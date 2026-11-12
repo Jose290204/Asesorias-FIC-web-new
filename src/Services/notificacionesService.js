@@ -27,19 +27,22 @@ export const TIPOS = {
   'asesoria.cancelada': { rutas: RUTAS_HISTORIAL },
   'sesion.registrada': { rutas: RUTAS_EN_CURSO },
   'material.subido': { rutas: RUTAS_EN_CURSO },
-  'chat.mensaje': { rutas: RUTAS_EN_CURSO },
+  // Los dos roles tienen su vista de Chats: ahí se abre la conversación del aviso (ver "abreChat")
+  'chat.mensaje': { rutas: { estudiante: '/estudiante/chats', asesor: '/asesor/chats' }, abreChat: true },
 };
 
 const ROL_COMO = { estudiante: ROL.ESTUDIANTE, asesor: ROL.ASESOR };
 
-// A dónde lleva un aviso: { rol, ruta }, o null si el tipo no se conoce (aviso de una versión nueva)
+// A dónde lleva un aviso: { rol, ruta, estado }, o null si el tipo no se conoce (aviso de una versión nueva).
+// "estado" viaja con la navegación: { abrirChat: id } hace que la vista de Chats abra esa conversación.
 export const destinoDe = (notificacion) => {
   const tipo = TIPOS[notificacion.tipo];
   if (!tipo) return null;
   if (tipo.rol) return { rol: tipo.rol, ruta: tipo.ruta };
 
   const como = tipo.rutas[notificacion.como] ? notificacion.como : 'estudiante';
-  return { rol: ROL_COMO[como], ruta: tipo.rutas[como] };
+  const estado = tipo.abreChat && notificacion.asesoriaId ? { abrirChat: notificacion.asesoriaId } : undefined;
+  return { rol: ROL_COMO[como], ruta: tipo.rutas[como], estado };
 };
 
 const adaptar = (n) => ({
@@ -75,4 +78,15 @@ export const marcarNotificacionLeida = async (id) => {
 export const marcarTodasLeidas = async () => {
   const { data } = await api.post('/notificaciones/leidas');
   return data.marcadas;
+};
+
+// DELETE /notificaciones/{id}. 404 si no es del usuario.
+export const borrarNotificacion = async (id) => {
+  await api.delete(`/notificaciones/${id}`);
+};
+
+// DELETE /notificaciones. Borra todas las del usuario. Responde { borradas: n }
+export const borrarTodasNotificaciones = async () => {
+  const { data } = await api.delete('/notificaciones');
+  return data.borradas;
 };

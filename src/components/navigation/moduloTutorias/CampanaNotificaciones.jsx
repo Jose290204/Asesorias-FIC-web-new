@@ -2,6 +2,8 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import ChatBubbleOutlinedIcon from '@mui/icons-material/ChatBubbleOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteSweepOutlinedIcon from '@mui/icons-material/DeleteSweepOutlined';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import EditCalendarOutlinedIcon from '@mui/icons-material/EditCalendarOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -12,12 +14,14 @@ import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import MarkEmailUnreadOutlinedIcon from '@mui/icons-material/MarkEmailUnreadOutlined';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import { Badge, ButtonBase, CircularProgress, IconButton, Popover, useMediaQuery } from '@mui/material';
+import { Badge, ButtonBase, CircularProgress, IconButton, Popover, Tooltip, useMediaQuery } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { tiempoRelativo } from '../../../Services/formatoFechas';
 import {
+  borrarNotificacion,
+  borrarTodasNotificaciones,
   marcarNotificacionLeida,
   marcarTodasLeidas,
   destinoDe,
@@ -71,6 +75,8 @@ function Campana({ color }) {
   const [pagina, setPagina] = useState(1);
   const [ultimaPagina, setUltimaPagina] = useState(1);
   const [cargandoMas, setCargandoMas] = useState(false);
+  // Pregunta "¿Borrar todas?" antes de vaciar la lista
+  const [confirmandoBorrado, setConfirmandoBorrado] = useState(false);
 
   const abierto = Boolean(anchorEl);
 
@@ -110,7 +116,10 @@ function Campana({ color }) {
     setAnchorEl(e.currentTarget);
     traerNotificaciones(1).then(aplicarPrimera).catch(() => {});
   };
-  const handleCerrar = () => setAnchorEl(null);
+  const handleCerrar = () => {
+    setAnchorEl(null);
+    setConfirmandoBorrado(false);
+  };
 
   const abrirNotificacion = (n) => {
     handleCerrar();
@@ -127,7 +136,7 @@ function Campana({ color }) {
 
     // Un asesor par puede recibir un aviso del otro rol: se cambia de pantalla antes de ir
     if (destino.rol !== rol && roles.includes(destino.rol)) cambiarRol(destino.rol);
-    navigate(destino.ruta);
+    navigate(destino.ruta, { state: destino.estado });
   };
 
   const marcarTodas = async () => {
@@ -137,6 +146,33 @@ function Campana({ color }) {
       setNoLeidas(0);
     } catch {
       /* se reintenta al volver a tocar el botón */
+    }
+  };
+
+  // Quita un aviso de la lista al instante; si el servidor falla, la siguiente consulta lo regresa
+  const borrarUna = (n) => {
+    setItems((prev) => prev.filter((x) => x.id !== n.id));
+    if (!n.leida) setNoLeidas((c) => Math.max(0, c - 1));
+
+    borrarNotificacion(n.id)
+      .then(() => {
+        // Con más páginas por cargar, se reacomoda desde la primera para no saltarse avisos
+        if (pagina < ultimaPagina) return traerNotificaciones(1).then(aplicarPrimera);
+        return undefined;
+      })
+      .catch(() => traerNotificaciones(1).then(aplicarPrimera).catch(() => {}));
+  };
+
+  const borrarTodas = async () => {
+    setConfirmandoBorrado(false);
+    try {
+      await borrarTodasNotificaciones();
+      setItems([]);
+      setNoLeidas(0);
+      setPagina(1);
+      setUltimaPagina(1);
+    } catch {
+      /* la lista se queda como estaba */
     }
   };
 
@@ -193,17 +229,53 @@ function Campana({ color }) {
       >
         <div className="flex items-center justify-between gap-2 border-b border-gray-200 bg-white px-4 py-3">
           <p className="text-base font-bold text-[#08338F]">Notificaciones</p>
-          {noLeidas > 0 && (
-            <button
-              type="button"
-              onClick={marcarTodas}
-              className="flex items-center gap-1 text-xs font-semibold text-[#244B91] hover:underline"
-            >
-              <DoneAllIcon sx={{ fontSize: 16 }} />
-              Marcar todas como leídas
-            </button>
-          )}
+          <div className="flex items-center gap-1">
+            {noLeidas > 0 && (
+              <button
+                type="button"
+                onClick={marcarTodas}
+                className="flex items-center gap-1 text-xs font-semibold text-[#244B91] hover:underline"
+              >
+                <DoneAllIcon sx={{ fontSize: 16 }} />
+                Marcar leídas
+              </button>
+            )}
+            {items.length > 0 && (
+              <Tooltip title="Borrar todas">
+                <IconButton
+                  size="small"
+                  aria-label="Borrar todas las notificaciones"
+                  onClick={() => setConfirmandoBorrado(true)}
+                  sx={{ color: '#6b7280', '&:hover': { color: '#C62828' } }}
+                >
+                  <DeleteSweepOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+          </div>
         </div>
+
+        {confirmandoBorrado && (
+          <div className="flex items-center justify-between gap-2 border-b border-red-100 bg-[#FFF4F4] px-4 py-2">
+            <p className="text-xs font-semibold text-[#8E1B1B]">¿Borrar todas las notificaciones?</p>
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={borrarTodas}
+                className="rounded-md bg-[#C62828] px-2.5 py-1 text-xs font-semibold text-white hover:bg-[#A31F1F]"
+              >
+                Borrar
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmandoBorrado(false)}
+                className="rounded-md px-2.5 py-1 text-xs font-semibold text-gray-600 hover:bg-white"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="overflow-y-auto">
           {items.length === 0 ? (
@@ -216,20 +288,24 @@ function Campana({ color }) {
               const { Icono, color: colorIcono, fondo } = ESTILO_TIPO[n.tipo] ?? ESTILO_DEFECTO;
 
               return (
-                <ButtonBase
+                <div
                   key={n.id}
+                  className="flex items-start border-b border-[#eef0f4]"
+                  style={{ backgroundColor: n.leida ? '#fff' : '#EEF3FB' }}
+                >
+                <ButtonBase
                   onClick={() => abrirNotificacion(n)}
                   sx={{
-                    width: '100%',
+                    flex: 1,
+                    minWidth: 0,
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: '12px',
-                    px: 2,
+                    pl: 2,
+                    pr: 1,
                     py: 1.5,
                     textAlign: 'left',
-                    borderBottom: '1px solid #eef0f4',
-                    bgcolor: n.leida ? '#fff' : '#EEF3FB',
-                    '&:hover': { bgcolor: n.leida ? '#f6f7f9' : '#E3EBF8' },
+                    '&:hover': { bgcolor: 'rgba(36, 75, 145, 0.06)' },
                   }}
                 >
                   <span
@@ -251,6 +327,18 @@ function Campana({ color }) {
                     <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-[#244B91]" aria-label="Sin leer" />
                   )}
                 </ButtonBase>
+
+                <Tooltip title="Borrar">
+                  <IconButton
+                    size="small"
+                    aria-label="Borrar notificación"
+                    onClick={() => borrarUna(n)}
+                    sx={{ mt: 1, mr: 0.75, color: '#9ca3af', '&:hover': { color: '#C62828' } }}
+                  >
+                    <CloseIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+                </div>
               );
             })
           )}

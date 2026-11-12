@@ -37,6 +37,7 @@ import BitacoraAdmin from './modules/tutorias/rolAdministrador/views/Bitacora';
 
 // Vistas de asesor
 import AsesoriasEnCurso from './modules/tutorias/rolAsesor/views/AsesoriasEnCurso';
+import ChatsAsesor from './modules/tutorias/rolAsesor/views/ChatsAsesor';
 import DisponibilidadAsesor from './modules/tutorias/rolAsesor/views/DisponibilidadAsesor';
 import HistorialAsesorias from './modules/tutorias/rolAsesor/views/HistorialAsesorias';
 import PerfilAsesor from './modules/tutorias/rolAsesor/views/PerfilAsesor';
@@ -44,6 +45,7 @@ import SolicitudesPendientes from './modules/tutorias/rolAsesor/views/Solicitude
 
 // Vistas de Estudiante
 import AsesoriasEstudiante from './modules/tutorias/rolEstudiante/views/AsesoriasEstudiante';
+import ChatsEstudiante from './modules/tutorias/rolEstudiante/views/ChatsEstudiante';
 import HistorialAsesoriasEstudiante from './modules/tutorias/rolEstudiante/views/HistorialAsesoriasEstudiante';
 import PerfilEstudiante from './modules/tutorias/rolEstudiante/views/PerfilEstudiante';
 import SolicitarAsesoria from './modules/tutorias/rolEstudiante/views/SolicitarAsesoria';
@@ -149,6 +151,7 @@ export default function App() {
           <Route path="solicitudes-pendientes" element={<SolicitudesPendientes />} />
           <Route path="disponibilidad" element={<DisponibilidadAsesor />} />
           <Route path="asesorias-en-curso" element={<AsesoriasEnCurso />} />
+          <Route path="chats" element={<ChatsAsesor />} />
           <Route path="historial-de-asesorias" element={<HistorialAsesorias />} />
           <Route path="perfil-asesor" element={<PerfilAsesor />} />
         </Route>
@@ -165,6 +168,7 @@ export default function App() {
           <Route index element={<Navigate to="/estudiante/solicitar-asesorias" replace />} />
           <Route path="solicitar-asesorias" element={<SolicitarAsesoria />} />
           <Route path="asesorias-estudiante" element={<AsesoriasEstudiante />} />
+          <Route path="chats" element={<ChatsEstudiante />} />
           <Route path="solicitudes-en-revision" element={<SolicitudesEnRevision />} />
           <Route path="historial-de-asesorias" element={<HistorialAsesoriasEstudiante />} />
           <Route path="perfil-estudiante" element={<PerfilEstudiante />} />

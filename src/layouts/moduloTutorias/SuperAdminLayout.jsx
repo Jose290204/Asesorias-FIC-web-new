@@ -27,6 +27,14 @@ export default function SuperAdminLayout() {
   const open = openPath === pathname;
   const closeDrawer = () => setOpenPath(null);
 
+  // Al cambiar de ruta se olvida el drawer abierto: si no, al volver a la ruta donde se abrió
+  // (p. ej. tocando "Asesorías FIC") el menú reaparecería solo.
+  const [pathPrevio, setPathPrevio] = useState(pathname);
+  if (pathPrevio !== pathname) {
+    setPathPrevio(pathname);
+    setOpenPath(null);
+  }
+
   // Menú del usuario (arriba a la derecha, solo en celular)
   const [anchorEl, setAnchorEl] = useState(null);
   const userMenuOpen = Boolean(anchorEl);
