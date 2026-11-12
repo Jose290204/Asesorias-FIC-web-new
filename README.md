@@ -1,16 +1,24 @@
-# React + Vite
+# 🎓 Asesorías FIC
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Plataforma web para organizar y dar seguimiento a las asesorías y tutorías de la Facultad de Informática Culiacán (UAS).**
 
-Currently, two official plugins are available:
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
+![MUI](https://img.shields.io/badge/Material_UI-007FFF?logo=mui&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 📖 Acerca del proyecto
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Asesorías FIC es un sistema que centraliza el proceso de asesoría académica entre estudiantes y asesores: desde la solicitud de apoyo en una materia hasta el seguimiento de las sesiones y el cierre de la asesoría. Reemplaza los registros dispersos por una herramienta única, ordenada y accesible desde computadora o celular.
 
-## Expanding the ESLint configuration
+El proyecto se desarrolla en la Facultad de Informática Culiacán con la visión de **extenderse a otras facultades de la Universidad Autónoma de Sinaloa**, donde cada una opera con su propia información dentro de la misma plataforma.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## ✨ Características
+
+- Búsqueda de asesores por materia y modalidad, y solicitud de asesoría.
+- Seguimiento de asesorías, sesiones e historial.
+- Material de apoyo y chat entre estudiante y asesor.
+- Panel de administración con reportes exportables a PDF y bitácora de acciones.
+- Diseño adaptable, pensado para usarse cómodamente desde el celular.
