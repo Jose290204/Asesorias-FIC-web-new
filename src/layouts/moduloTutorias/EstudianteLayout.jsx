@@ -6,6 +6,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import LogoAsesorias from '../../assets/logo_asesorias.png';
 import EstudianteSidebar from '../../components/navigation/moduloTutorias/EstudianteSidbar';
 import BarraContexto from '../../components/navigation/moduloTutorias/BarraContexto';
+import CampanaNotificaciones from '../../components/navigation/moduloTutorias/CampanaNotificaciones';
 import MenuUsuario from '../../components/navigation/moduloTutorias/MenuUsuario';
 import { useAuth } from '../../context/AuthContext';
 import { traerPerfilEstudiante } from '../../Services/estudiantesService';
@@ -100,6 +101,8 @@ export default function EstudianteLayout() {
 
         {/* Empuja el usuario a la derecha */}
         <div className="flex-1" />
+
+        <CampanaNotificaciones soloEn="celular" />
 
         {/* Usuario: avatar + nombre (el nombre solo desde pantallas sm) */}
         <Button

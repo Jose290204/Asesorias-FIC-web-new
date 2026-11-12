@@ -5,13 +5,9 @@ import { ROL } from '../../../constants/roles';
 import { useAuth } from '../../../context/AuthContext';
 import { useFacultadActiva } from '../../../context/FacultadActivaContext';
 import { catalogosService } from '../../../Services/catalogosService';
+import CampanaNotificaciones from './CampanaNotificaciones';
 
 // Franja superior del contenido (solo escritorio): logo de la facultad, su nombre y el ciclo escolar vigente.
-// - La facultad sale de la sesión (usuario.facultad); si el super admin está dentro del panel
-//   de una facultad, se muestra esa.
-// - El ciclo sale de GET /catalogos (campo ciclo_escolar). Si el backend aún no lo manda, no se muestra.
-// - En el panel principal del super admin (fuera de toda facultad) va el logo de la UAS y no hay ciclo:
-//   el ciclo escolar es de cada facultad, así que mostrar uno ahí sería engañoso.
 export default function BarraContexto() {
   const { usuario, rol } = useAuth();
   const { facultadActiva } = useFacultadActiva();
@@ -59,6 +55,11 @@ export default function BarraContexto() {
         <p className="whitespace-nowrap rounded-full bg-[#1B3A73]/10 px-3 py-1 text-sm font-bold text-[#1B3A73] ring-1 ring-[#1B3A73]/20">
           Ciclo escolar {ciclo.nombre}
         </p>
+      )}
+
+      {/* Solo estudiante y asesor reciben avisos */}
+      {(rol === ROL.ESTUDIANTE || rol === ROL.ASESOR) && (
+        <CampanaNotificaciones soloEn="escritorio" color="#1B3A73" />
       )}
     </div>
   );

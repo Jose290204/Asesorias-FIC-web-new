@@ -117,11 +117,20 @@ export default function TarjetaAsesor({ asesor, onSaveSolicitud, showToast, razo
                         variant="contained"
                         sx={{
                             minHeight: 40,
-                            backgroundColor: '#2E7D32',
+                            background: 'linear-gradient(135deg, #43A047 0%, #2E7D32 55%, #1B5E20 100%)',
                             color: '#ffffff',
-                            borderRadius: '5px',
+                            fontWeight: 700,
+                            letterSpacing: '0.3px',
+                            borderRadius: '8px',
                             textTransform: 'none',
-                            '&:hover': { backgroundColor: '#1B5E20' }
+                            boxShadow: '0 4px 12px rgba(46, 125, 50, 0.45)',
+                            transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                            '&:hover': {
+                                background: 'linear-gradient(135deg, #2E7D32 0%, #1B5E20 100%)',
+                                boxShadow: '0 6px 16px rgba(27, 94, 32, 0.55)',
+                                transform: 'translateY(-1px)'
+                            },
+                            '&:active': { transform: 'translateY(0)', boxShadow: '0 2px 6px rgba(27, 94, 32, 0.5)' }
                         }}
                         startIcon={<SendIcon />}
                         onClick={() => abrirModal(setOpenSolicitar)}
