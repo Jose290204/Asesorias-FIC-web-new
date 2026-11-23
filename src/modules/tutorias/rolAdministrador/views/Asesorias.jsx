@@ -20,6 +20,7 @@ import { mensajesDeError } from '../../../../Services/errores';
 import ModalCrearAsesoria from '../components/asesorias/modales/ModalCrearAsesoria';
 import ModalFiltrosAdmin from '../components/asesorias/modales/ModalFiltrosAdmin';
 import TablaAsesorias from '../components/asesorias/TablaAsesorias';
+import { MINIMO_CARGA_MS, conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 
 const initialFiltros = {
   licenciatura: '',
@@ -33,6 +34,8 @@ export default function Asesorias() {
   // Lo que se escribe en el buscador, y el texto que ya se mandó a la API (con una pausa al escribir)
   const [busqueda, setBusqueda] = useState('');
   const [buscar, setBuscar] = useState('');
+  // Mientras se busca por texto, los filtros no cuentan: la búsqueda es sobre todas las asesorías
+  const buscando = Boolean(busqueda.trim());
 
   // La API pagina de 10 en 10: "meta" trae la última página y el total
   const [pagina, setPagina] = useState(1);
@@ -104,11 +107,11 @@ export default function Asesorias() {
       if (!silencioso) setCargando(true);
       setError(false);
 
-      const { asesorias: lista, meta: metaNueva } = await traerAsesoriasAdmin({
+      const { asesorias: lista, meta: metaNueva } = await conTiempoMinimo(traerAsesoriasAdmin({
         buscar,
         page: pagina,
-        filtros: aplicados
-      });
+        filtros: buscar ? initialFiltros : aplicados
+      }), silencioso ? 0 : MINIMO_CARGA_MS);
 
       // Si se atendió la última asesoría de esta página, la página queda vacía:
       // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)
@@ -233,7 +236,7 @@ export default function Asesorias() {
       {/* Barra de herramientas: en celular el filtro va arriba y el buscador abajo (igual que las otras vistas) */}
       <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
         <div className="flex flex-col items-start gap-3">
-          <BotonFiltro onClick={handleOpenModalFiltros} />
+          <BotonFiltro onClick={handleOpenModalFiltros} disabled={buscando} />
           {hayFiltros && (
             <button
               type="button"

@@ -19,6 +19,7 @@ import {
 import { mensajesDeError } from '../../../../Services/errores';
 import ModalAsignarAsesorPar from '../components/asesoresPar/modales/ModalAsignarAsesorPar';
 import TablaAsesoresPar from '../components/asesoresPar/TablaAsesoresPar';
+import { MINIMO_CARGA_MS, conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 
 // Azul de los botones de asignar, del indicador de carga y del botón Reintentar (el mismo de los botones de crear)
 const AZUL = '#244B91';
@@ -34,6 +35,8 @@ export default function AsesoresPar() {
     // Lo que se escribe en el buscador, y el texto que ya se mandó a la API (con una pausa al escribir)
     const [busqueda, setBusqueda] = useState('');
     const [buscar, setBuscar] = useState('');
+    // Mientras se busca por texto, el filtro de materia no cuenta: la búsqueda es sobre todos los asesores
+    const buscando = Boolean(busqueda.trim());
 
     // Filtro por materia ('' = todas): deja a los asesores que imparten esa materia
     const [materiaId, setMateriaId] = useState('');
@@ -79,11 +82,11 @@ export default function AsesoresPar() {
             if (!silencioso) setCargando(true);
             setError(false);
 
-            const { asesores: lista, meta: metaNueva } = await traerParesAdmin({
+            const { asesores: lista, meta: metaNueva } = await conTiempoMinimo(traerParesAdmin({
                 buscar,
                 page: pagina,
-                materiaId
-            });
+                materiaId: buscar ? '' : materiaId
+            }), silencioso ? 0 : MINIMO_CARGA_MS);
 
             // Si se dio de baja al último de esta página, la página queda vacía:
             // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)
@@ -167,6 +170,7 @@ export default function AsesoresPar() {
                     value={materiaId}
                     onChange={handleCambiarMateria}
                     sx={ESTILO_FILTRO}
+                    disabled={buscando}
                     slotProps={{ select: {
                             displayEmpty: true,
                             MenuProps: MENU_LISTA,

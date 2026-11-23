@@ -10,6 +10,7 @@ import InputBuscar from '../../../../components/ui/InputBuscar';
 import TituloVista from '../../../../components/ui/TituloVista';
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import { useCatalogos } from '../../../../context/CatalogosContext';
+import { compararGrupos, etiquetaGrupo } from '../../../../utils/etiquetaGrupo';
 import {
     crearEstudianteAdmin,
     darDeBajaEstudianteAdmin,
@@ -17,10 +18,10 @@ import {
     traerEstudiantesAdmin
 } from '../../../../Services/estudiantesAdminService';
 import { mensajesDeError } from '../../../../Services/errores';
+import ModalCargaEstudiantes from '../components/estudiantes/modales/ModalCargaEstudiantes';
 import ModalCrearEstudiante from '../components/estudiantes/modales/ModalCrearEstudiante';
 import TablaEstudiantes from '../components/estudiantes/TablaEstudiantes';
-import ModalCargaExcel from '../components/ModalCargaExel';
-import { uploadEstudiantes } from '../services/estudianteService';
+import { MINIMO_CARGA_MS, conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 
 // Color de los botones de crear (distinto al verde de la carga masiva)
 const AZUL = '#244B91';
@@ -29,12 +30,17 @@ const AZUL_OSCURO = '#1B3A73';
 // Estilo de las listas de filtro (licenciatura y grupo)
 const ESTILO_FILTRO = { width: { xs: 230, sm: 220 }, maxWidth: '100%', flexShrink: 0, backgroundColor: '#FFFFFF' };
 
+// Altura máxima del menú de las listas desplegables, para que no se desborden de la pantalla
+const MENU_LISTA = { slotProps: { paper: { sx: { maxHeight: 320 } } } };
+
 export default function Estudiantes() {
     const { catalogos } = useCatalogos();
 
     // Lo que se escribe en el buscador, y el texto que ya se mandó a la API (con una pausa al escribir)
     const [busqueda, setBusqueda] = useState('');
     const [buscar, setBuscar] = useState('');
+    // Mientras se busca por texto, los filtros no cuentan: la búsqueda es sobre todos los estudiantes
+    const buscando = Boolean(busqueda.trim());
 
     // Filtros ('' = todas). El grupo depende de la licenciatura elegida
     const [licenciaturaId, setLicenciaturaId] = useState('');
@@ -61,7 +67,8 @@ export default function Estudiantes() {
     // Grupos que ofrece el filtro: los de la licenciatura elegida, o todos si no hay ninguna
     const gruposFiltro = useMemo(() => {
         const grupos = catalogos?.grupos ?? [];
-        return licenciaturaId ? grupos.filter((g) => g.licenciatura_id === licenciaturaId) : grupos;
+        const visibles = licenciaturaId ? grupos.filter((g) => g.licenciatura_id === licenciaturaId) : grupos;
+        return [...visibles].sort(compararGrupos);
     }, [catalogos, licenciaturaId]);
 
     // Al dejar de escribir 400 ms se busca en la API y se vuelve a la página 1
@@ -80,12 +87,12 @@ export default function Estudiantes() {
             if (!silencioso) setCargando(true);
             setError(false);
 
-            const { estudiantes: lista, meta: metaNueva } = await traerEstudiantesAdmin({
+            const { estudiantes: lista, meta: metaNueva } = await conTiempoMinimo(traerEstudiantesAdmin({
                 buscar,
                 page: pagina,
-                licenciaturaId,
-                grupoId
-            });
+                licenciaturaId: buscar ? '' : licenciaturaId,
+                grupoId: buscar ? '' : grupoId
+            }), silencioso ? 0 : MINIMO_CARGA_MS);
 
             // Si se dio de baja al último de esta página, la página queda vacía:
             // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)
@@ -134,18 +141,6 @@ export default function Estudiantes() {
     const handleDeleteEstudiante = (estudiante) =>
         ejecutar(() => darDeBajaEstudianteAdmin(estudiante.id), 'Estudiante dado de baja');
 
-    // TODO (etapa 2.7): conectar la carga masiva con el backend; por ahora el servicio es una simulación
-    const handleExcelData = async (data) => {
-        try {
-            await uploadEstudiantes(data);
-            showToast('Estudiantes cargados exitosamente', 'success');
-            cargarEstudiantes({ silencioso: true });
-        } catch (err) {
-            console.error('Error al procesar el archivo de estudiantes:', err);
-            showToast('Error al procesar el archivo de estudiantes', 'error');
-        }
-    };
-
     // Al cambiar de licenciatura se limpia el grupo; cualquier filtro regresa a la página 1
     const handleCambiarLicenciatura = (e) => {
         setLicenciaturaId(e.target.value);
@@ -193,7 +188,8 @@ export default function Estudiantes() {
                     value={licenciaturaId}
                     onChange={handleCambiarLicenciatura}
                     sx={ESTILO_FILTRO}
-                    slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
+                    disabled={buscando}
+                    slotProps={{ select: { displayEmpty: true, MenuProps: MENU_LISTA }, inputLabel: { shrink: true } }}
                 >
                     <MenuItem value="">
                         <em>Todas</em>
@@ -212,14 +208,15 @@ export default function Estudiantes() {
                     value={grupoId}
                     onChange={handleCambiarGrupo}
                     sx={ESTILO_FILTRO}
-                    slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
+                    disabled={buscando}
+                    slotProps={{ select: { displayEmpty: true, MenuProps: MENU_LISTA }, inputLabel: { shrink: true } }}
                 >
                     <MenuItem value="">
                         <em>Todos</em>
                     </MenuItem>
                     {gruposFiltro.map((g) => (
                         <MenuItem key={g.id} value={g.id}>
-                            {g.modalidad === 'virtual' ? `${g.nombre} (virtual)` : g.nombre}
+                            {etiquetaGrupo(g, catalogos?.licenciaturas)}
                         </MenuItem>
                     ))}
                 </TextField>
@@ -291,11 +288,11 @@ export default function Estudiantes() {
                 onSave={handleCrearEstudiante}
             />
 
-            {/* Modal reutilizable de carga masiva desde Excel */}
-            <ModalCargaExcel
+            {/* Carga masiva desde la plantilla de Excel (valida, muestra errores y crea) */}
+            <ModalCargaEstudiantes
                 open={modalExcelOpen}
                 onClose={() => setModalExcelOpen(false)}
-                onDataLoaded={handleExcelData}
+                onTerminado={() => cargarEstudiantes({ silencioso: true })}
             />
 
 

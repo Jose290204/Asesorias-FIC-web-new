@@ -2,13 +2,20 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Pagination from "@mui/material/Pagination";
 import { useCallback, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import ToastNotification from "../../../../components/ui/ToastNotification";
-import { traerAsesorias } from "../../../../Services/asesoriasEstudianteService";
+import { encontrarAsesoriaEnCurso, traerAsesorias } from "../../../../Services/asesoriasEstudianteService";
 import { mensajesDeError } from "../../../../Services/errores";
 import TituloVista from "../../../../components/ui/TituloVista";
 import ListaAsesoriasEstudiante from "../components/asesorias/ListaAsesoriasEstudiante";
 
 export default function AsesoriasEstudiante() {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Asesoría cuyo material se abre al llegar desde el aviso de material nuevo
+    const [materialDesdeAviso, setMaterialDesdeAviso] = useState(null);
+
     const [asesorias, setAsesorias] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -54,6 +61,22 @@ export default function AsesoriasEstudiante() {
         return () => clearInterval(intervalo);
     }, [cargarAsesorias]);
 
+    // Si se llega desde el aviso de material nuevo, se abre el material de esa asesoría.
+    // El estado de la navegación se limpia para que al recargar la página no se vuelva a abrir.
+    useEffect(() => {
+        const id = Number(location.state?.abrirMaterial);
+        if (!id) return;
+
+        navigate(location.pathname, { replace: true, state: null });
+
+        encontrarAsesoriaEnCurso(id)
+            .then((asesoria) => {
+                if (asesoria) setMaterialDesdeAviso(asesoria);
+                else setToast({ open: true, message: "Esa asesoría ya no está en curso.", type: "info" });
+            })
+            .catch(() => setToast({ open: true, message: "No se pudo abrir el material.", type: "error" }));
+    }, [location.state, location.pathname, navigate]);
+
     // Al abrir o cerrar el chat, esa asesoría ya no tiene mensajes sin leer
     const handleChatLeido = (asesoriaId) =>
         setAsesorias((prev) => prev.map((a) => (a.id === asesoriaId ? { ...a, mensajes_sin_leer: 0 } : a)));
@@ -82,7 +105,12 @@ export default function AsesoriasEstudiante() {
                     </div>
                 ) : (
                     <>
-                        <ListaAsesoriasEstudiante asesorias={asesorias} onChatLeido={handleChatLeido} />
+                        <ListaAsesoriasEstudiante
+                            asesorias={asesorias}
+                            onChatLeido={handleChatLeido}
+                            materialExterno={materialDesdeAviso}
+                            onCerrarMaterialExterno={() => setMaterialDesdeAviso(null)}
+                        />
 
                         {/* Paginación: solo aparece si hay más de una página */}
                         {meta && meta.last_page > 1 && (

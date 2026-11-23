@@ -15,6 +15,7 @@ import {
 } from '../../../../Services/solicitudesAdminService';
 import { ETIQUETA_ESTATUS } from '../components/solicitudes/estatusSolicitud';
 import TablaSolicitudes from '../components/solicitudes/TablaSolicitudes';
+import { MINIMO_CARGA_MS, conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 
 // Al entrar se muestran las pendientes: son las únicas que se pueden aceptar o rechazar
 const ESTATUS_INICIAL = 'pendiente';
@@ -23,6 +24,8 @@ export default function Solicitudes() {
   // Lo que se escribe en el buscador, y el texto que ya se mandó a la API (con una pausa al escribir)
   const [busqueda, setBusqueda] = useState('');
   const [buscar, setBuscar] = useState('');
+  // Mientras se busca por texto, el filtro de estatus no cuenta: la búsqueda es sobre todas las solicitudes
+  const buscando = Boolean(busqueda.trim());
 
   // La API pagina de 10 en 10: "meta" trae la última página y el total
   const [pagina, setPagina] = useState(1);
@@ -61,11 +64,11 @@ export default function Solicitudes() {
       if (!silencioso) setCargando(true);
       setError(false);
 
-      const { solicitudes: lista, meta: metaNueva } = await traerSolicitudesAdmin({
+      const { solicitudes: lista, meta: metaNueva } = await conTiempoMinimo(traerSolicitudesAdmin({
         buscar,
         page: pagina,
-        estatus
-      });
+        estatus: buscar ? '' : estatus
+      }), silencioso ? 0 : MINIMO_CARGA_MS);
 
       // Si se atendió la última solicitud de esta página, la página queda vacía:
       // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)
@@ -137,6 +140,7 @@ export default function Solicitudes() {
           label="Estatus"
           value={estatus}
           onChange={handleCambiarEstatus}
+          disabled={buscando}
           sx={{ minWidth: { xs: 150, sm: 200 }, width: { xs: 170, sm: 'auto' }, flexShrink: 0, backgroundColor: '#FFFFFF' }}
           slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
         >

@@ -12,6 +12,12 @@
 
 /* 3. Establecemos Roboto como la fuente base para toda la aplicación */
 @layer base {
+  /* Sin rebote al llegar al tope o al final con el touchpad (en la app instalada dejaba un hueco blanco arriba) */
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+
   body {
     font-family: var(--font-inter);
     margin: 0;

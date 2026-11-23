@@ -26,7 +26,8 @@ export const TIPOS = {
   'asesoria.completada': { rutas: RUTAS_HISTORIAL },
   'asesoria.cancelada': { rutas: RUTAS_HISTORIAL },
   'sesion.registrada': { rutas: RUTAS_EN_CURSO },
-  'material.subido': { rutas: RUTAS_EN_CURSO },
+  // Lleva a Asesorías en curso y abre el material de esa asesoría (ver "abreMaterial")
+  'material.subido': { rutas: RUTAS_EN_CURSO, abreMaterial: true },
   // Los dos roles tienen su vista de Chats: ahí se abre la conversación del aviso (ver "abreChat")
   'chat.mensaje': { rutas: { estudiante: '/estudiante/chats', asesor: '/asesor/chats' }, abreChat: true },
 };
@@ -34,14 +35,17 @@ export const TIPOS = {
 const ROL_COMO = { estudiante: ROL.ESTUDIANTE, asesor: ROL.ASESOR };
 
 // A dónde lleva un aviso: { rol, ruta, estado }, o null si el tipo no se conoce (aviso de una versión nueva).
-// "estado" viaja con la navegación: { abrirChat: id } hace que la vista de Chats abra esa conversación.
+// "estado" viaja con la navegación: { abrirChat: id } hace que la vista de Chats abra esa conversación y
+// { abrirMaterial: id } hace que Asesorías en curso abra el material de esa asesoría.
 export const destinoDe = (notificacion) => {
   const tipo = TIPOS[notificacion.tipo];
   if (!tipo) return null;
   if (tipo.rol) return { rol: tipo.rol, ruta: tipo.ruta };
 
   const como = tipo.rutas[notificacion.como] ? notificacion.como : 'estudiante';
-  const estado = tipo.abreChat && notificacion.asesoriaId ? { abrirChat: notificacion.asesoriaId } : undefined;
+  let estado;
+  if (tipo.abreChat && notificacion.asesoriaId) estado = { abrirChat: notificacion.asesoriaId };
+  if (tipo.abreMaterial && notificacion.asesoriaId) estado = { abrirMaterial: notificacion.asesoriaId };
   return { rol: ROL_COMO[como], ruta: tipo.rutas[como], estado };
 };
 
@@ -66,6 +70,13 @@ export const traerNotificaciones = async (pagina = 1) => {
     noLeidas: data.meta?.no_leidas ?? 0,
     ultimaPagina: data.meta?.last_page ?? 1,
   };
+};
+
+// GET /notificaciones/resumen: consulta muy barata (sin la lista) para saber si hay algo nuevo.
+// Regresa { noLeidas, ultima, ultimaEn }; si cualquiera cambia, hay que traer la lista.
+export const traerResumenNotificaciones = async () => {
+  const { data } = await api.get('/notificaciones/resumen');
+  return { noLeidas: data.no_leidas ?? 0, ultima: data.ultima ?? null, ultimaEn: data.ultima_en ?? null };
 };
 
 // POST /notificaciones/{id}/leida. 404 si no es del usuario.

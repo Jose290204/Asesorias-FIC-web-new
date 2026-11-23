@@ -15,7 +15,7 @@ import MarkEmailUnreadOutlinedIcon from '@mui/icons-material/MarkEmailUnreadOutl
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import { Badge, ButtonBase, CircularProgress, IconButton, Popover, Tooltip, useMediaQuery } from '@mui/material';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { tiempoRelativo } from '../../../Services/formatoFechas';
@@ -26,6 +26,7 @@ import {
   marcarTodasLeidas,
   destinoDe,
   traerNotificaciones,
+  traerResumenNotificaciones,
 } from '../../../Services/notificacionesService';
 
 // Ícono y color de cada tipo (los mismos códigos de TIPOS en notificacionesService.js)
@@ -52,7 +53,8 @@ const ESTILO_TIPO = {
 };
 const ESTILO_DEFECTO = { Icono: NotificationsNoneIcon, color: '#5f6b7a', fondo: '#ECEFF3' };
 
-const CADA_MS = 30000;
+// Cada cuánto se pregunta si hay algo nuevo (la consulta es muy barata: solo trae números)
+const CADA_MS = 10000;
 
 // Campanita con la lista de avisos del usuario (estudiante o asesor).
 // La cabecera del celular y la franja del escritorio son dos lugares distintos: "soloEn" decide
@@ -80,6 +82,9 @@ function Campana({ color }) {
 
   const abierto = Boolean(anchorEl);
 
+  // Huella de lo último que se vio en el servidor: solo si cambia se trae la lista completa
+  const huellaRef = useRef('');
+
   // Aplica la primera página de la consulta al estado
   const aplicarPrimera = useCallback((r) => {
     setItems(r.notificaciones);
@@ -88,26 +93,42 @@ function Campana({ color }) {
     setUltimaPagina(r.ultimaPagina);
   }, []);
 
-  // Consulta cada 30 s mientras la lista está cerrada y la pestaña a la vista.
-  // Abierta no se refresca sola: así no pisa lo que ya cargaste con "Ver más".
-  // Si falla (sin conexión, sesión vencida), se queda con lo que ya tenía.
+  // Cada 10 s (y al volver a la pestaña o a la app) se pide el resumen: son solo números.
+  // La lista completa se trae únicamente si algo cambió. Abierta no se refresca sola:
+  // así no pisa lo que ya cargaste con "Ver más". Si falla (sin conexión, sesión vencida),
+  // se queda con lo que ya tenía.
   useEffect(() => {
     if (abierto) return undefined;
 
     let vigente = true;
     const consultar = () =>
-      traerNotificaciones(1)
-        .then((r) => vigente && aplicarPrimera(r))
+      traerResumenNotificaciones()
+        .then((resumen) => {
+          if (!vigente) return undefined;
+          setNoLeidas(resumen.noLeidas);
+
+          const huella = `${resumen.noLeidas}|${resumen.ultima}|${resumen.ultimaEn}`;
+          if (huella === huellaRef.current) return undefined;
+          huellaRef.current = huella;
+
+          return traerNotificaciones(1).then((r) => vigente && aplicarPrimera(r));
+        })
         .catch(() => {});
 
-    consultar();
-    const id = setInterval(() => {
+    const alVolver = () => {
       if (document.visibilityState === 'visible') consultar();
-    }, CADA_MS);
+    };
+
+    consultar();
+    const id = setInterval(alVolver, CADA_MS);
+    document.addEventListener('visibilitychange', alVolver);
+    window.addEventListener('focus', alVolver);
 
     return () => {
       vigente = false;
       clearInterval(id);
+      document.removeEventListener('visibilitychange', alVolver);
+      window.removeEventListener('focus', alVolver);
     };
   }, [abierto, aplicarPrimera]);
 

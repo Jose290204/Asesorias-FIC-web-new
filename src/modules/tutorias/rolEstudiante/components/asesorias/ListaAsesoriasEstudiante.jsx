@@ -10,7 +10,9 @@ import TarjetaAsesoriaEstudiante from './TarjetaAsesoriaEstudiante';
 
 // Cuadrícula de tarjetas de las asesorías en curso (también en escritorio: aquí no hay tabla).
 // Las asesorías las carga la vista; esto las muestra y maneja los modales de cada tarjeta.
-export default function ListaAsesoriasEstudiante({ asesorias = [], onChatLeido }) {
+// materialExterno: asesoría cuyo material se abre desde fuera (al tocar el aviso de material nuevo);
+// onCerrarMaterialExterno avisa a la vista que ya se cerró.
+export default function ListaAsesoriasEstudiante({ asesorias = [], onChatLeido, materialExterno = null, onCerrarMaterialExterno }) {
     // Estados para Modales
     const [selectedAsesoria, setSelectedAsesoria] = useState(null);
     const [modalMaterialOpen, setModalMaterialOpen] = useState(false);
@@ -74,9 +76,12 @@ export default function ListaAsesoriasEstudiante({ asesorias = [], onChatLeido }
 
             {/* Modales */}
             <ModalMaterialEstudiante
-                open={modalMaterialOpen}
-                onClose={() => setModalMaterialOpen(false)}
-                data={selectedAsesoria}
+                open={modalMaterialOpen || Boolean(materialExterno)}
+                onClose={() => {
+                    setModalMaterialOpen(false);
+                    if (onCerrarMaterialExterno) onCerrarMaterialExterno();
+                }}
+                data={materialExterno ?? selectedAsesoria}
                 showToast={showToast}
             />
 

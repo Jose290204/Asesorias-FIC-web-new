@@ -21,6 +21,7 @@ import { mensajesDeError } from '../../../../Services/errores';
 import ModalAsesorDisciplinar from '../components/asesoresDisciplinares/modales/ModalAsesorDisciplinar';
 import TablaAsesoresDisciplinares from '../components/asesoresDisciplinares/TablaAsesoresDisciplinares';
 import ModalCargaExcel from '../components/ModalCargaExel';
+import { MINIMO_CARGA_MS, conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 
 // Color de los botones de crear (distinto al verde de la carga masiva)
 const AZUL = '#244B91';
@@ -36,6 +37,8 @@ export default function AsesoresDisciplinares() {
     // Lo que se escribe en el buscador, y el texto que ya se mandó a la API (con una pausa al escribir)
     const [busqueda, setBusqueda] = useState('');
     const [buscar, setBuscar] = useState('');
+    // Mientras se busca por texto, el filtro de materia no cuenta: la búsqueda es sobre todos los asesores
+    const buscando = Boolean(busqueda.trim());
 
     // Filtro por materia ('' = todas): deja a los asesores que imparten esa materia
     const [materiaId, setMateriaId] = useState('');
@@ -82,11 +85,11 @@ export default function AsesoresDisciplinares() {
             if (!silencioso) setCargando(true);
             setError(false);
 
-            const { asesores: lista, meta: metaNueva } = await traerDisciplinaresAdmin({
+            const { asesores: lista, meta: metaNueva } = await conTiempoMinimo(traerDisciplinaresAdmin({
                 buscar,
                 page: pagina,
-                materiaId
-            });
+                materiaId: buscar ? '' : materiaId
+            }), silencioso ? 0 : MINIMO_CARGA_MS);
 
             // Si se dio de baja al último de esta página, la página queda vacía:
             // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)
@@ -182,6 +185,7 @@ export default function AsesoresDisciplinares() {
                     value={materiaId}
                     onChange={handleCambiarMateria}
                     sx={ESTILO_FILTRO}
+                    disabled={buscando}
                     slotProps={{ select: {
                             displayEmpty: true,
                             MenuProps: MENU_LISTA,

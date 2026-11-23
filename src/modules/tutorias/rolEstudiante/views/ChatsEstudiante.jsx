@@ -75,12 +75,18 @@ export default function ChatsEstudiante() {
         cargar();
     }, [cargar]);
 
-    // Cada 20 s se refresca la lista (solo con la pestaña a la vista): los globitos se actualizan solos
+    // Cada 10 s, y al volver a la pestaña o a la app, se refresca la lista sin quitarla
+    // (solo con la pestaña a la vista): los globitos y el último mensaje se actualizan solos
     useEffect(() => {
-        const intervalo = setInterval(() => {
+        const refrescar = () => {
             if (!document.hidden) cargar({ silencioso: true });
-        }, 20000);
-        return () => clearInterval(intervalo);
+        };
+        const intervalo = setInterval(refrescar, 10000);
+        document.addEventListener('visibilitychange', refrescar);
+        return () => {
+            clearInterval(intervalo);
+            document.removeEventListener('visibilitychange', refrescar);
+        };
     }, [cargar]);
 
     // Si se llega desde el aviso de un mensaje, se abre esa conversación.
