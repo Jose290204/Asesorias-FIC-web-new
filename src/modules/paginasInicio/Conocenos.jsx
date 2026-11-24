@@ -1,39 +1,23 @@
 import AutoGraphOutlinedIcon from '@mui/icons-material/AutoGraphOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
+import FacebookIcon from '@mui/icons-material/Facebook';
 import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import InstagramIcon from '@mui/icons-material/Instagram';
+import KeyboardArrowDownOutlinedIcon from '@mui/icons-material/KeyboardArrowDownOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import RocketLaunchOutlinedIcon from '@mui/icons-material/RocketLaunchOutlined';
 import SettingsSuggestOutlinedIcon from '@mui/icons-material/SettingsSuggestOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import LogoFic from "../../assets/fic_logo.png";
 import LogoUas from "../../assets/logo_uas.png";
 
-import adiuas from '../../assets/dependencias/adiuas.png';
-import biblioteca from '../../assets/dependencias/biblioteca.png';
 import bienestar from '../../assets/dependencias/bienestar.png';
-import ccu from '../../assets/dependencias/ccu.jpeg';
-import ciencias from '../../assets/dependencias/ciencias.jpg';
-import culturauaslogo from '../../assets/dependencias/culturauaslogo.png';
-import dgep from '../../assets/dependencias/dgep.jpeg';
-import dgvri from '../../assets/dependencias/dgvri.png';
-import direccionartistica from '../../assets/dependencias/direccionartistica.png';
-import EMPRENDEUAS from '../../assets/dependencias/EMPRENDEUAS.png';
-import lidatfic from '../../assets/dependencias/lidatfic.png';
-import logo_dges from '../../assets/dependencias/logo_dges.png';
-import logo_dsgc from '../../assets/dependencias/logo_dsgc.png';
-import logo_odontologia from '../../assets/dependencias/logo_odontologia.png';
-import logo_prodep from '../../assets/dependencias/logo_prodep.jpeg';
-import logofic from '../../assets/dependencias/logofic.png';
-import medicina from '../../assets/dependencias/medicina.png';
-import piefad from '../../assets/dependencias/piefad.png';
-import psicologia from '../../assets/dependencias/psicologia.png';
-import radio_uas from '../../assets/dependencias/radio_uas.png';
-import sau from '../../assets/dependencias/sau.png';
-import serviciosocial from '../../assets/dependencias/serviciosocial.png';
 
 
 /* ======================= DATOS ======================= */
@@ -54,16 +38,16 @@ const MENU_OPCIONES = [
 // Equipo: una entrada por persona con todos sus roles
 const EQUIPO = [
   {
+    nombre: "José Ángel Astorga Mejía",
+    roles: ["Gerente del proyecto", "Gerente de desarrollo", "Analista de desarrollo y calidad"],
+  },
+  {
     nombre: "MC. Alejandro Yahir Sicairos Ochoa",
     roles: ["Gerente del proyecto", "Especialista SEO", "Analista de desarrollo y calidad"],
   },
   {
     nombre: "MGTI. Óscar Mejía Quintero",
-    roles: ["Gerente del proyecto", "Analista de desarrollo y calidad"],
-  },
-  {
-    nombre: "José Ángel Astorga Mejía",
-    roles: ["Gerente del proyecto", "Gerente de desarrollo", "Analista de desarrollo y calidad"],
+    roles: ["Analista de desarrollo y calidad"],
   },
   {
     nombre: "Leslie Mayram Barrera Rodríguez",
@@ -73,6 +57,15 @@ const EQUIPO = [
     nombre: "Jenifer Guadalupe Tizoc López",
     roles: ["Gerente de desarrollo"],
   },
+];
+
+// Roles del equipo en el orden en que se muestran: [como está en EQUIPO, título en plural]
+const ROLES_EQUIPO = [
+  ["Gerente del proyecto", "Gerentes del proyecto"],
+  ["Gerente de desarrollo", "Gerentes de desarrollo"],
+  ["Especialista SEO", "Especialistas SEO"],
+  ["Analista de desarrollo y calidad", "Analistas de desarrollo y calidad"],
+  ["Diseñadora UI/UX", "Diseñadora UI/UX"],
 ];
 
 // Pasos de la línea de tiempo de "¿Cómo surgió?"
@@ -155,83 +148,72 @@ const MISION_VISION = [
   },
 ];
 
+// Redes sociales de la facultad que aparecen en Contacto
+const REDES = [
+  { nombre: "Facebook", usuario: "Facultad de Informática Culiacán", url: "https://www.facebook.com/FICuliacan/", Icono: FacebookIcon },
+  { nombre: "Instagram", usuario: "@facultadinformaticaculiacan", url: "https://www.instagram.com/facultadinformaticaculiacan/", Icono: InstagramIcon },
+];
+
 // Dependencias vinculadas: nombre (texto alternativo) y logo
 const DEPENDENCIAS = [
-  { nombre: "Facultad de Informática Culiacán", img: logofic },
-  { nombre: "LIDATFIC", img: lidatfic },
   { nombre: "Bienestar Universitario", img: bienestar },
-  { nombre: "Servicio Social", img: serviciosocial },
-  { nombre: "ADIUAS", img: adiuas },
-  { nombre: "SAU", img: sau },
-  { nombre: "DGVRI", img: dgvri },
-  { nombre: "PIEFAD", img: piefad },
-  { nombre: "Biblioteca", img: biblioteca },
-  { nombre: "Cultura UAS", img: culturauaslogo },
-  { nombre: "Dirección de Actividades Artísticas", img: direccionartistica },
-  { nombre: "Facultad de Psicología", img: psicologia },
-  { nombre: "Facultad de Medicina", img: medicina },
-  { nombre: "DGEP", img: dgep },
-  { nombre: "Sistema de Gestión de la Calidad", img: logo_dsgc },
-  { nombre: "PRODEP", img: logo_prodep },
-  { nombre: "Radio UAS", img: radio_uas },
-  { nombre: "Facultad de Ciencias", img: ciencias },
-  { nombre: "Facultad de Odontología", img: logo_odontologia },
-  { nombre: "CCU", img: ccu },
-  { nombre: "Emprende UAS", img: EMPRENDEUAS },
-  { nombre: "DGES", img: logo_dges },
+  { nombre: "Facultad de Informática Culiacán", img: LogoFic },
 ];
 
 
 /* ======================= AYUDANTES ======================= */
 
-// Iniciales de una persona, ignorando títulos como "MC." o "MGTI."
-function iniciales(nombre) {
-  return nombre
-    .split(" ")
-    .filter((p) => !p.endsWith("."))
-    .slice(0, 2)
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase();
+// Lleva suavemente a una sección de la página
+function irASeccion(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 }
 
-// Título de sección con la línea dorada debajo
-function TituloSeccion({ children, centrado = true, claro = false }) {
+// Título de sección: etiqueta pequeña dorada, título y la línea dorada debajo
+function TituloSeccion({ children, etiqueta, centrado = true, claro = false }) {
   return (
     <div className={centrado ? "text-center" : ""}>
-      <h2 className={`text-2xl sm:text-4xl font-bold ${claro ? "text-white" : "text-[#1B3A73]"}`}>
+      {etiqueta && (
+        <p className="mb-2 font-titulos text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-[#C49E0D]">
+          {etiqueta}
+        </p>
+      )}
+      <h2 className={`text-2xl sm:text-4xl font-extrabold leading-tight ${claro ? "text-white" : "text-[#1B3A73]"}`}>
         {children}
       </h2>
-      <div className={`mt-3 h-1 w-14 rounded-full bg-[#C49E0D] ${centrado ? "mx-auto" : ""}`} />
+      <div className={`mt-4 h-1 w-14 rounded-full bg-[#C49E0D] ${centrado ? "mx-auto" : ""}`} />
     </div>
   );
 }
 
 // Sección de texto con panel de ícono; alterna lado y fondo según las props
-function SeccionTexto({ id, titulo, Icono, parrafos, invertida = false, fondo = "blanco" }) {
-  const fondoClase = fondo === "blanco" ? "bg-white" : "bg-slate-100";
+function SeccionTexto({ id, etiqueta, titulo, Icono, parrafos, invertida = false, fondo = "medio" }) {
+  const fondoClase = fondo === "medio" ? "bg-[#E3EBF8]" : "bg-[#EEF3FB]";
 
   return (
-    <section id={id} className={`scroll-mt-24 py-14 sm:py-20 ${fondoClase}`}>
+    <section id={id} className={`scroll-mt-24 py-16 sm:py-24 ${fondoClase}`}>
       <div
-        className={`max-w-6xl mx-auto px-6 grid gap-10 md:grid-cols-5 items-center ${
+        className={`max-w-6xl mx-auto px-6 grid gap-12 md:grid-cols-5 items-center ${
           invertida ? "md:[&>div:first-child]:order-2" : ""
         }`}
       >
         {/* Columna de texto */}
         <div className="md:col-span-3">
-          <TituloSeccion centrado={false}>{titulo}</TituloSeccion>
-          <div className="mt-6 space-y-4 max-w-prose text-slate-600 leading-relaxed text-base sm:text-lg">
+          <TituloSeccion etiqueta={etiqueta} centrado={false}>{titulo}</TituloSeccion>
+          <div className="mt-7 space-y-4 max-w-prose text-slate-600 leading-relaxed text-base sm:text-lg">
             {parrafos.map((t, i) => (
               <p key={i}>{t}</p>
             ))}
           </div>
         </div>
 
-        {/* Panel decorativo con ícono */}
+        {/* Panel con ícono: anillos decorativos y un recuadro azul con borde dorado */}
         <div className="md:col-span-2 grid place-items-center">
-          <div className="grid h-48 w-48 sm:h-64 sm:w-64 place-items-center rounded-3xl bg-linear-to-br from-[#1B3A73] to-[#244B91] shadow-xl rotate-3">
-            <Icono sx={{ fontSize: 96, color: "#EBD9B4" }} />
+          <div className="relative grid h-56 w-56 sm:h-72 sm:w-72 place-items-center">
+            <span className="absolute inset-0 rounded-full border-2 border-dashed border-[#C49E0D]/50" />
+            <span className="absolute inset-6 rounded-full bg-white/70" />
+            <div className="relative grid h-32 w-32 sm:h-40 sm:w-40 place-items-center rounded-3xl bg-linear-to-br from-[#1E4DB7] via-[#08338F] to-[#052466] shadow-[0_16px_36px_rgba(8,51,143,0.35)] ring-4 ring-[#EBD9B4]">
+              <Icono sx={{ fontSize: 72, color: "#EBD9B4" }} />
+            </div>
           </div>
         </div>
       </div>
@@ -239,43 +221,43 @@ function SeccionTexto({ id, titulo, Icono, parrafos, invertida = false, fondo = 
   );
 }
 
-// Barra de navegación por secciones, con scroll horizontal en pantallas pequeñas
-function Menu() {
+// Barra de navegación por secciones: resalta la sección que se está viendo
+// y hace scroll horizontal en pantallas pequeñas
+function Menu({ activa }) {
   return (
-    <nav className="w-full bg-[#D49A17] shadow-lg border-b border-black/10">
+    <nav className="w-full bg-linear-to-r from-[#DDB02B] via-[#D49A17] to-[#C98F13] shadow-[0_4px_16px_rgba(0,0,0,0.2)] border-b border-black/10">
 
       {/* Contenedor con scroll horizontal y sin barra visible */}
       <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 
         {/* w-max + mx-auto: centrado si cabe, alineado al inicio si desborda */}
         <div className="flex w-max mx-auto items-center gap-1.5 sm:gap-2 py-2.5 px-3 sm:px-6">
-          {MENU_OPCIONES.map((opcion) => (
-            <button
-              key={opcion.id}
-              onClick={() => {
-                document.getElementById(opcion.id)?.scrollIntoView({
-                  behavior: "smooth",
-                });
-              }}
-              className="
-                text-white
-                font-medium
-                text-sm sm:text-base
-                px-3.5 py-1.5
-                rounded-lg
-                whitespace-nowrap
-                tracking-wide
-                shrink-0
-                cursor-pointer
-                transition-all duration-200 ease-in-out
-                hover:bg-white/20
-                hover:scale-105
-                active:scale-95
-              "
-            >
-              {opcion.nombre}
-            </button>
-          ))}
+          {MENU_OPCIONES.map((opcion) => {
+            const esActiva = activa === opcion.id;
+
+            return (
+              <button
+                key={opcion.id}
+                onClick={() => irASeccion(opcion.id)}
+                className={`
+                  font-titulos font-semibold
+                  text-[13px] sm:text-sm
+                  px-4 py-1.5
+                  rounded-full
+                  whitespace-nowrap
+                  shrink-0
+                  cursor-pointer
+                  transition-all duration-200 ease-in-out
+                  active:scale-95
+                  ${esActiva
+                    ? "bg-[#1B3A73] text-white shadow-md"
+                    : "text-white hover:bg-white/20"}
+                `}
+              >
+                {opcion.nombre}
+              </button>
+            );
+          })}
         </div>
       </div>
     </nav>
@@ -294,11 +276,33 @@ export default function Conocenos() {
     navigate('/');
   }
 
+  // Sección que se está viendo (para resaltarla en el menú)
+  const [seccionActiva, setSeccionActiva] = useState('');
+
+  useEffect(() => {
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        entradas.forEach((e) => {
+          if (e.isIntersecting) setSeccionActiva(e.target.id);
+        });
+      },
+      // Cuenta como "activa" la sección que cruza la parte alta de la pantalla
+      { rootMargin: '-30% 0px -60% 0px' }
+    );
+
+    MENU_OPCIONES.forEach((o) => {
+      const el = document.getElementById(o.id);
+      if (el) observador.observe(el);
+    });
+
+    return () => observador.disconnect();
+  }, []);
+
   return (
-    <div className="min-h-dvh bg-slate-100 flex flex-col scroll-smooth">
+    <div className="min-h-dvh bg-[#EEF3FB] flex flex-col scroll-smooth font-texto [&_h1]:font-titulos [&_h2]:font-titulos [&_h3]:font-titulos">
 
       {/* ============ ENCABEZADO ============ */}
-      <header className="bg-linear-to-r from-[#1B3A73] to-[#244B91] text-white px-4 sm:px-8 lg:px-12 py-3 sm:py-4 shadow-lg border-b border-white/10">
+      <header className="bg-linear-to-r from-[#0B2A66] via-[#1B3A73] to-[#244B91] text-white px-4 sm:px-8 lg:px-12 py-3 sm:py-4 border-b-[3px] border-[#D4A017]">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
 
           {/* Logo + título */}
@@ -318,7 +322,7 @@ export default function Conocenos() {
 
             <div className="min-w-0">
               <h1 className="text-lg sm:text-2xl font-bold leading-tight truncate">
-                Tutorías FIC
+                Asesorías FIC
               </h1>
               <p className="text-xs sm:text-sm text-blue-100 leading-tight truncate">
                 Facultad de Informática Culiacán
@@ -329,7 +333,7 @@ export default function Conocenos() {
           {/* Botón para volver al inicio */}
           <button
             onClick={irInicioPage}
-            className="shrink-0 inline-flex items-center gap-2 rounded-[5px] border border-white/40 px-3 sm:px-4 py-2 text-sm font-medium hover:bg-white hover:text-[#244B91] transition-colors cursor-pointer"
+            className="shrink-0 inline-flex items-center gap-2 rounded-full border border-white/40 px-4 py-2 text-sm font-medium hover:bg-white hover:text-[#244B91] transition-colors cursor-pointer"
           >
             <HomeOutlinedIcon fontSize="small" />
             <span className="hidden sm:inline">Inicio</span>
@@ -340,75 +344,110 @@ export default function Conocenos() {
 
       {/*=============== MENU ==================*/}
       <div className="sticky top-0 z-50">
-        <Menu />
+        <Menu activa={seccionActiva} />
       </div>
 
       {/* ============ CONTENIDO DE LA PAGINA ============ */}
       <main className="flex-1">
 
         {/* ---------- HERO ---------- */}
-        <section className="bg-white border-b border-slate-200">
-          <div className="max-w-4xl mx-auto px-6 py-14 sm:py-20 text-center">
-            <p className="text-sm font-semibold tracking-widest uppercase text-[#C49E0D] mb-3">
-              Acerca de nosotros
-            </p>
-            <h2 className="text-3xl sm:text-5xl font-bold text-[#1B3A73] leading-tight">
-              Sistema de tutorías FIC
-            </h2>
-            <p className="mt-5 text-base sm:text-lg text-slate-600 leading-relaxed">
-              La Universidad Autónoma de Sinaloa, a través de Bienestar Universitario y la Facultad
-              de Informática Culiacán, en colaboración con el Laboratorio de Innovación, Desarrollo
-              Académico y Tecnológico, presenta el Sistema de tutorías FIC.
-            </p>
+        <section className="relative overflow-hidden bg-linear-to-br from-[#0B2A66] via-[#1B3A73] to-[#244B91] text-white">
+          {/* Círculos decorativos */}
+          <span className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full border-[40px] border-white/5" />
+          <span className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-[#C49E0D]/10" />
+
+          <div className="relative max-w-6xl mx-auto px-6 py-14 sm:py-20 grid gap-10 lg:grid-cols-5 items-center">
+
+            {/* Texto */}
+            <div className="lg:col-span-3 text-center lg:text-left">
+              <p className="mb-3 font-titulos text-xs sm:text-sm font-bold uppercase tracking-[0.25em] text-[#E6C65A]">
+                Acerca de nosotros
+              </p>
+              <h2 className="text-3xl sm:text-5xl font-extrabold leading-tight">
+                Asesorías FIC
+              </h2>
+              <div className="mx-auto lg:mx-0 mt-5 h-1 w-16 rounded-full bg-[#C49E0D]" />
+              <p className="mt-6 text-base sm:text-lg text-blue-50 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                La Universidad Autónoma de Sinaloa, a través de Bienestar Universitario y la Facultad
+                de Informática Culiacán, en colaboración con el Laboratorio de Innovación, Desarrollo
+                Académico y Tecnológico, presenta el Sistema de Asesorías FIC.
+              </p>
+
+              {/* Botones */}
+              <div className="mt-8 flex flex-wrap justify-center lg:justify-start gap-3">
+                <button
+                  onClick={() => irASeccion('equipo')}
+                  className="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 font-titulos font-bold text-white cursor-pointer bg-linear-to-r from-[#E0B32A] to-[#C49E0D] shadow-[0_6px_16px_rgba(196,158,13,0.4)] transition hover:brightness-110 active:scale-95"
+                >
+                  Conoce al equipo
+                  <KeyboardArrowDownOutlinedIcon fontSize="small" />
+                </button>
+                <button
+                  onClick={() => irASeccion('contacto')}
+                  className="rounded-lg border border-white/40 px-5 py-2.5 font-titulos font-semibold cursor-pointer transition hover:bg-white hover:text-[#1B3A73] active:scale-95"
+                >
+                  Contacto
+                </button>
+              </div>
+            </div>
+
+            {/* Logo de la facultad sobre una tarjeta blanca */}
+            <div className="lg:col-span-2 grid place-items-center">
+              <div className="rounded-3xl bg-white p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.35)] ring-4 ring-[#EBD9B4]/60">
+                <img
+                  src={LogoFic}
+                  alt="Facultad de Informática Culiacán, 34 aniversario"
+                  className="h-52 sm:h-72 w-auto object-contain"
+                />
+              </div>
+            </div>
           </div>
         </section>
 
         {/* ---------- NUESTRO EQUIPO ---------- */}
-        <section id="equipo" className="scroll-mt-24 py-14 sm:py-20 bg-slate-100">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="mb-10">
-              <TituloSeccion>Nuestro equipo</TituloSeccion>
+        <section id="equipo" className="relative overflow-hidden scroll-mt-24 py-16 sm:py-24 bg-linear-to-b from-[#244B91] to-[#1B3A73] text-white">
+          <span className="pointer-events-none absolute -right-20 bottom-0 h-72 w-72 rounded-full border-[32px] border-white/5" />
+
+          <div className="relative max-w-6xl mx-auto px-6">
+            <div className="mb-12">
+              <TituloSeccion etiqueta="Quiénes lo hacen posible" claro>Nuestro equipo</TituloSeccion>
             </div>
 
-            {/* Tarjetas centradas, todas del mismo ancho */}
-            <ul className="flex flex-wrap justify-center gap-6">
-              {EQUIPO.map((p) => (
-                <li
-                  key={p.nombre}
-                  className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-lg"
-                >
-                  {/* Avatar con iniciales */}
-                  <div className="mx-auto mb-4 grid h-20 w-20 place-items-center rounded-full bg-linear-to-br from-[#1B3A73] to-[#244B91] text-2xl font-bold text-white ring-4 ring-[#EBD9B4]">
-                    {iniciales(p.nombre)}
-                  </div>
+            {/* Todo en línea: cada rol es un título y debajo los nombres, uno por renglón */}
+            <div className="mx-auto flex max-w-2xl flex-col items-center gap-9 text-center">
+              {ROLES_EQUIPO.map(([rol, rolPlural]) => {
+                const personas = EQUIPO.filter((p) => p.roles.includes(rol));
+                if (personas.length === 0) return null;
 
-                  <h3 className="text-lg font-bold text-slate-800 leading-snug">{p.nombre}</h3>
-
-                  {/* Roles como chips */}
-                  <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    {p.roles.map((r) => (
-                      <span
-                        key={r}
-                        className="rounded-full bg-[#1B3A73]/10 px-3 py-1 text-xs font-medium text-[#1B3A73]"
-                      >
-                        {r}
-                      </span>
-                    ))}
+                return (
+                  <div key={rol} className="w-full">
+                    <h3 className="text-xl sm:text-2xl font-extrabold uppercase tracking-wide text-[#EBD9B4]">
+                      {personas.length > 1 ? rolPlural : rol}
+                    </h3>
+                    <div className="mx-auto mt-2 mb-3 h-0.5 w-10 rounded-full bg-[#C49E0D]" />
+                    <ul className="flex flex-col gap-1.5">
+                      {personas.map((p) => (
+                        <li key={p.nombre} className="text-base sm:text-xl text-white">
+                          {p.nombre}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                </li>
-              ))}
-            </ul>
+                );
+              })}
+            </div>
           </div>
         </section>
 
         {/* ---------- NUESTRO PROYECTO ---------- */}
         <SeccionTexto
           id="proyecto"
+          etiqueta="Qué hacemos"
           titulo="Nuestro proyecto"
           Icono={RocketLaunchOutlinedIcon}
-          fondo="blanco"
+          fondo="medio"
           parrafos={[
-            "El Sistema de tutorías FIC es una plataforma móvil y web desarrollada para permitir la gestión de asesorías en la Facultad de Informática de Culiacán, facilitando la interacción entre estudiantes, asesores y administradores mediante una plataforma moderna, eficiente y centralizada.",
+            "El Sistema de Asesorías FIC es una plataforma móvil y web desarrollada para permitir la gestión de asesorías en la Facultad de Informática de Culiacán, facilitando la interacción entre estudiantes, asesores y administradores mediante una plataforma moderna, eficiente y centralizada.",
             "Sus objetivos principales son automatizar la solicitud, aprobación y seguimiento de asesorías y proveer a los estudiantes un espacio para consultar horarios disponibles y enviar solicitudes para asesorías.",
             "El sistema facilita a los asesores la administración de sus horarios, asesorías, evidencias y reportes, además de la generación de historial y evidencia de cada asesoría para respaldos y evaluaciones.",
           ]}
@@ -417,9 +456,10 @@ export default function Conocenos() {
         {/* ---------- QUIÉNES SOMOS ---------- */}
         <SeccionTexto
           id="quienes-somos"
+          etiqueta="Nuestra identidad"
           titulo="¿Quiénes somos?"
           Icono={GroupsOutlinedIcon}
-          fondo="gris"
+          fondo="claro"
           invertida
           parrafos={[
             "Somos el Laboratorio de Innovación, Desarrollo Académico y Tecnológico de la Facultad de Informática Culiacán, un espacio dedicado a la creación de soluciones tecnológicas que impacten positivamente los procesos académicos y administrativos dentro de la universidad.",
@@ -429,21 +469,23 @@ export default function Conocenos() {
         />
 
         {/* ---------- ¿CÓMO SURGIÓ? (línea de tiempo) ---------- */}
-        <section id="como-surgio" className="scroll-mt-24 py-14 sm:py-20 bg-white">
-          <div className="max-w-3xl mx-auto px-6">
-            <div className="mb-12">
-              <TituloSeccion>¿Cómo surgió?</TituloSeccion>
+        <section id="como-surgio" className="scroll-mt-24 py-16 sm:py-24 bg-[#E3EBF8]">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="mb-14">
+              <TituloSeccion etiqueta="Nuestra historia">¿Cómo surgió?</TituloSeccion>
             </div>
 
-            {/* Línea vertical con un punto por paso */}
-            <ol className="relative border-l-2 border-[#C49E0D]/60 ml-3 space-y-10">
+            {/* Cuatro pasos en fila (en celular, uno debajo de otro) unidos por una línea dorada */}
+            <ol className="relative grid gap-10 md:grid-cols-4">
+              <span className="hidden md:block absolute top-5 left-[12.5%] right-[12.5%] h-0.5 bg-[#C49E0D]/50" />
+
               {HISTORIA.map((paso, i) => (
-                <li key={paso.titulo} className="pl-8 relative">
-                  <span className="absolute -left-[17px] top-0 grid h-8 w-8 place-items-center rounded-full bg-[#1B3A73] text-sm font-bold text-white ring-4 ring-white">
+                <li key={paso.titulo} className="relative text-center">
+                  <span className="relative mx-auto grid h-10 w-10 place-items-center rounded-full bg-linear-to-br from-[#1E4DB7] to-[#08338F] text-base font-bold text-white ring-4 ring-[#E3EBF8] shadow-md">
                     {i + 1}
                   </span>
-                  <h3 className="text-lg font-bold text-[#1B3A73]">{paso.titulo}</h3>
-                  <p className="mt-1 text-slate-600 leading-relaxed">{paso.texto}</p>
+                  <h3 className="mt-4 text-lg font-bold text-[#1B3A73]">{paso.titulo}</h3>
+                  <p className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed">{paso.texto}</p>
                 </li>
               ))}
             </ol>
@@ -451,10 +493,10 @@ export default function Conocenos() {
         </section>
 
         {/* ---------- OBJETIVOS ---------- */}
-        <section id="objetivos" className="scroll-mt-24 py-14 sm:py-20 bg-slate-100">
+        <section id="objetivos" className="scroll-mt-24 py-16 sm:py-24 bg-[#EEF3FB]">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="mb-10">
-              <TituloSeccion>Objetivos</TituloSeccion>
+            <div className="mb-12">
+              <TituloSeccion etiqueta="Lo que buscamos">Objetivos</TituloSeccion>
             </div>
 
             {/* Cuatro tarjetas numeradas */}
@@ -462,13 +504,16 @@ export default function Conocenos() {
               {OBJETIVOS.map((o, i) => (
                 <article
                   key={o.titulo}
-                  className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-lg"
+                  className="overflow-hidden rounded-2xl border border-[#E3E8F2] bg-white shadow-[0_2px_10px_rgba(8,51,143,0.08)] transition hover:-translate-y-1 hover:shadow-[0_10px_24px_rgba(8,51,143,0.16)]"
                 >
-                  <span className="text-4xl font-black text-[#C49E0D]">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <h3 className="mt-2 font-bold text-slate-800">{o.titulo}</h3>
-                  <p className="mt-2 text-sm text-slate-600 leading-relaxed">{o.texto}</p>
+                  <div className="h-1.5 bg-linear-to-r from-[#1E4DB7] to-[#08338F]" />
+                  <div className="p-6">
+                    <span className="text-4xl font-black text-[#C49E0D]">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <h3 className="mt-2 font-bold text-[#1B3A73]">{o.titulo}</h3>
+                    <p className="mt-2 text-sm text-slate-600 leading-relaxed">{o.texto}</p>
+                  </div>
                 </article>
               ))}
             </div>
@@ -476,10 +521,10 @@ export default function Conocenos() {
         </section>
 
         {/* ---------- ALCANCE ---------- */}
-        <section id="alcance" className="scroll-mt-24 py-14 sm:py-20 bg-white">
+        <section id="alcance" className="scroll-mt-24 py-16 sm:py-24 bg-[#E3EBF8]">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="mb-10">
-              <TituloSeccion>Alcance</TituloSeccion>
+            <div className="mb-12">
+              <TituloSeccion etiqueta="Hasta dónde llega">Alcance</TituloSeccion>
             </div>
 
             {/* Cuadrícula de 1 columna en móvil y 2 desde sm */}
@@ -487,13 +532,13 @@ export default function Conocenos() {
               {ALCANCE.map(({ Icono, titulo, texto }) => (
                 <article
                   key={titulo}
-                  className="flex gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 transition hover:border-[#C49E0D] hover:shadow-md"
+                  className="flex gap-5 rounded-2xl border border-[#E3E8F2] bg-white p-6 shadow-[0_2px_10px_rgba(8,51,143,0.06)] transition hover:border-[#C49E0D] hover:shadow-[0_10px_24px_rgba(8,51,143,0.12)]"
                 >
-                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#1B3A73] text-[#EBD9B4]">
+                  <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-[#E6ECF8] text-[#08338F]">
                     <Icono />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-800">{titulo}</h3>
+                    <h3 className="font-bold text-[#1B3A73] text-lg">{titulo}</h3>
                     <p className="mt-1 text-sm sm:text-base text-slate-600 leading-relaxed">{texto}</p>
                   </div>
                 </article>
@@ -505,21 +550,28 @@ export default function Conocenos() {
         {/* ---------- MISIÓN Y VISIÓN ---------- */}
         <section
           id="mision-vision"
-          className="scroll-mt-24 py-14 sm:py-20 bg-linear-to-br from-[#1B3A73] to-[#244B91] text-white"
+          className="relative overflow-hidden scroll-mt-24 py-16 sm:py-24 bg-linear-to-br from-[#0B2A66] via-[#1B3A73] to-[#244B91] text-white"
         >
-          <div className="max-w-6xl mx-auto px-6">
+          <span className="pointer-events-none absolute -left-24 -top-24 h-80 w-80 rounded-full border-[36px] border-white/5" />
+
+          <div className="relative max-w-6xl mx-auto px-6">
+            <div className="mb-12">
+              <TituloSeccion etiqueta="Hacia dónde vamos" claro>Misión y visión</TituloSeccion>
+            </div>
+
             {/* items-stretch y h-full igualan la altura de ambas tarjetas */}
             <div className="grid gap-6 md:grid-cols-2 items-stretch">
               {MISION_VISION.map(({ Icono, titulo, texto }) => (
                 <article
                   key={titulo}
-                  className="h-full rounded-2xl bg-white/10 p-8 ring-1 ring-white/20"
+                  className="h-full rounded-2xl bg-white/10 p-8 ring-1 ring-white/20 backdrop-blur-sm"
                 >
-                  <div className="mb-4 grid h-12 w-12 place-items-center rounded-xl bg-[#C49E0D] text-white">
+                  <div className="mb-5 grid h-14 w-14 place-items-center rounded-xl bg-linear-to-br from-[#E0B32A] to-[#C49E0D] text-white shadow-lg">
                     <Icono />
                   </div>
-                  <h2 className="text-2xl font-bold">{titulo}</h2>
-                  <p className="mt-3 text-blue-50 leading-relaxed">{texto}</p>
+                  <h3 className="text-2xl font-bold">{titulo}</h3>
+                  <div className="mt-2 mb-4 h-0.5 w-10 rounded-full bg-[#C49E0D]" />
+                  <p className="text-blue-50 leading-relaxed">{texto}</p>
                 </article>
               ))}
             </div>
@@ -527,10 +579,10 @@ export default function Conocenos() {
         </section>
 
         {/* ---------- VINCULACIÓN ---------- */}
-        <section id="vinculacion" className="scroll-mt-24 py-14 sm:py-20 bg-slate-100">
+        <section id="vinculacion" className="scroll-mt-24 py-16 sm:py-24 bg-[#EEF3FB]">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="mb-10">
-              <TituloSeccion>Dependencias vinculadas</TituloSeccion>
+            <div className="mb-12">
+              <TituloSeccion etiqueta="Trabajamos con">Dependencias vinculadas</TituloSeccion>
             </div>
 
             {/* Logos centrados; la última fila queda centrada aunque no esté completa */}
@@ -539,7 +591,7 @@ export default function Conocenos() {
                 <li
                   key={d.nombre}
                   title={d.nombre}
-                  className="grid h-20 w-20 sm:h-24 sm:w-24 place-items-center rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-lg hover:ring-[#C49E0D]"
+                  className="grid h-32 w-32 sm:h-40 sm:w-40 place-items-center rounded-2xl bg-white p-4 shadow-[0_2px_10px_rgba(8,51,143,0.08)] ring-1 ring-[#E3E8F2] transition hover:-translate-y-1 hover:shadow-[0_10px_24px_rgba(8,51,143,0.16)] hover:ring-[#C49E0D]"
                 >
                   {/* Escala de grises solo en pantallas con mouse (md en adelante) */}
                   <img
@@ -556,35 +608,56 @@ export default function Conocenos() {
       </main>
 
       {/* ===============   FOOTER    ==========================*/}
-      <footer id="contacto" className="w-full bg-linear-to-r from-[#1B3A73] to-[#244B91] text-white shadow-inner border-t border-white/10">
+      <footer id="contacto" className="w-full bg-linear-to-r from-[#0B2A66] via-[#1B3A73] to-[#244B91] text-white border-t-[3px] border-[#D4A017]">
 
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-10 sm:py-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 py-12 sm:py-14 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
 
           {/* ============================= PARTE IZQUIERDA ========================= */}
           <div className="text-center md:text-left">
 
-            <h2 className="font-bold text-2xl sm:text-3xl mb-1">Contacto</h2>
+            <h2 className="font-extrabold text-2xl sm:text-3xl mb-1">Contacto</h2>
             <div className="mx-auto md:mx-0 mb-6 h-1 w-14 rounded-full bg-[#C49E0D]" />
 
             <p className="text-base sm:text-lg font-semibold mb-5">Facultad de Informática Culiacán</p>
 
             <ul className="flex flex-col gap-4 text-sm sm:text-base text-blue-50">
               <li className="flex items-start justify-center md:justify-start gap-3">
-                <LocationOnOutlinedIcon className="mt-0.5 shrink-0 text-[#EBD9B4]" />
-                <span className="max-w-sm leading-relaxed text-left">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 ring-1 ring-white/20">
+                  <LocationOnOutlinedIcon className="text-[#EBD9B4]" />
+                </span>
+                <span className="max-w-sm leading-relaxed text-left self-center">
                   C. Josefa Ortiz de Domínguez S/N, Cd Universitaria, CIUDAD UNIVERSITARIA, 80013 Culiacán
                 </span>
               </li>
 
               <li className="flex items-center justify-center md:justify-start gap-3">
-                <EmailOutlinedIcon className="shrink-0 text-[#EBD9B4]" />
-                <a href="mailto:sitema@correo.com" className="hover:underline">sitema@correo.com</a>
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 ring-1 ring-white/20">
+                  <EmailOutlinedIcon className="text-[#EBD9B4]" />
+                </span>
+                <a href="mailto:info@info.uas.edu.mx" className="hover:underline">info@info.uas.edu.mx</a>
               </li>
+
+              {REDES.map(({ nombre, usuario, url, Icono }) => (
+                <li key={nombre} className="flex items-center justify-center md:justify-start gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 ring-1 ring-white/20">
+                    <Icono className="text-[#EBD9B4]" />
+                  </span>
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${nombre} de la Facultad de Informática Culiacán`}
+                    className="hover:underline text-left"
+                  >
+                    {usuario}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* ============================= PARTE DERECHA ========================= */}
-          <div className="w-full h-[240px] sm:h-[300px] lg:h-[320px] rounded-[10px] overflow-hidden shadow-2xl border border-white/20">
+          <div className="w-full h-[240px] sm:h-[300px] lg:h-[320px] rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white/20">
             <iframe
               className="w-full h-full border-0"
               title="Facultad de informatica UAS"
@@ -597,7 +670,7 @@ export default function Conocenos() {
 
         {/* Derechos */}
         <div className="border-t border-white/10 px-6 py-4 text-center text-xs sm:text-sm text-blue-100">
-          © {new Date().getFullYear()} Tutorías FIC · Facultad de Informática Culiacán · UAS
+          © {new Date().getFullYear()} Asesorías FIC · Facultad de Informática Culiacán · UAS
         </div>
 
       </footer>

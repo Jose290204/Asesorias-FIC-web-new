@@ -1,7 +1,7 @@
 import { ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LogoBienestar from '../assets/dependencias/bienestar.png';
-import LogoFicFooter from '../assets/dependencias/logofic.png';
+import LogoFicFooter from '../assets/fic_logo.png';
 import fondoInicio from '../assets/fondo_inicio.jpeg';
 import LogoAsesorias from '../assets/logo_asesorias.png';
 import LogoUas from '../assets/logo_uas.png';
@@ -62,19 +62,20 @@ export default function LayoutPublico({ children, mostrarFooter = true }) {
             {/* Contenedor de Logos */}
             <div className="flex justify-center items-center gap-6 sm:gap-12 mb-8 pb-8 border-b border-white/15">
               <img
-                src={LogoAsesorias}
-                alt="Logo Asesorías FIC"
-                className="w-[50px] h-[50px] sm:w-[70px] sm:h-[70px] rounded-full bg-white p-0.5 object-contain shadow-[0_0_14px_rgba(212,176,60,0.4)]"
-              />
-              <img
-                src={LogoFicFooter}
-                alt="Logo FIC"
-                className="w-[50px] h-[50px] sm:w-[70px] sm:h-[70px] object-contain"
-              />
-              <img
                 src={LogoBienestar}
                 alt="Logo Bienestar"
                 className="w-[50px] h-[50px] sm:w-[70px] sm:h-[70px] object-contain"
+              />
+              {/* Logo del 34 aniversario: lleva texto oscuro, por eso va sobre un fondo blanco */}
+              <img
+                src={LogoFicFooter}
+                alt="Logo FIC 34 aniversario"
+                className="h-[64px] w-auto sm:h-[84px] rounded-xl bg-white p-1.5 object-contain shadow-[0_0_14px_rgba(212,176,60,0.4)]"
+              />
+              <img
+                src={LogoAsesorias}
+                alt="Logo Asesorías FIC"
+                className="w-[50px] h-[50px] sm:w-[70px] sm:h-[70px] rounded-full bg-white p-0.5 object-contain shadow-[0_0_14px_rgba(212,176,60,0.4)]"
               />
             </div>
 
@@ -102,8 +103,8 @@ export default function LayoutPublico({ children, mostrarFooter = true }) {
               {/* Contacto */}
               <div className="flex flex-col items-center lg:items-start space-y-1">
                 <h3 className="font-bold text-[#e6c65a] tracking-wide mb-0.5 text-[12px] sm:text-[14px]">Contacto:</h3>
-                <a href="mailto:contacto@correo.mx" className="hover:underline">
-                  contacto@correo.mx
+                <a href="mailto:info@info.uas.edu.mx" className="hover:underline">
+                  info@info.uas.edu.mx
                 </a>
 
                 <button onClick={() => navigate('/Conocenos')} className="flex items-center justify-center lg:justify-start gap-1 hover:underline">
