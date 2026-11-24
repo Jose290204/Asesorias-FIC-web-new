@@ -1,4 +1,7 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
+import { Typography } from '@mui/material';
+
+import ModalConfirmacion from '../../compartidos/ModalConfirmacion';
 
 /**
  * Confirmación para cerrar la sesión de un usuario.
@@ -12,36 +15,20 @@ export default function ModalCerrarSesion({ open, onClose, onConfirm, data }) {
     };
 
     return (
-        <Dialog
-            open={Boolean(open)}
+        <ModalConfirmacion
+            open={open}
             onClose={onClose}
-            disableRestoreFocus
-            sx={{
-                '& .MuiPaper-root': {
-                    width: '450px',
-                    maxWidth: '90vw',
-                    borderRadius: '12px',
-                    p: 1
-                }
-            }}
+            onConfirm={handleConfirm}
+            icono={<LogoutOutlinedIcon />}
+            titulo="Cerrar sesión"
+            subtitulo="Tendrá que iniciar sesión de nuevo"
+            tono="rojo"
+            textoConfirmar="Cerrar sesión"
         >
-            <DialogTitle sx={{ fontWeight: 'bold' }}>Cerrar sesión</DialogTitle>
-
-            <DialogContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 3 }}>
-                <Typography variant="body1" align="center">
-                    ¿Deseas cerrar la sesión de {data?.nombre ? <strong>{data.nombre}</strong> : 'este usuario'}
-                    {data?.dispositivo ? ` en ${data.dispositivo}` : ''}? Tendrá que iniciar sesión de nuevo.
-                </Typography>
-            </DialogContent>
-
-            <DialogActions sx={{ p: 2, justifyContent: 'flex-end', gap: 1 }}>
-                <Button variant="outlined" color="inherit" onClick={onClose}>
-                    Cancelar
-                </Button>
-                <Button variant="contained" color="error" onClick={handleConfirm}>
-                    Cerrar sesión
-                </Button>
-            </DialogActions>
-        </Dialog>
+            <Typography variant="body1">
+                ¿Deseas cerrar la sesión de {data?.nombre ? <strong>{data.nombre}</strong> : 'este usuario'}
+                {data?.dispositivo ? ` en ${data.dispositivo}` : ''}?
+            </Typography>
+        </ModalConfirmacion>
     );
 }

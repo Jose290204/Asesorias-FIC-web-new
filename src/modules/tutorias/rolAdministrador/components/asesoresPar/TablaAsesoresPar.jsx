@@ -31,7 +31,6 @@ export default function TablaAsesoresPar({ rows = [], onQuitar, onGuardarDisponi
                 onBaja={abrir(setModalQuitarOpen)}
                 textoBaja="Quitar rol"
                 textoVacio="No se encontraron asesores par"
-                etiquetaId="Asesor par"
             />
 
             <ModalInfoAsesorPar

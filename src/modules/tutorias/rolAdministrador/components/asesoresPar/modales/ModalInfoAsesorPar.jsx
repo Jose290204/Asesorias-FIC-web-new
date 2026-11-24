@@ -1,30 +1,28 @@
-import CloseIcon from '@mui/icons-material/Close';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import EditCalendarOutlinedIcon from '@mui/icons-material/EditCalendarOutlined';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, TextField, Typography, useMediaQuery } from '@mui/material';
-
+import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import { Box, Button, Dialog, DialogActions, DialogContent, Typography, useMediaQuery } from '@mui/material';
 import { useState } from 'react';
 
+import SeccionInfo from '../../../../rolEstudiante/components/compartidos/SeccionInfo';
 import ModalDisponibilidadAsesor from '../../asesores/ModalDisponibilidadAsesor';
 import ResumenDisponibilidad from '../../asesores/ResumenDisponibilidad';
-
-// Campo de solo lectura con el estilo de los demás modales
-function Dato({ label, valor }) {
-    return (
-        <TextField
-            label={label}
-            value={valor || ''}
-            placeholder="—"
-            disabled
-            size="small"
-            fullWidth
-            slotProps={{ inputLabel: { shrink: true } }}
-        />
-    );
-}
+import EncabezadoModal from '../../compartidos/EncabezadoModal';
+import {
+    ESTILO_BOTON_CERRAR,
+    ESTILO_BOTON_SECUNDARIO,
+    ICONO,
+    PAPER_MODAL_CELULAR,
+    paperModal
+} from '../../compartidos/estilosAdmin';
 
 /**
  * Información de un asesor par. Un asesor par es un estudiante con rol de asesor, así que sus datos personales
- * se muestran bloqueados (se editan en Estudiantes). Lo que sí se puede cambiar aquí es su disponibilidad.
+ * son de solo lectura (se editan en Estudiantes). Lo que sí se puede cambiar aquí es su disponibilidad.
  *
  * Props:
  *  - open, onClose
@@ -46,73 +44,65 @@ export default function ModalInfoAsesorPar({ open, onClose, data, onGuardarDispo
         setModalDisponibilidadOpen(true);
     };
 
+    const texto = (valor) => (
+        <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>{valor}</Typography>
+    );
+
     return (
         <Dialog
             open={Boolean(open)}
             onClose={handleCloseModal}
             fullScreen={esCelular}
             disableRestoreFocus
-            sx={{
-                '& .MuiPaper-root': esCelular
-                    ? { borderRadius: 0 }
-                    : { width: '550px', maxWidth: '90vw', maxHeight: '90dvh', borderRadius: '12px', p: 1.5 }
-            }}
+            sx={esCelular ? PAPER_MODAL_CELULAR : paperModal(550)}
         >
-            <DialogTitle sx={{ m: 0, p: 2, pr: 7, fontWeight: 'bold', fontSize: '1.2rem' }}>
-                Información del Asesor Par
-                <IconButton
-                    aria-label="close"
-                    onClick={handleCloseModal}
-                    sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
-                >
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
+            <EncabezadoModal
+                icono={<InfoOutlinedIcon />}
+                titulo="Información del asesor par"
+                subtitulo={data?.nombre}
+                onClose={handleCloseModal}
+            />
 
-            <DialogContent
-                dividers
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2.5,
-                    py: 3,
-                    '& .MuiInputBase-input.Mui-disabled': { WebkitTextFillColor: '#1F2937' },
-                    '& .MuiInputLabel-root.Mui-disabled': { color: 'text.secondary' },
-                    '& .MuiOutlinedInput-root.Mui-disabled': { backgroundColor: '#F3F5F9' },
-                    '& .Mui-disabled .MuiOutlinedInput-notchedOutline': { borderColor: '#E1E5EC' }
-                }}
-            >
+            <DialogContent dividers sx={{ py: 2 }}>
                 {data && (
-                    <>
-                        <Dato label="Nombre" valor={data.nombre} />
-                        <Dato label="Correo institucional" valor={data.correo} />
-                        <Dato label="Número de cuenta" valor={data.numeroCuenta} />
-                        <Dato label="Teléfono" valor={data.telefono} />
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        <SeccionInfo icono={<PersonOutlineOutlinedIcon sx={ICONO} />} etiqueta="Nombre">
+                            {texto(data.nombre)}
+                        </SeccionInfo>
+                        {data.correo && (
+                            <SeccionInfo icono={<MailOutlinedIcon sx={ICONO} />} etiqueta="Correo institucional">
+                                {texto(data.correo)}
+                            </SeccionInfo>
+                        )}
+                        {data.numeroCuenta && (
+                            <SeccionInfo icono={<BadgeOutlinedIcon sx={ICONO} />} etiqueta="Número de cuenta">
+                                {texto(data.numeroCuenta)}
+                            </SeccionInfo>
+                        )}
+                        {data.telefono && (
+                            <SeccionInfo icono={<PhoneOutlinedIcon sx={ICONO} />} etiqueta="Teléfono">
+                                {texto(data.telefono)}
+                            </SeccionInfo>
+                        )}
 
-                        <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                        <Typography variant="body2" sx={{ color: '#6B7280', px: 0.5 }}>
                             Sus datos personales se editan desde Estudiantes, porque es un estudiante con rol de asesor.
                         </Typography>
 
-                        <div className="flex flex-col gap-3 border-t border-gray-200 pt-4">
-                            <div className="flex items-center justify-between gap-3">
-                                <Typography sx={{ fontSize: '15px', fontWeight: 700, color: '#1F2937' }}>
-                                    Disponibilidad
-                                </Typography>
-
+                        <SeccionInfo icono={<EventAvailableOutlinedIcon sx={ICONO} />} etiqueta="Disponibilidad">
+                            <Box sx={{ mt: 0.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                <ResumenDisponibilidad disponibilidad={data.disponibilidad} />
                                 <Button
-                                    size="small"
                                     variant="outlined"
                                     startIcon={<EditCalendarOutlinedIcon />}
                                     onClick={abrirDisponibilidad}
-                                    sx={{ flexShrink: 0, textTransform: 'none', borderRadius: '5px', color: '#244B91', borderColor: '#244B91' }}
+                                    sx={{ ...ESTILO_BOTON_SECUNDARIO, alignSelf: 'flex-start', color: '#08338F', borderColor: '#08338F' }}
                                 >
-                                    {data.disponibilidad.vacia ? 'Armar' : 'Editar'}
+                                    {data.disponibilidad.vacia ? 'Armar disponibilidad' : 'Editar disponibilidad'}
                                 </Button>
-                            </div>
-
-                            <ResumenDisponibilidad disponibilidad={data.disponibilidad} />
-                        </div>
-                    </>
+                            </Box>
+                        </SeccionInfo>
+                    </Box>
                 )}
             </DialogContent>
 
@@ -125,7 +115,7 @@ export default function ModalInfoAsesorPar({ open, onClose, data, onGuardarDispo
                     '& > button': { flex: esCelular ? 1 : 'none', minHeight: 40 }
                 }}
             >
-                <Button variant="outlined" color="inherit" onClick={handleCloseModal}>
+                <Button variant="contained" onClick={handleCloseModal} sx={ESTILO_BOTON_CERRAR}>
                     Cerrar
                 </Button>
             </DialogActions>

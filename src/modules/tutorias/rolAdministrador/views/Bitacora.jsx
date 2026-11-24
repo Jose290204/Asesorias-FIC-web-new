@@ -10,8 +10,21 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useEffect, useRef, useState } from 'react';
 import TituloVista from '../../../../components/ui/TituloVista';
 import ChipAccion from '../../../superAdmin/components/ChipAccion';
-import TarjetaBitacora from '../../../superAdmin/components/TarjetaBitacora';
+import TarjetaBitacoraAdmin from '../components/bitacora/TarjetaBitacoraAdmin';
 import { GRUPOS_ACCIONES_ADMIN, listarBitacoraAdmin } from '../services/bitacoraAdminService';
+
+// Encabezado de la tabla: igual que las demás tablas del administrador
+const ESTILO_ENCABEZADO = {
+    backgroundColor: '#244B91',
+    color: '#FFFFFF',
+    fontSize: '12px',
+    fontWeight: 700,
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
+    borderBottom: 0,
+    py: 1.75,
+    whiteSpace: 'nowrap'
+};
 
 const FILTROS_VACIOS = { accion: '', buscar: '', desde: '', hasta: '' };
 
@@ -146,25 +159,39 @@ export default function Bitacora() {
                 {!error && esMovil && registros.length > 0 && (
                     <div className="flex flex-col gap-5">
                         {registros.map((r) => (
-                            <TarjetaBitacora key={r.id} registro={r} fecha={mostrarFecha(r.fecha)} />
+                            <TarjetaBitacoraAdmin key={r.id} registro={r} fecha={mostrarFecha(r.fecha)} />
                         ))}
                     </div>
                 )}
 
                 {/* Escritorio: tabla */}
                 {!error && !esMovil && registros.length > 0 && (
-                    <TableContainer component={Paper} sx={{ borderRadius: '5px' }}>
-                        <Table size="small">
+                    <TableContainer
+                        component={Paper}
+                        variant="outlined"
+                        sx={{ borderRadius: '12px', borderColor: '#E5E7EB', overflow: 'hidden', boxShadow: '0px 2px 8px rgba(16, 24, 40, 0.06)' }}
+                    >
+                        <Table>
                             <TableHead>
-                                <TableRow sx={{ bgcolor: '#08338F' }}>
+                                <TableRow sx={{ '& th': ESTILO_ENCABEZADO, '& th:first-of-type': { pl: 3 }, '& th:last-child': { pr: 3 } }}>
                                     {['Fecha', 'Usuario', 'Acción', 'Registro', 'Detalle'].map((h) => (
-                                        <TableCell key={h} sx={{ color: '#fff', fontWeight: 700 }}>{h}</TableCell>
+                                        <TableCell key={h}>{h}</TableCell>
                                     ))}
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {registros.map((r) => (
-                                    <TableRow key={r.id} hover>
+                                    <TableRow
+                                        key={r.id}
+                                        hover
+                                        sx={{
+                                            '& td': { fontSize: '14.5px', borderBottom: '1px solid #EEF1F6', py: 1.5 },
+                                            '& td:first-of-type': { pl: 3 },
+                                            '& td:last-child': { pr: 3 },
+                                            '&:hover': { backgroundColor: '#EAF0FB !important' },
+                                            '&:last-child td': { borderBottom: 0 }
+                                        }}
+                                    >
                                         <TableCell sx={{ whiteSpace: 'nowrap' }}>{mostrarFecha(r.fecha)}</TableCell>
                                         <TableCell sx={{ maxWidth: 180, overflowWrap: 'anywhere' }}>{r.usuario}</TableCell>
                                         <TableCell><ChipAccion accion={r.accion} /></TableCell>

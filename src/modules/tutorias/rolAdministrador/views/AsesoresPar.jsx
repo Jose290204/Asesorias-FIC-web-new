@@ -17,13 +17,13 @@ import {
     traerParesAdmin
 } from '../../../../Services/asesoresAdminService';
 import { mensajesDeError } from '../../../../Services/errores';
+import { ESTILO_BOTON_AZUL, ESTILO_BOTON_CREAR } from '../components/compartidos/estilosAdmin';
 import ModalAsignarAsesorPar from '../components/asesoresPar/modales/ModalAsignarAsesorPar';
 import TablaAsesoresPar from '../components/asesoresPar/TablaAsesoresPar';
 import { MINIMO_CARGA_MS, conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 
 // Azul de los botones de asignar, del indicador de carga y del botón Reintentar (el mismo de los botones de crear)
 const AZUL = '#244B91';
-const AZUL_OSCURO = '#1B3A73';
 
 // Menú de la lista de materias: con scroll y del mismo ancho que el campo, para que no se desborde ni tape el menú lateral
 const MENU_LISTA = { slotProps: { paper: { sx: { maxHeight: 280, maxWidth: 'min(320px, 90vw)' } } } };
@@ -210,15 +210,13 @@ export default function AsesoresPar() {
                     startIcon={<PersonAddAlt1OutlinedIcon />}
                     onClick={handleOpenModalAsignar}
                     sx={{
-                        borderRadius: '5px',
-                        textTransform: 'none',
-                        backgroundColor: AZUL,
-                        '&:hover': { backgroundColor: AZUL_OSCURO },
+                        ...ESTILO_BOTON_CREAR,
+                        borderRadius: '8px',
                         flexShrink: 0,
                         display: { xs: 'none', sm: 'inline-flex' }
                     }}
                 >
-                    Asignar Asesor Par
+                    Asignar asesor par
                 </Button>
             </div>
 
@@ -228,14 +226,11 @@ export default function AsesoresPar() {
                 aria-label="Asignar asesor par"
                 onClick={handleOpenModalAsignar}
                 sx={{
+                    ...ESTILO_BOTON_CREAR,
                     position: 'fixed',
                     right: 16,
                     bottom: 16,
                     zIndex: 10,
-                    textTransform: 'none',
-                    color: '#ffffff',
-                    backgroundColor: AZUL,
-                    '&:hover': { backgroundColor: AZUL_OSCURO },
                     display: { xs: 'inline-flex', sm: 'none' }
                 }}
             >
@@ -265,7 +260,7 @@ export default function AsesoresPar() {
                             variant="contained"
                             size="small"
                             onClick={() => cargarAsesores()}
-                            sx={{ textTransform: 'none', borderRadius: '5px', backgroundColor: AZUL }}
+                            sx={{ ...ESTILO_BOTON_AZUL, minHeight: 36 }}
                         >
                             Reintentar
                         </Button>

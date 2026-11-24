@@ -1,7 +1,13 @@
+import FilterListOutlinedIcon from '@mui/icons-material/FilterListOutlined';
+import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+
+import EncabezadoModal from '../../compartidos/EncabezadoModal';
+import { ESTILO_BOTON_AZUL, ESTILO_BOTON_SECUNDARIO, paperModal } from '../../compartidos/estilosAdmin';
 
 // Lista desplegable con scroll interno
 const MENU_CON_SCROLL = {
@@ -37,24 +43,15 @@ export default function ModalFiltrosAdmin({
     ];
 
     return (
-        <Dialog
-            open={Boolean(open)}
-            onClose={onClose}
-            disableAutoFocus
-            slotProps={{
-                paper: {
-                    style: {
-                        borderRadius: '16px',
-                        padding: '25px',
-                        maxWidth: '450px',
-                        width: '100%',
-                        maxHeight: '85vh',
-                        margin: '16px'
-                    }
-                }
-            }}
-        >
-            <DialogContent className="flex flex-col gap-4">
+        <Dialog open={Boolean(open)} onClose={onClose} disableAutoFocus sx={paperModal(450)}>
+            <EncabezadoModal
+                icono={<FilterListOutlinedIcon />}
+                titulo="Filtros"
+                subtitulo="Filtra la lista de asesorías"
+                onClose={onClose}
+            />
+
+            <DialogContent dividers className="flex flex-col gap-4" sx={{ pt: 3 }}>
                 {campos.map((campo) => (
                     <TextField
                         key={campo.name}
@@ -83,17 +80,16 @@ export default function ModalFiltrosAdmin({
                         ))}
                     </TextField>
                 ))}
-
-                <div className="flex flex-col items-center gap-3 mt-4">
-                    <button
-                        type="button"
-                        onClick={onApply}
-                        className="w-full bg-[#244b91] hover:bg-[#244b91] text-white font-semibold py-2 rounded-lg transition-colors cursor-pointer"
-                    >
-                        Aplicar Filtros
-                    </button>
-                </div>
             </DialogContent>
+
+            <DialogActions sx={{ p: 2, justifyContent: 'flex-end', gap: 1 }}>
+                <Button variant="outlined" color="inherit" onClick={onClose} sx={ESTILO_BOTON_SECUNDARIO}>
+                    Cancelar
+                </Button>
+                <Button variant="contained" onClick={onApply} sx={ESTILO_BOTON_AZUL}>
+                    Aplicar filtros
+                </Button>
+            </DialogActions>
         </Dialog>
     );
 }

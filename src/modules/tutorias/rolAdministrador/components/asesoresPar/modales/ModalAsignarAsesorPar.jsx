@@ -1,18 +1,10 @@
-import CloseIcon from '@mui/icons-material/Close';
-import {
-    Box,
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    IconButton,
-    Typography,
-    useMediaQuery
-} from '@mui/material';
+import GroupAddOutlinedIcon from '@mui/icons-material/GroupAddOutlined';
+import { Box, Button, Dialog, DialogActions, DialogContent, Typography, useMediaQuery } from '@mui/material';
 import { useEffect, useState } from 'react';
 
 import InputBuscar from '../../../../../../components/ui/InputBuscar';
+import EncabezadoModal from '../../compartidos/EncabezadoModal';
+import { ESTILO_BOTON_AZUL, ESTILO_BOTON_SECUNDARIO, PAPER_MODAL_CELULAR, paperModal } from '../../compartidos/estilosAdmin';
 import { mensajesDeError } from '../../../../../../Services/errores';
 import { traerCandidatosParAdmin } from '../../../../../../Services/asesoresAdminService';
 
@@ -108,30 +100,16 @@ export default function ModalAsignarAsesorPar({ open, onClose, onAsignar, showTo
             onClose={handleCloseModal}
             fullScreen={esCelular}
             disableRestoreFocus
-            sx={{
-                '& .MuiPaper-root': esCelular
-                    ? { borderRadius: 0 }
-                    : {
-                        width: '550px',
-                        maxWidth: '90vw',
-                        maxHeight: '90dvh',
-                        borderRadius: '12px',
-                        p: 1.5
-                    }
-            }}
+            sx={esCelular ? PAPER_MODAL_CELULAR : paperModal(550)}
         >
-            <DialogTitle sx={{ m: 0, p: 2, pr: 7, fontWeight: 'bold', fontSize: '1.2rem' }}>
-                Asignar Asesor Par
-                <IconButton
-                    aria-label="close"
-                    onClick={handleCloseModal}
-                    sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
-                >
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
+            <EncabezadoModal
+                icono={<GroupAddOutlinedIcon />}
+                titulo="Asignar asesor par"
+                subtitulo="Elige al estudiante que tendrá el rol"
+                onClose={handleCloseModal}
+            />
 
-            <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2.5 }}>
+            <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2 }}>
                 <Typography variant="body2" color="text.secondary">
                     Busca y selecciona al estudiante que pasará a tener el rol de Asesor Par. Seguirá siendo estudiante.
                 </Typography>
@@ -149,8 +127,9 @@ export default function ModalAsignarAsesorPar({ open, onClose, onAsignar, showTo
                     sx={{
                         maxHeight: esCelular ? 'none' : '280px',
                         overflowY: 'auto',
-                        border: '1px solid #E5E7EB',
-                        borderRadius: '8px'
+                        border: '1px solid #E3E8F2',
+                        borderRadius: '12px',
+                        backgroundColor: '#F7F9FD'
                     }}
                 >
                     {cargando ? (
@@ -177,9 +156,9 @@ export default function ModalAsignarAsesorPar({ open, onClose, onAsignar, showTo
                                         alignItems: 'center',
                                         gap: 1,
                                         borderBottom: '1px solid #EEF1F6',
-                                        borderLeft: activo ? '4px solid #244B91' : '4px solid transparent',
-                                        backgroundColor: activo ? '#EAF0FB' : 'transparent',
-                                        '&:hover': { backgroundColor: '#EAF0FB' },
+                                        borderLeft: activo ? '4px solid #08338F' : '4px solid transparent',
+                                        backgroundColor: activo ? '#E6ECF8' : 'transparent',
+                                        '&:hover': { backgroundColor: '#E6ECF8' },
                                         '&:last-child': { borderBottom: 0 }
                                     }}
                                 >
@@ -193,7 +172,7 @@ export default function ModalAsignarAsesorPar({ open, onClose, onAsignar, showTo
                                     </Box>
 
                                     {activo && (
-                                        <Typography sx={{ fontSize: '12px', fontWeight: 700, color: '#244B91', flexShrink: 0 }}>
+                                        <Typography sx={{ fontSize: '12px', fontWeight: 700, color: '#08338F', flexShrink: 0 }}>
                                             Seleccionado
                                         </Typography>
                                     )}
@@ -220,17 +199,13 @@ export default function ModalAsignarAsesorPar({ open, onClose, onAsignar, showTo
                     '& > button': { flex: esCelular ? 1 : 'none', minHeight: 40 }
                 }}
             >
-                <Button variant="outlined" color="inherit" onClick={handleCloseModal}>
+                <Button variant="outlined" color="inherit" onClick={handleCloseModal} sx={ESTILO_BOTON_SECUNDARIO}>
                     Cancelar
                 </Button>
                 <Button
                     variant="contained"
                     disabled={!seleccionado || guardando}
-                    sx={{
-                        backgroundColor: '#244B91',
-                        '&:hover': { backgroundColor: '#1B3A73' },
-                        '&.Mui-disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' }
-                    }}
+                    sx={ESTILO_BOTON_AZUL}
                     onClick={handleConfirmar}
                 >
                     Asignar

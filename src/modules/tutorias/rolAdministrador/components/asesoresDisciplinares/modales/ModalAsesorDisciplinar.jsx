@@ -1,18 +1,28 @@
-import CloseIcon from '@mui/icons-material/Close';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import EditCalendarOutlinedIcon from '@mui/icons-material/EditCalendarOutlined';
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    IconButton,
-    TextField,
-    Typography,
-    useMediaQuery
-} from '@mui/material';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
+import PersonAddAlt1OutlinedIcon from '@mui/icons-material/PersonAddAlt1Outlined';
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import { Box, Button, Dialog, DialogActions, DialogContent, TextField, Typography, useMediaQuery } from '@mui/material';
 import { useEffect, useState } from 'react';
 
+import SeccionInfo from '../../../../rolEstudiante/components/compartidos/SeccionInfo';
+import BloqueFormulario from '../../compartidos/BloqueFormulario';
+import EncabezadoModal from '../../compartidos/EncabezadoModal';
+import {
+    ESTILO_BOTON_AZUL,
+    ESTILO_BOTON_CERRAR,
+    ESTILO_BOTON_SECUNDARIO,
+    ESTILO_BOTON_VERDE,
+    ICONO,
+    PAPER_MODAL_CELULAR,
+    paperModal
+} from '../../compartidos/estilosAdmin';
 import ModalDisponibilidadAsesor from '../../asesores/ModalDisponibilidadAsesor';
 import ResumenDisponibilidad from '../../asesores/ResumenDisponibilidad';
 import CampoContrasena from './CampoContrasena';
@@ -41,9 +51,9 @@ const MAX_CONTRASENA = 72;
 const MIN_TELEFONO = 10;
 
 const TITULOS = {
-    crear: 'Crear Asesor Disciplinar',
-    editar: 'Editar Asesor Disciplinar',
-    info: 'Información del Asesor'
+    crear: 'Crear asesor disciplinar',
+    editar: 'Editar asesor disciplinar',
+    info: 'Información del asesor'
 };
 
 /**
@@ -172,204 +182,187 @@ export default function ModalAsesorDisciplinar({ open, onClose, modo = 'info', d
         setModalDisponibilidadOpen(true);
     };
 
+    const nombreCompleto = [data?.nombres, data?.apellido_paterno, data?.apellido_materno].filter(Boolean).join(' ') || data?.nombre;
+    const texto = (valor) => (
+        <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>{valor}</Typography>
+    );
+    const iconoEncabezado = crear ? <PersonAddAlt1OutlinedIcon /> : soloLectura ? <InfoOutlinedIcon /> : <EditOutlinedIcon />;
+
     return (
         <Dialog
             open={Boolean(open)}
             onClose={handleCloseModal}
             fullScreen={esCelular}
             disableRestoreFocus
-            sx={{
-                '& .MuiPaper-root': esCelular
-                    ? { borderRadius: 0 }
-                    : {
-                        width: '550px',
-                        maxWidth: '90vw',
-                        maxHeight: '90dvh',
-                        borderRadius: '12px',
-                        p: 1.5
-                    }
-            }}
+            sx={esCelular ? PAPER_MODAL_CELULAR : paperModal(550)}
         >
-            <DialogTitle sx={{ m: 0, p: 2, pr: 7, fontWeight: 'bold', fontSize: '1.2rem' }}>
-                {TITULOS[modo]}
-                <IconButton
-                    aria-label="close"
-                    onClick={handleCloseModal}
-                    sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
-                >
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
+            <EncabezadoModal
+                icono={iconoEncabezado}
+                titulo={TITULOS[modo]}
+                subtitulo={crear ? 'Se crea activo y con la contraseña que escribas' : nombreCompleto}
+                onClose={handleCloseModal}
+            />
 
-            <DialogContent
-                dividers
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2.5,
-                    py: 3,
-                    // En solo lectura los campos siguen legibles (MUI los pone en gris claro al deshabilitarlos)
-                    '& .MuiInputBase-input.Mui-disabled': { WebkitTextFillColor: '#1F2937' },
-                    '& .MuiInputLabel-root.Mui-disabled': { color: 'text.secondary' },
-                    // Se nota que está bloqueado: fondo gris suave y borde tenue
-                    '& .MuiOutlinedInput-root.Mui-disabled': { backgroundColor: '#F3F5F9' },
-                    '& .Mui-disabled .MuiOutlinedInput-notchedOutline': { borderColor: '#E1E5EC' }
-                }}
-            >
-                {/* Solo letras y espacios */}
-                <TextField
-                    label="Nombre(s)"
-                    placeholder={soloLectura ? '—' : undefined}
-                    disabled={!editando}
-                    size="small"
-                    fullWidth
-                    required={editando}
-                    value={formData.nombres}
-                    onChange={handleChange('nombres', (v) => v.replace(SOLO_LETRAS, ''))}
-                    error={intentoGuardar && nombresVacio}
-                    helperText={intentoGuardar && nombresVacio ? 'Campo obligatorio' : ''}
-                    slotProps={{ inputLabel: { shrink: soloLectura || undefined }, htmlInput: { maxLength: 60 } }}
-                />
+            <DialogContent dividers sx={{ py: 2 }}>
+                {soloLectura ? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        <SeccionInfo icono={<PersonOutlineOutlinedIcon sx={ICONO} />} etiqueta="Nombre">
+                            {texto(nombreCompleto)}
+                        </SeccionInfo>
+                        {data?.correo && (
+                            <SeccionInfo icono={<MailOutlinedIcon sx={ICONO} />} etiqueta="Correo institucional">
+                                {texto(data.correo)}
+                            </SeccionInfo>
+                        )}
+                        {data?.numeroCuenta && (
+                            <SeccionInfo icono={<BadgeOutlinedIcon sx={ICONO} />} etiqueta="Número de cuenta">
+                                {texto(data.numeroCuenta)}
+                            </SeccionInfo>
+                        )}
+                        {data?.telefono && (
+                            <SeccionInfo icono={<PhoneOutlinedIcon sx={ICONO} />} etiqueta="Teléfono">
+                                {texto(data.telefono)}
+                            </SeccionInfo>
+                        )}
+                        {data && (
+                            <SeccionInfo icono={<EventAvailableOutlinedIcon sx={ICONO} />} etiqueta="Disponibilidad">
+                                <Box sx={{ mt: 0.5 }}>
+                                    <ResumenDisponibilidad disponibilidad={data.disponibilidad} />
+                                </Box>
+                            </SeccionInfo>
+                        )}
+                    </Box>
+                ) : (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        <BloqueFormulario icono={<PersonOutlineOutlinedIcon sx={ICONO} />} titulo="Datos personales">
+                            {/* Solo letras y espacios */}
+                            <TextField
+                                label="Nombre(s)"
+                                size="small"
+                                fullWidth
+                                required
+                                value={formData.nombres}
+                                onChange={handleChange('nombres', (v) => v.replace(SOLO_LETRAS, ''))}
+                                error={intentoGuardar && nombresVacio}
+                                helperText={intentoGuardar && nombresVacio ? 'Campo obligatorio' : ''}
+                                slotProps={{ htmlInput: { maxLength: 60 } }}
+                            />
+                            <TextField
+                                label="Apellido paterno"
+                                size="small"
+                                fullWidth
+                                required
+                                value={formData.apellido_paterno}
+                                onChange={handleChange('apellido_paterno', (v) => v.replace(SOLO_LETRAS, ''))}
+                                error={intentoGuardar && paternoVacio}
+                                helperText={intentoGuardar && paternoVacio ? 'Campo obligatorio' : ''}
+                                slotProps={{ htmlInput: { maxLength: 60 } }}
+                            />
+                            <TextField
+                                label="Apellido materno"
+                                size="small"
+                                fullWidth
+                                value={formData.apellido_materno}
+                                onChange={handleChange('apellido_materno', (v) => v.replace(SOLO_LETRAS, ''))}
+                                slotProps={{ htmlInput: { maxLength: 60 } }}
+                            />
+                        </BloqueFormulario>
 
-                <div className="flex flex-col gap-5 sm:flex-row sm:gap-4">
-                    <TextField
-                        label="Apellido paterno"
-                        placeholder={soloLectura ? '—' : undefined}
-                        disabled={!editando}
-                        size="small"
-                        sx={{ flex: 1 }}
-                        required={editando}
-                        value={formData.apellido_paterno}
-                        onChange={handleChange('apellido_paterno', (v) => v.replace(SOLO_LETRAS, ''))}
-                        error={intentoGuardar && paternoVacio}
-                        helperText={intentoGuardar && paternoVacio ? 'Campo obligatorio' : ''}
-                        slotProps={{ inputLabel: { shrink: soloLectura || undefined }, htmlInput: { maxLength: 60 } }}
-                    />
+                        <BloqueFormulario icono={<BadgeOutlinedIcon sx={ICONO} />} titulo="Cuenta y contacto">
+                            {/* Formato de correo: algo@dominio.ext */}
+                            <TextField
+                                label="Correo institucional"
+                                type="email"
+                                size="small"
+                                fullWidth
+                                required
+                                value={formData.correo}
+                                onChange={handleChange('correo', (v) => v.replace(/\s/g, ''))}
+                                error={intentoGuardar && Boolean(errorCorreo)}
+                                helperText={intentoGuardar ? errorCorreo : ''}
+                            />
+                            {/* Solo números, opcional */}
+                            <TextField
+                                label="Número de cuenta"
+                                size="small"
+                                fullWidth
+                                value={formData.numeroCuenta}
+                                onChange={handleChange('numeroCuenta', (v) => v.replace(SOLO_NUMEROS, ''))}
+                                slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 20 } }}
+                            />
+                            {/* Solo números, opcional */}
+                            <TextField
+                                label="Teléfono"
+                                size="small"
+                                fullWidth
+                                value={formData.telefono}
+                                onChange={handleChange('telefono', (v) => v.replace(SOLO_NUMEROS, ''))}
+                                error={intentoGuardar && telefonoInvalido}
+                                helperText={intentoGuardar && telefonoInvalido ? `Mínimo ${MIN_TELEFONO} dígitos` : ''}
+                                slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 15 } }}
+                            />
+                        </BloqueFormulario>
 
-                    <TextField
-                        label="Apellido materno"
-                        placeholder={soloLectura ? '—' : undefined}
-                        disabled={!editando}
-                        size="small"
-                        sx={{ flex: 1 }}
-                        value={formData.apellido_materno}
-                        onChange={handleChange('apellido_materno', (v) => v.replace(SOLO_LETRAS, ''))}
-                        slotProps={{ inputLabel: { shrink: soloLectura || undefined }, htmlInput: { maxLength: 60 } }}
-                    />
-                </div>
-
-                {/* Formato de correo: algo@dominio.ext */}
-                <TextField
-                    label="Correo institucional"
-                    placeholder={soloLectura ? '—' : undefined}
-                    disabled={!editando}
-                    type="email"
-                    size="small"
-                    fullWidth
-                    required={editando}
-                    value={formData.correo}
-                    onChange={handleChange('correo', (v) => v.replace(/\s/g, ''))}
-                    error={intentoGuardar && Boolean(errorCorreo)}
-                    helperText={intentoGuardar ? errorCorreo : ''}
-                    slotProps={{ inputLabel: { shrink: soloLectura || undefined } }}
-                />
-
-                {/* Solo números, opcional */}
-                <TextField
-                    label="Número de cuenta"
-                    placeholder={soloLectura ? '—' : undefined}
-                    disabled={!editando}
-                    size="small"
-                    fullWidth
-                    value={formData.numeroCuenta}
-                    onChange={handleChange('numeroCuenta', (v) => v.replace(SOLO_NUMEROS, ''))}
-                    slotProps={{ inputLabel: { shrink: soloLectura || undefined }, htmlInput: { inputMode: 'numeric', maxLength: 20 } }}
-                />
-
-                {/* Solo números, opcional */}
-                <TextField
-                    label="Teléfono"
-                    placeholder={soloLectura ? '—' : undefined}
-                    disabled={!editando}
-                    size="small"
-                    fullWidth
-                    value={formData.telefono}
-                    onChange={handleChange('telefono', (v) => v.replace(SOLO_NUMEROS, ''))}
-                    error={intentoGuardar && telefonoInvalido}
-                    helperText={intentoGuardar && telefonoInvalido ? `Mínimo ${MIN_TELEFONO} dígitos` : ''}
-                    slotProps={{ inputLabel: { shrink: soloLectura || undefined }, htmlInput: { inputMode: 'numeric', maxLength: 15 } }}
-                />
-
-                {editando && (
-                    <>
-                        {/* Alta: obligatoria. Edición: vacía = no se cambia (sirve si el asesor la olvidó) */}
-                        <CampoContrasena
-                            label={crear ? 'Contraseña' : 'Nueva contraseña'}
-                            required={crear}
-                            value={formData.contrasena}
-                            onChange={handleChange('contrasena', (v) => v.replace(/\s/g, ''))}
-                            error={intentoGuardar && (contrasenaFaltante || contrasenaCorta)}
-                            helperText={
-                                intentoGuardar && contrasenaFaltante
-                                    ? 'Campo obligatorio'
-                                    : contrasenaCorta
-                                        ? `Mínimo ${MIN_CONTRASENA} caracteres`
-                                        : crear
-                                            ? `Mínimo ${MIN_CONTRASENA} caracteres`
-                                            : 'Déjala vacía para conservar la actual. Al cambiarla se cierran sus sesiones abiertas.'
-                            }
-                            slotProps={{ htmlInput: { maxLength: MAX_CONTRASENA } }}
-                        />
-
-                        {/* En la edición solo aparece cuando se escribe una contraseña nueva */}
-                        {(crear || contrasenaModificada) && (
+                        <BloqueFormulario icono={<LockOutlinedIcon sx={ICONO} />} titulo="Contraseña">
+                            {/* Alta: obligatoria. Edición: vacía = no se cambia (sirve si el asesor la olvidó) */}
                             <CampoContrasena
-                                label="Confirmar contraseña"
+                                label={crear ? 'Contraseña' : 'Nueva contraseña'}
                                 required={crear}
-                                value={formData.confirmarContrasena}
-                                onChange={handleChange('confirmarContrasena', (v) => v.replace(/\s/g, ''))}
-                                error={contrasenaNoCoincide && (intentoGuardar || formData.confirmarContrasena.length > 0)}
+                                value={formData.contrasena}
+                                onChange={handleChange('contrasena', (v) => v.replace(/\s/g, ''))}
+                                error={intentoGuardar && (contrasenaFaltante || contrasenaCorta)}
                                 helperText={
-                                    contrasenaNoCoincide && (intentoGuardar || formData.confirmarContrasena.length > 0)
-                                        ? 'Las contraseñas no coinciden'
-                                        : ''
+                                    intentoGuardar && contrasenaFaltante
+                                        ? 'Campo obligatorio'
+                                        : contrasenaCorta
+                                            ? `Mínimo ${MIN_CONTRASENA} caracteres`
+                                            : crear
+                                                ? `Mínimo ${MIN_CONTRASENA} caracteres`
+                                                : 'Déjala vacía para conservar la actual. Al cambiarla se cierran sus sesiones abiertas.'
                                 }
                                 slotProps={{ htmlInput: { maxLength: MAX_CONTRASENA } }}
                             />
-                        )}
-                    </>
-                )}
 
-                {/* Disponibilidad: en el alta no hay; se arma después desde Información o Editar */}
-                {crear ? (
-                    <Typography variant="body2" sx={{ color: '#6B7280' }}>
-                        La disponibilidad (materias, horarios y modalidad) se configura después de crearlo, desde Editar.
-                        Hasta entonces no aparecerá para los estudiantes.
-                    </Typography>
-                ) : (
-                    data && (
-                        <div className="flex flex-col gap-3 border-t border-gray-200 pt-4">
-                            <div className="flex items-center justify-between gap-3">
-                                <Typography sx={{ fontSize: '15px', fontWeight: 700, color: '#1F2937' }}>
-                                    Disponibilidad
-                                </Typography>
+                            {/* En la edición solo aparece cuando se escribe una contraseña nueva */}
+                            {(crear || contrasenaModificada) && (
+                                <CampoContrasena
+                                    label="Confirmar contraseña"
+                                    required={crear}
+                                    value={formData.confirmarContrasena}
+                                    onChange={handleChange('confirmarContrasena', (v) => v.replace(/\s/g, ''))}
+                                    error={contrasenaNoCoincide && (intentoGuardar || formData.confirmarContrasena.length > 0)}
+                                    helperText={
+                                        contrasenaNoCoincide && (intentoGuardar || formData.confirmarContrasena.length > 0)
+                                            ? 'Las contraseñas no coinciden'
+                                            : ''
+                                    }
+                                    slotProps={{ htmlInput: { maxLength: MAX_CONTRASENA } }}
+                                />
+                            )}
+                        </BloqueFormulario>
 
-                                {editando && (
+                        {/* Disponibilidad: en el alta no hay; se arma después desde Información o Editar */}
+                        {crear ? (
+                            <Typography variant="body2" sx={{ color: '#6B7280', px: 0.5 }}>
+                                La disponibilidad (materias, horarios y modalidad) se configura después de crearlo, desde Editar.
+                                Hasta entonces no aparecerá para los estudiantes.
+                            </Typography>
+                        ) : (
+                            data && (
+                                <BloqueFormulario icono={<EventAvailableOutlinedIcon sx={ICONO} />} titulo="Disponibilidad">
                                     <Button
-                                        size="small"
                                         variant="outlined"
                                         startIcon={<EditCalendarOutlinedIcon />}
                                         onClick={abrirDisponibilidad}
-                                        sx={{ flexShrink: 0, textTransform: 'none', borderRadius: '5px', color: '#244B91', borderColor: '#244B91' }}
+                                        sx={{ ...ESTILO_BOTON_SECUNDARIO, justifySelf: 'start', color: '#08338F', borderColor: '#08338F' }}
                                     >
-                                        {data.disponibilidad.vacia ? 'Armar' : 'Editar'}
+                                        {data.disponibilidad.vacia ? 'Armar disponibilidad' : 'Editar disponibilidad'}
                                     </Button>
-                                )}
-                            </div>
-
-                            <ResumenDisponibilidad disponibilidad={data.disponibilidad} />
-                        </div>
-                    )
+                                    <ResumenDisponibilidad disponibilidad={data.disponibilidad} />
+                                </BloqueFormulario>
+                            )
+                        )}
+                    </Box>
                 )}
             </DialogContent>
 
@@ -385,28 +378,20 @@ export default function ModalAsesorDisciplinar({ open, onClose, modo = 'info', d
             >
                 {editando ? (
                     <>
-                        <Button variant="outlined" color="inherit" onClick={handleCloseModal}>
+                        <Button variant="outlined" color="inherit" onClick={handleCloseModal} sx={ESTILO_BOTON_SECUNDARIO}>
                             Cancelar
                         </Button>
                         <Button
                             variant="contained"
                             disabled={!hasChanges() || guardando}
-                            sx={
-                                crear
-                                    ? { backgroundColor: '#244B91', '&:hover': { backgroundColor: '#1B3A73' } }
-                                    : {
-                                        backgroundColor: '#2e7d32',
-                                        '&:hover': { backgroundColor: '#1b5e20' },
-                                        '&.Mui-disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' }
-                                    }
-                            }
+                            sx={crear ? ESTILO_BOTON_AZUL : ESTILO_BOTON_VERDE}
                             onClick={handleGuardar}
                         >
-                            {crear ? 'Crear Asesor' : 'Aplicar Cambios'}
+                            {crear ? 'Crear asesor' : 'Aplicar cambios'}
                         </Button>
                     </>
                 ) : (
-                    <Button variant="outlined" color="inherit" onClick={handleCloseModal}>
+                    <Button variant="contained" onClick={handleCloseModal} sx={ESTILO_BOTON_CERRAR}>
                         Cerrar
                     </Button>
                 )}

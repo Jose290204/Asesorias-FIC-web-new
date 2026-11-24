@@ -31,7 +31,6 @@ export default function TablaAsesoresDisciplinares({ rows = [], onUpdate, onDele
                 onBaja={abrir(setModalEliminarOpen)}
                 textoBaja="Dar de baja"
                 textoVacio="No se encontraron asesores disciplinares"
-                etiquetaId="Asesor"
             />
 
             {/* Información: todo bloqueado */}

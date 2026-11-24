@@ -1,11 +1,7 @@
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Typography
-} from '@mui/material';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import { Typography } from '@mui/material';
+
+import ModalConfirmacion from '../../compartidos/ModalConfirmacion';
 
 /**
  * Confirmación para aprobar una solicitud.
@@ -22,44 +18,28 @@ export default function ModalAprobarSolicitud({ open, onClose, onConfirm, data }
     };
 
     return (
-        <Dialog
-            open={Boolean(open)}
+        <ModalConfirmacion
+            open={open}
             onClose={onClose}
-            sx={{
-                '& .MuiPaper-root': {
-                    width: '450px',
-                    maxWidth: '90vw',
-                    borderRadius: '12px',
-                    p: 1
-                }
-            }}
+            onConfirm={handleConfirm}
+            icono={<CheckCircleOutlinedIcon />}
+            titulo="Aprobar solicitud"
+            tono="verde"
+            textoConfirmar="Aprobar"
         >
-            <DialogTitle sx={{ fontWeight: 'bold' }}>Aprobar solicitud</DialogTitle>
-            <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1, py: 3 }}>
-                <Typography variant="body1" align="center">
-                    ¿Estás seguro de que deseas aprobar esta solicitud?
-                </Typography>
+            <Typography variant="body1">¿Estás seguro de que deseas aprobar esta solicitud?</Typography>
 
-                {(data?.materia || data?.estudiante) && (
-                    <Typography variant="body2" align="center" sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}>
-                        {data?.materia}
-                        {data?.materia && data?.estudiante && ' · '}
-                        {data?.estudiante}
-                    </Typography>
-                )}
-
-                <Typography variant="body2" align="center" color="text.secondary">
-                    Al aprobarla, la solicitud pasa a ser una asesoría en curso.
+            {(data?.materia || data?.estudiante) && (
+                <Typography variant="body2" sx={{ fontWeight: 600, mt: 1.5 }}>
+                    {data?.materia}
+                    {data?.materia && data?.estudiante && ' · '}
+                    {data?.estudiante}
                 </Typography>
-            </DialogContent>
-            <DialogActions sx={{ p: 2, justifyContent: 'flex-end', gap: 1 }}>
-                <Button variant="outlined" color="inherit" onClick={onClose}>
-                    Cancelar
-                </Button>
-                <Button variant="contained" color="success" onClick={handleConfirm}>
-                    Aprobar
-                </Button>
-            </DialogActions>
-        </Dialog>
+            )}
+
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Al aprobarla, la solicitud pasa a ser una asesoría en curso.
+            </Typography>
+        </ModalConfirmacion>
     );
 }

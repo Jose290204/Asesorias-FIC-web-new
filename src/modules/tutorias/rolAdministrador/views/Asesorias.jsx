@@ -21,6 +21,7 @@ import ModalCrearAsesoria from '../components/asesorias/modales/ModalCrearAsesor
 import ModalFiltrosAdmin from '../components/asesorias/modales/ModalFiltrosAdmin';
 import TablaAsesorias from '../components/asesorias/TablaAsesorias';
 import { MINIMO_CARGA_MS, conTiempoMinimo } from '../../../../utils/tiempoMinimo';
+import { ESTILO_BOTON_CREAR } from '../components/compartidos/estilosAdmin';
 
 const initialFiltros = {
   licenciatura: '',
@@ -259,10 +260,8 @@ export default function Asesorias() {
         <Button
           variant="contained"
           sx={{
-            borderRadius: '5px',
-            textTransform: 'none',
-            backgroundColor: '#08338F',
-            '&:hover': { backgroundColor: '#1B3A73' },
+            ...ESTILO_BOTON_CREAR,
+            borderRadius: '8px',
             flexShrink: 0,
             // Botón normal: solo tablet y escritorio
             display: { xs: 'none', sm: 'inline-flex' }
@@ -281,14 +280,11 @@ export default function Asesorias() {
         aria-label="Crear asesoría"
         onClick={handleOpenModalCrear}
         sx={{
+          ...ESTILO_BOTON_CREAR,
           position: 'fixed',
           right: 16,
           bottom: 16,
           zIndex: 10,
-          textTransform: 'none',
-          color: '#ffffff',
-          backgroundColor: '#08338F',
-          '&:hover': { backgroundColor: '#1B3A73' },
           display: { xs: 'inline-flex', sm: 'none' },
         }}
       >

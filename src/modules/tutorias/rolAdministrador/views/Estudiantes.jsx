@@ -1,4 +1,5 @@
 import PersonAddAlt1OutlinedIcon from '@mui/icons-material/PersonAddAlt1Outlined';
+import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Fab from '@mui/material/Fab';
@@ -18,6 +19,7 @@ import {
     traerEstudiantesAdmin
 } from '../../../../Services/estudiantesAdminService';
 import { mensajesDeError } from '../../../../Services/errores';
+import { ESTILO_BOTON_AZUL, ESTILO_BOTON_CREAR, ESTILO_BOTON_VERDE } from '../components/compartidos/estilosAdmin';
 import ModalCargaEstudiantes from '../components/estudiantes/modales/ModalCargaEstudiantes';
 import ModalCrearEstudiante from '../components/estudiantes/modales/ModalCrearEstudiante';
 import TablaEstudiantes from '../components/estudiantes/TablaEstudiantes';
@@ -25,7 +27,6 @@ import { MINIMO_CARGA_MS, conTiempoMinimo } from '../../../../utils/tiempoMinimo
 
 // Color de los botones de crear (distinto al verde de la carga masiva)
 const AZUL = '#244B91';
-const AZUL_OSCURO = '#1B3A73';
 
 // Estilo de las listas de filtro (licenciatura y grupo)
 const ESTILO_FILTRO = { width: { xs: 230, sm: 220 }, maxWidth: '100%', flexShrink: 0, backgroundColor: '#FFFFFF' };
@@ -232,15 +233,14 @@ export default function Estudiantes() {
                     />
                 </div>
 
-                <button
+                <Button
+                    variant="contained"
+                    startIcon={<UploadFileOutlinedIcon />}
                     onClick={handleOpenModalExcel}
-                    className="w-1/2 sm:w-auto shrink-0 justify-center bg-[#2e7d32] hover:bg-[#1b5e20] text-sm text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
+                    sx={{ ...ESTILO_BOTON_VERDE, flexShrink: 0, width: { xs: '50%', sm: 'auto' }, minHeight: 40 }}
                 >
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1.8 14.8l-1.4 1.4L12 15.8l-2.4 2.4-1.4-1.4 2.4-2.4-2.4-2.4 1.4-1.4 2.4 2.4 2.4-2.4 1.4 1.4-2.4 2.4 2.4 2.4zM13 9V3.5L18.5 9H13z" />
-                    </svg>
-                    Cargar Estudiantes
-                </button>
+                    Cargar estudiantes
+                </Button>
 
                 {/* Botón normal: solo tablet y escritorio */}
                 <Button
@@ -249,15 +249,13 @@ export default function Estudiantes() {
                     startIcon={<PersonAddAlt1OutlinedIcon />}
                     onClick={handleOpenModalCrear}
                     sx={{
-                        borderRadius: '5px',
-                        textTransform: 'none',
-                        backgroundColor: AZUL,
-                        '&:hover': { backgroundColor: AZUL_OSCURO },
+                        ...ESTILO_BOTON_CREAR,
+                        borderRadius: '8px',
                         flexShrink: 0,
                         display: { xs: 'none', sm: 'inline-flex' }
                     }}
                 >
-                    Crear Estudiante
+                    Crear estudiante
                 </Button>
             </div>
 
@@ -267,14 +265,11 @@ export default function Estudiantes() {
                 aria-label="Crear estudiante"
                 onClick={handleOpenModalCrear}
                 sx={{
+                    ...ESTILO_BOTON_CREAR,
                     position: 'fixed',
                     right: 16,
                     bottom: 16,
                     zIndex: 10,
-                    textTransform: 'none',
-                    color: '#ffffff',
-                    backgroundColor: AZUL,
-                    '&:hover': { backgroundColor: AZUL_OSCURO },
                     display: { xs: 'inline-flex', sm: 'none' }
                 }}
             >
@@ -310,7 +305,7 @@ export default function Estudiantes() {
                             variant="contained"
                             size="small"
                             onClick={() => cargarEstudiantes()}
-                            sx={{ textTransform: 'none', borderRadius: '5px', backgroundColor: AZUL }}
+                            sx={{ ...ESTILO_BOTON_AZUL, minHeight: 36 }}
                         >
                             Reintentar
                         </Button>

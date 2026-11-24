@@ -8,6 +8,7 @@ import TituloVista from '../../../../components/ui/TituloVista';
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import TablaUsuariosEnLinea from '../components/usuariosEnLinea/TablaUsuariosEnLinea';
 import { estaEnLinea } from '../components/usuariosEnLinea/tiempo';
+import { ESTILO_BOTON_SECUNDARIO } from '../components/compartidos/estilosAdmin';
 import { sesionesService } from '../services/sesionesService';
 
 // Cada cuánto se vuelve a consultar la lista sin que el administrador haga nada
@@ -89,12 +90,13 @@ export default function UsuariosEnLinea() {
                     disabled={actualizando}
                     onClick={() => fetchSesiones()}
                     sx={{
-                        borderRadius: '5px',
-                        textTransform: 'none',
-                        color: '#244B91',
-                        borderColor: '#244B91',
+                        ...ESTILO_BOTON_SECUNDARIO,
+                        minHeight: 40,
+                        color: '#08338F',
+                        borderColor: '#08338F',
+                        backgroundColor: '#FFFFFF',
                         flexShrink: 0,
-                        '&:hover': { borderColor: '#1B3A73', backgroundColor: 'rgba(36, 75, 145, 0.06)' }
+                        '&:hover': { borderColor: '#062568', backgroundColor: 'rgba(8, 51, 143, 0.06)' }
                     }}
                 >
                     Actualizar

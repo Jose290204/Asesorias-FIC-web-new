@@ -1,6 +1,9 @@
 // rolAdministrador/components/reportes/ModalDetalleAsesorias.jsx
-import CloseIcon from '@mui/icons-material/Close';
-import { Dialog, DialogContent, DialogTitle, IconButton, Typography, useMediaQuery } from '@mui/material';
+import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
+import { Button, Dialog, DialogActions, DialogContent, useMediaQuery } from '@mui/material';
+
+import EncabezadoModal from '../compartidos/EncabezadoModal';
+import { ESTILO_BOTON_CERRAR, PAPER_MODAL_CELULAR } from '../compartidos/estilosAdmin';
 import TablaReporte from './TablaReporte';
 
 /**
@@ -17,27 +20,13 @@ export default function ModalDetalleAsesorias({ open, onClose, titulo, subtitulo
             onClose={onClose}
             fullScreen={esCelular}
             disableRestoreFocus
-            sx={{
-                '& .MuiPaper-root': esCelular
-                    ? { borderRadius: 0 }
-                    : { width: '1100px', maxWidth: '95vw', maxHeight: '90dvh', borderRadius: '12px' }
-            }}
+            sx={
+                esCelular
+                    ? PAPER_MODAL_CELULAR
+                    : { '& .MuiPaper-root': { width: '1100px', maxWidth: '95vw', maxHeight: '90dvh', borderRadius: '16px' } }
+            }
         >
-            <DialogTitle sx={{ m: 0, p: 2, pr: 7, fontWeight: 'bold', fontSize: '1.2rem' }}>
-                {titulo}
-                {subtitulo && (
-                    <Typography component="span" sx={{ display: 'block', fontSize: '0.85rem', fontWeight: 400, color: 'text.secondary' }}>
-                        {subtitulo}
-                    </Typography>
-                )}
-                <IconButton
-                    aria-label="close"
-                    onClick={onClose}
-                    sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
-                >
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
+            <EncabezadoModal icono={<EventNoteOutlinedIcon />} titulo={titulo} subtitulo={subtitulo} onClose={onClose} />
 
             <DialogContent dividers sx={{ p: { xs: 1.5, sm: 2 }, backgroundColor: '#F4F7FC' }}>
                 <TablaReporte
@@ -48,6 +37,12 @@ export default function ModalDetalleAsesorias({ open, onClose, titulo, subtitulo
                     textoVacio="No hay asesorías"
                 />
             </DialogContent>
+
+            <DialogActions sx={{ p: 2, pb: esCelular ? 'calc(16px + env(safe-area-inset-bottom))' : 2 }}>
+                <Button variant="contained" onClick={onClose} sx={{ ...ESTILO_BOTON_CERRAR, textTransform: 'none', borderRadius: '8px', minHeight: 40 }}>
+                    Cerrar
+                </Button>
+            </DialogActions>
         </Dialog>
     );
 }

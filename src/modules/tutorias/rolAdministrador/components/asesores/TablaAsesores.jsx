@@ -47,7 +47,6 @@ const estiloAccion = (color, fondo) => ({
  *  - onInfo(row, event), onBaja(row, event); onEditar(row, event) es opcional (los pares no se editan aquí)
  *  - textoBaja: 'Dar de baja' (disciplinares) o 'Quitar rol' (pares)
  *  - textoVacio: lo que se muestra si no hay filas
- *  - etiquetaId: texto de la tarjeta ("Asesor #3")
  */
 export default function TablaAsesores({
     rows = [],
@@ -55,8 +54,7 @@ export default function TablaAsesores({
     onEditar,
     onBaja,
     textoBaja = 'Dar de baja',
-    textoVacio = 'No se encontraron asesores',
-    etiquetaId = 'Asesor'
+    textoVacio = 'No se encontraron asesores'
 }) {
     // Mismo corte que "md" de Tailwind: menos de 768px = móvil
     const esMovil = useMediaQuery('(max-width:767px)');
@@ -92,7 +90,6 @@ export default function TablaAsesores({
                                 onEditar={handleEditar}
                                 onBaja={handleBaja}
                                 textoBaja={textoBaja}
-                                etiquetaId={etiquetaId}
                             />
                         ))}
                     </Box>
@@ -117,7 +114,6 @@ export default function TablaAsesores({
                 <Table stickyHeader sx={{ minWidth: 950 }}>
                     <TableHead>
                         <TableRow sx={{ '& th': ESTILO_ENCABEZADO, '& th:first-of-type': { pl: 3 }, '& th:last-child': { pr: 3 } }}>
-                            <TableCell sx={{ width: '70px' }} align="center">ID</TableCell>
                             <TableCell align="left">Nombre</TableCell>
                             <TableCell align="left">Correo</TableCell>
                             <TableCell align="center">Número de Cuenta</TableCell>
@@ -130,7 +126,7 @@ export default function TablaAsesores({
                     <TableBody>
                         {rows.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} align="center" sx={{ py: 5, color: '#6B7280', border: 0 }}>
+                                <TableCell colSpan={6} align="center" sx={{ py: 5, color: '#6B7280', border: 0 }}>
                                     {textoVacio}
                                 </TableCell>
                             </TableRow>
@@ -152,10 +148,6 @@ export default function TablaAsesores({
                                         '&:last-child td': { borderBottom: 0 }
                                     }}
                                 >
-                                    <TableCell align="center" sx={{ color: '#6B7280 !important', fontWeight: 600 }}>
-                                        #{row.id}
-                                    </TableCell>
-
                                     <TableCell align="left" sx={{ fontWeight: 600, color: '#111827 !important' }}>
                                         {row.nombre}
                                     </TableCell>

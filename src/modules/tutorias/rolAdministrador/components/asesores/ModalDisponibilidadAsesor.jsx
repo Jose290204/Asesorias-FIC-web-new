@@ -1,6 +1,9 @@
 import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
+import LaptopOutlinedIcon from '@mui/icons-material/LaptopOutlined';
+import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
+import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined';
 import {
     Box,
     Button,
@@ -9,8 +12,6 @@ import {
     Dialog,
     DialogActions,
     DialogContent,
-    DialogTitle,
-    IconButton,
     Typography,
     useMediaQuery
 } from '@mui/material';
@@ -18,6 +19,9 @@ import { useEffect, useState } from 'react';
 
 import { useCatalogos } from '../../../../../context/CatalogosContext';
 import { traerMaterias } from '../../../../../Services/asesoriasAsesorService';
+import BloqueFormulario from '../compartidos/BloqueFormulario';
+import EncabezadoModal from '../compartidos/EncabezadoModal';
+import { ESTILO_BOTON_SECUNDARIO, ESTILO_BOTON_VERDE, ICONO, PAPER_MODAL_CELULAR, paperModal } from '../compartidos/estilosAdmin';
 import ModalMaterias from '../../../rolAsesor/components/disponibilidad/ModalMaterias';
 
 // Respaldo por si el catálogo de días aún no llega (los valores son los mismos que usa la API, sin acento)
@@ -35,15 +39,6 @@ const clave = (h) => `${h.dia}-${h.horarioId}`;
 // De lo que entrega el servicio (horarios agrupados por día) a la lista plana que se edita
 const aHorariosPlanos = (horariosPorDia) =>
     horariosPorDia.flatMap((grupo) => grupo.horarios.map((h) => ({ dia: grupo.dia, horarioId: h.id })));
-
-// Título de cada bloque del editor; en rojo si falta algo al intentar guardar
-function Etiqueta({ children, error }) {
-    return (
-        <Typography sx={{ fontSize: '14px', fontWeight: 700, color: error ? '#d32f2f' : '#1F2937', mb: 1 }}>
-            {children}
-        </Typography>
-    );
-}
 
 const estiloChip = (activo) => ({
     height: 36,
@@ -196,46 +191,31 @@ export default function ModalDisponibilidadAsesor({ open, onClose, asesor, onGua
             onClose={handleCloseModal}
             fullScreen={esCelular}
             disableRestoreFocus
-            sx={{
-                '& .MuiPaper-root': esCelular
-                    ? { borderRadius: 0 }
-                    : { width: '640px', maxWidth: '92vw', maxHeight: '90dvh', borderRadius: '12px', p: 1.5 }
-            }}
+            sx={esCelular ? PAPER_MODAL_CELULAR : paperModal(640)}
         >
-            <DialogTitle sx={{ m: 0, p: 2, pr: 7, fontWeight: 'bold', fontSize: '1.2rem' }}>
-                Disponibilidad
-                {asesor?.nombre && (
-                    <Typography component="span" sx={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#6B7280' }}>
-                        {asesor.nombre}
-                    </Typography>
-                )}
-                <IconButton
-                    aria-label="close"
-                    onClick={handleCloseModal}
-                    sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
-                >
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
+            <EncabezadoModal
+                icono={<EventAvailableOutlinedIcon />}
+                titulo="Disponibilidad"
+                subtitulo={asesor?.nombre}
+                onClose={handleCloseModal}
+            />
 
-            <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 3, py: 3 }}>
+            <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, py: 2 }}>
                 {/* MATERIAS */}
-                <Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
-                        <Typography sx={{ fontSize: '14px', fontWeight: 700, color: intentoGuardar && sinMaterias ? '#d32f2f' : '#1F2937' }}>
-                            Materias que asesora
-                        </Typography>
-                        <Button
-                            size="small"
-                            variant="outlined"
-                            startIcon={cargandoMaterias ? <CircularProgress size={14} /> : <EditOutlinedIcon />}
-                            disabled={cargandoMaterias || errorMaterias}
-                            onClick={() => setDialogMateriasOpen(true)}
-                            sx={{ flexShrink: 0, textTransform: 'none', borderRadius: '5px', color: '#244B91', borderColor: '#244B91' }}
-                        >
-                            {sinMaterias ? 'Añadir' : 'Editar'}
-                        </Button>
-                    </Box>
+                <BloqueFormulario
+                    icono={<MenuBookOutlinedIcon sx={ICONO} />}
+                    titulo={intentoGuardar && sinMaterias ? 'Materias que asesora · elige al menos una' : 'Materias que asesora'}
+                >
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={cargandoMaterias ? <CircularProgress size={14} /> : <EditOutlinedIcon />}
+                        disabled={cargandoMaterias || errorMaterias}
+                        onClick={() => setDialogMateriasOpen(true)}
+                        sx={{ ...ESTILO_BOTON_SECUNDARIO, justifySelf: 'start', color: '#08338F', borderColor: '#08338F' }}
+                    >
+                        {sinMaterias ? 'Añadir materias' : 'Editar materias'}
+                    </Button>
 
                     {errorMaterias && (
                         <Typography variant="body2" color="error" sx={{ mb: 1 }}>
@@ -266,13 +246,13 @@ export default function ModalDisponibilidadAsesor({ open, onClose, asesor, onGua
                             ))}
                         </Box>
                     )}
-                </Box>
+                </BloqueFormulario>
 
                 {/* MODALIDADES */}
-                <Box>
-                    <Etiqueta error={intentoGuardar && sinModalidades}>
-                        Modalidades{intentoGuardar && sinModalidades ? ' · elige al menos una' : ''}
-                    </Etiqueta>
+                <BloqueFormulario
+                    icono={<LaptopOutlinedIcon sx={ICONO} />}
+                    titulo={intentoGuardar && sinModalidades ? 'Modalidades · elige al menos una' : 'Modalidades'}
+                >
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                         {opcionesModalidad.map((m) => {
                             const activa = modalidades.includes(m.valor);
@@ -289,13 +269,13 @@ export default function ModalDisponibilidadAsesor({ open, onClose, asesor, onGua
                             );
                         })}
                     </Box>
-                </Box>
+                </BloqueFormulario>
 
                 {/* HORARIOS POR DÍA */}
-                <Box>
-                    <Etiqueta error={intentoGuardar && sinHorarios}>
-                        Horarios disponibles{intentoGuardar && sinHorarios ? ' · elige al menos uno' : ''}
-                    </Etiqueta>
+                <BloqueFormulario
+                    icono={<ScheduleOutlinedIcon sx={ICONO} />}
+                    titulo={intentoGuardar && sinHorarios ? 'Horarios disponibles · elige al menos uno' : 'Horarios disponibles'}
+                >
                     <div className="flex flex-col gap-4">
                         {dias.map((dia) => {
                             const activosDelDia = slots.filter((s) => seleccionados.has(`${dia.valor}-${s.id}`)).length;
@@ -341,7 +321,7 @@ export default function ModalDisponibilidadAsesor({ open, onClose, asesor, onGua
                             );
                         })}
                     </div>
-                </Box>
+                </BloqueFormulario>
             </DialogContent>
 
             <DialogActions
@@ -354,17 +334,13 @@ export default function ModalDisponibilidadAsesor({ open, onClose, asesor, onGua
                     '& > button': { flex: esCelular ? 1 : 'none', minHeight: 40 }
                 }}
             >
-                <Button variant="outlined" color="inherit" onClick={handleCloseModal}>
+                <Button variant="outlined" color="inherit" onClick={handleCloseModal} sx={ESTILO_BOTON_SECUNDARIO}>
                     Cancelar
                 </Button>
                 <Button
                     variant="contained"
                     disabled={!hayCambios || guardando}
-                    sx={{
-                        backgroundColor: '#2e7d32',
-                        '&:hover': { backgroundColor: '#1b5e20' },
-                        '&.Mui-disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' }
-                    }}
+                    sx={ESTILO_BOTON_VERDE}
                     onClick={handleGuardar}
                 >
                     Guardar disponibilidad

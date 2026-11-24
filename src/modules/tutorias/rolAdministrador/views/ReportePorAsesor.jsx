@@ -17,10 +17,10 @@ import ModalDetalleAsesorias from '../components/reportes/ModalDetalleAsesorias'
 import PanelReporte from '../components/reportes/PanelReporte';
 import ResumenReporte from '../components/reportes/ResumenReporte';
 import TablaReporte from '../components/reportes/TablaReporte';
+import { ESTILO_BOTON_AZUL, ESTILO_BOTON_SECUNDARIO } from '../components/compartidos/estilosAdmin';
 import { reportesService } from '../services/reportesService';
 
 const AZUL = '#244B91';
-const AZUL_OSCURO = '#1B3A73';
 
 // Columnas del reporte general (un renglón por asesor)
 const COLUMNAS_GENERAL = [
@@ -341,10 +341,8 @@ export default function ReportePorAsesor() {
                     onClick={handleBuscar}
                     disabled={cargando || cargandoListas}
                     sx={{
-                        borderRadius: '5px',
-                        textTransform: 'none',
-                        backgroundColor: AZUL,
-                        '&:hover': { backgroundColor: AZUL_OSCURO },
+                        ...ESTILO_BOTON_AZUL,
+                        minHeight: 40,
                         flexShrink: 0,
                         width: { xs: '100%', lg: 'auto' }
                     }}
@@ -358,8 +356,8 @@ export default function ReportePorAsesor() {
                     onClick={handleExportarPdf}
                     disabled={cargando || exportando}
                     sx={{
-                        borderRadius: '5px',
-                        textTransform: 'none',
+                        ...ESTILO_BOTON_SECUNDARIO,
+                        minHeight: 40,
                         color: '#C62828',
                         borderColor: '#C62828',
                         backgroundColor: '#FFFFFF',

@@ -140,18 +140,27 @@ export default function TablaReporte({
                                     width: '100%',
                                     maxWidth: '400px',
                                     background: '#FFFFFF',
-                                    borderLeft: '20px solid #08338F',
-                                    borderRadius: '5px',
-                                    boxShadow: '0px 4px 12.3px rgba(0, 0, 0, 0.20)'
+                                    border: '1px solid #E3E8F2',
+                                    borderRadius: '16px',
+                                    overflow: 'hidden',
+                                    boxShadow: '0px 2px 10px rgba(8, 51, 143, 0.08)'
                                 }}
                             >
-                                <CardContent sx={{ padding: '24px' }}>
-                                    <Typography sx={{ fontSize: '18px', fontWeight: 700, color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', mb: 1.5 }}>
+                                <Box sx={{ height: '5px', backgroundColor: '#08338F' }} />
+
+                                <Box
+                                    sx={{
+                                        padding: '16px 22px',
+                                        background: 'linear-gradient(180deg, #F4F7FD 0%, #FFFFFF 100%)',
+                                        borderBottom: '1px solid #EEF1F7'
+                                    }}
+                                >
+                                    <Typography sx={{ fontSize: '18px', fontWeight: 700, color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere' }}>
                                         {row[columnaPrincipal.campo]}
                                     </Typography>
 
                                     {columnasChip.length > 0 && (
-                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: '10px' }}>
                                             {columnasChip.map((col) => (
                                                 <Chip
                                                     key={col.campo}
@@ -162,7 +171,9 @@ export default function TablaReporte({
                                             ))}
                                         </Box>
                                     )}
+                                </Box>
 
+                                <CardContent sx={{ padding: '18px 22px', '&:last-child': { paddingBottom: '18px' } }}>
                                     {/* Datos en dos columnas: etiqueta chica y valor grande */}
                                     <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                         {columnasDato.map((col) => (

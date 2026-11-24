@@ -1,16 +1,20 @@
-import CloseIcon from '@mui/icons-material/Close';
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    IconButton,
-    TextField,
-    useMediaQuery
-} from '@mui/material';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import PersonAddAlt1OutlinedIcon from '@mui/icons-material/PersonAddAlt1Outlined';
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
+import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import { Box, Button, Dialog, DialogActions, DialogContent, TextField, useMediaQuery } from '@mui/material';
 import { useEffect, useState } from 'react';
 
+import BloqueFormulario from '../../compartidos/BloqueFormulario';
+import EncabezadoModal from '../../compartidos/EncabezadoModal';
+import {
+    ESTILO_BOTON_AZUL,
+    ESTILO_BOTON_SECUNDARIO,
+    ICONO,
+    PAPER_MODAL_CELULAR,
+    paperModal
+} from '../../compartidos/estilosAdmin';
 // TODO: mover este componente a una carpeta compartida cuando se haga la limpieza de duplicados
 import CampoContrasena from '../../asesoresDisciplinares/modales/CampoContrasena';
 import CamposLicenciaturaGrupo from './CamposLicenciaturaGrupo';
@@ -135,137 +139,127 @@ export default function ModalCrearEstudiante({ open, onClose, onSave }) {
             onClose={handleCloseModal}
             fullScreen={esCelular}
             disableRestoreFocus
-            sx={{
-                '& .MuiPaper-root': esCelular
-                    ? { borderRadius: 0 }
-                    : {
-                        width: '550px',
-                        maxWidth: '90vw',
-                        maxHeight: '90dvh',
-                        borderRadius: '12px',
-                        p: 1.5
-                    }
-            }}
+            sx={esCelular ? PAPER_MODAL_CELULAR : paperModal(550)}
         >
-            <DialogTitle sx={{ m: 0, p: 2, pr: 7, fontWeight: 'bold', fontSize: '1.2rem' }}>
-                Crear Estudiante
-                <IconButton
-                    aria-label="close"
-                    onClick={handleCloseModal}
-                    sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
-                >
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
+            <EncabezadoModal
+                icono={<PersonAddAlt1OutlinedIcon />}
+                titulo="Crear estudiante"
+                subtitulo="Se crea activo y con la contraseña que escribas"
+                onClose={handleCloseModal}
+            />
 
-            <DialogContent dividers sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, py: 3 }}>
-                {/* Solo letras y espacios */}
-                <TextField
-                    label="Nombre(s)"
-                    size="small"
-                    fullWidth
-                    required
-                    value={formData.nombres}
-                    onChange={handleChange('nombres', (v) => v.replace(SOLO_LETRAS, ''))}
-                    error={intentoGuardar && nombresVacio}
-                    helperText={intentoGuardar && nombresVacio ? 'Campo obligatorio' : ''}
-                    slotProps={{ htmlInput: { maxLength: 60 } }}
-                />
+            <DialogContent dividers sx={{ py: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    <BloqueFormulario icono={<PersonOutlineOutlinedIcon sx={ICONO} />} titulo="Datos personales">
+                        {/* Solo letras y espacios */}
+                        <TextField
+                            label="Nombre(s)"
+                            size="small"
+                            fullWidth
+                            required
+                            value={formData.nombres}
+                            onChange={handleChange('nombres', (v) => v.replace(SOLO_LETRAS, ''))}
+                            error={intentoGuardar && nombresVacio}
+                            helperText={intentoGuardar && nombresVacio ? 'Campo obligatorio' : ''}
+                            slotProps={{ htmlInput: { maxLength: 60 } }}
+                        />
+                        <TextField
+                            label="Apellido paterno"
+                            size="small"
+                            fullWidth
+                            required
+                            value={formData.apellido_paterno}
+                            onChange={handleChange('apellido_paterno', (v) => v.replace(SOLO_LETRAS, ''))}
+                            error={intentoGuardar && paternoVacio}
+                            helperText={intentoGuardar && paternoVacio ? 'Campo obligatorio' : ''}
+                            slotProps={{ htmlInput: { maxLength: 60 } }}
+                        />
+                        <TextField
+                            label="Apellido materno"
+                            size="small"
+                            fullWidth
+                            value={formData.apellido_materno}
+                            onChange={handleChange('apellido_materno', (v) => v.replace(SOLO_LETRAS, ''))}
+                            slotProps={{ htmlInput: { maxLength: 60 } }}
+                        />
+                    </BloqueFormulario>
 
-                <div className="flex flex-col gap-5 sm:flex-row sm:gap-4">
-                    <TextField
-                        label="Apellido paterno"
-                        size="small"
-                        sx={{ flex: 1 }}
-                        required
-                        value={formData.apellido_paterno}
-                        onChange={handleChange('apellido_paterno', (v) => v.replace(SOLO_LETRAS, ''))}
-                        error={intentoGuardar && paternoVacio}
-                        helperText={intentoGuardar && paternoVacio ? 'Campo obligatorio' : ''}
-                        slotProps={{ htmlInput: { maxLength: 60 } }}
-                    />
+                    <BloqueFormulario icono={<BadgeOutlinedIcon sx={ICONO} />} titulo="Cuenta y contacto">
+                        {/* Solo números */}
+                        <TextField
+                            label="Número de cuenta"
+                            size="small"
+                            fullWidth
+                            required
+                            value={formData.numeroCuenta}
+                            onChange={handleChange('numeroCuenta', (v) => v.replace(SOLO_NUMEROS, ''))}
+                            error={intentoGuardar && cuentaVacia}
+                            helperText={intentoGuardar && cuentaVacia ? 'Campo obligatorio' : ''}
+                            slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 20 } }}
+                        />
+                        {/* Formato de correo: algo@dominio.ext */}
+                        <TextField
+                            label="Correo institucional"
+                            type="email"
+                            size="small"
+                            fullWidth
+                            required
+                            value={formData.correo}
+                            onChange={handleChange('correo', (v) => v.replace(/\s/g, ''))}
+                            error={intentoGuardar && Boolean(errorCorreo)}
+                            helperText={intentoGuardar ? errorCorreo : ''}
+                        />
+                        {/* Solo números, opcional */}
+                        <TextField
+                            label="Teléfono"
+                            size="small"
+                            fullWidth
+                            value={formData.telefono}
+                            onChange={handleChange('telefono', (v) => v.replace(SOLO_NUMEROS, ''))}
+                            error={intentoGuardar && telefonoInvalido}
+                            helperText={intentoGuardar && telefonoInvalido ? `Mínimo ${MIN_TELEFONO} dígitos` : ''}
+                            slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 15 } }}
+                        />
+                    </BloqueFormulario>
 
-                    <TextField
-                        label="Apellido materno"
-                        size="small"
-                        sx={{ flex: 1 }}
-                        value={formData.apellido_materno}
-                        onChange={handleChange('apellido_materno', (v) => v.replace(SOLO_LETRAS, ''))}
-                        slotProps={{ htmlInput: { maxLength: 60 } }}
-                    />
-                </div>
+                    <BloqueFormulario icono={<SchoolOutlinedIcon sx={ICONO} />} titulo="Licenciatura y grupo">
+                        {/* Los grupos mostrados dependen de la licenciatura elegida; el grupo es obligatorio */}
+                        <CamposLicenciaturaGrupo
+                            licenciaturaId={formData.licenciaturaId}
+                            grupoId={formData.grupo_id}
+                            onChange={({ licenciaturaId, grupoId }) =>
+                                setFormData((prev) => ({ ...prev, licenciaturaId, grupo_id: grupoId }))
+                            }
+                            mostrarErrores={intentoGuardar}
+                        />
+                    </BloqueFormulario>
 
-                {/* Solo números */}
-                <TextField
-                    label="Número de cuenta"
-                    size="small"
-                    fullWidth
-                    required
-                    value={formData.numeroCuenta}
-                    onChange={handleChange('numeroCuenta', (v) => v.replace(SOLO_NUMEROS, ''))}
-                    error={intentoGuardar && cuentaVacia}
-                    helperText={intentoGuardar && cuentaVacia ? 'Campo obligatorio' : ''}
-                    slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 20 } }}
-                />
+                    <BloqueFormulario icono={<LockOutlinedIcon sx={ICONO} />} titulo="Contraseña">
+                        <CampoContrasena
+                            label="Contraseña"
+                            required
+                            value={formData.contrasena}
+                            onChange={handleChange('contrasena', (v) => v.replace(/\s/g, ''))}
+                            error={intentoGuardar && Boolean(errorContrasena)}
+                            helperText={intentoGuardar && errorContrasena ? errorContrasena : `Mínimo ${MIN_CONTRASENA} caracteres`}
+                            slotProps={{ htmlInput: { maxLength: MAX_CONTRASENA } }}
+                        />
 
-                {/* Formato de correo: algo@dominio.ext */}
-                <TextField
-                    label="Correo institucional"
-                    type="email"
-                    size="small"
-                    fullWidth
-                    required
-                    value={formData.correo}
-                    onChange={handleChange('correo', (v) => v.replace(/\s/g, ''))}
-                    error={intentoGuardar && Boolean(errorCorreo)}
-                    helperText={intentoGuardar ? errorCorreo : ''}
-                />
-
-                {/* Solo números, opcional */}
-                <TextField
-                    label="Teléfono"
-                    size="small"
-                    fullWidth
-                    value={formData.telefono}
-                    onChange={handleChange('telefono', (v) => v.replace(SOLO_NUMEROS, ''))}
-                    error={intentoGuardar && telefonoInvalido}
-                    helperText={intentoGuardar && telefonoInvalido ? `Mínimo ${MIN_TELEFONO} dígitos` : ''}
-                    slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 15 } }}
-                />
-
-                {/* Los grupos mostrados dependen de la licenciatura elegida; el grupo es obligatorio */}
-                <CamposLicenciaturaGrupo
-                    licenciaturaId={formData.licenciaturaId}
-                    grupoId={formData.grupo_id}
-                    onChange={({ licenciaturaId, grupoId }) =>
-                        setFormData((prev) => ({ ...prev, licenciaturaId, grupo_id: grupoId }))
-                    }
-                    mostrarErrores={intentoGuardar}
-                />
-
-                <CampoContrasena
-                    label="Contraseña"
-                    required
-                    value={formData.contrasena}
-                    onChange={handleChange('contrasena', (v) => v.replace(/\s/g, ''))}
-                    error={intentoGuardar && Boolean(errorContrasena)}
-                    helperText={intentoGuardar && errorContrasena ? errorContrasena : `Mínimo ${MIN_CONTRASENA} caracteres`}
-                    slotProps={{ htmlInput: { maxLength: MAX_CONTRASENA } }}
-                />
-
-                <CampoContrasena
-                    label="Confirmar contraseña"
-                    required
-                    value={formData.confirmarContrasena}
-                    onChange={handleChange('confirmarContrasena', (v) => v.replace(/\s/g, ''))}
-                    error={contrasenaNoCoincide && (intentoGuardar || formData.confirmarContrasena.length > 0)}
-                    helperText={
-                        contrasenaNoCoincide && (intentoGuardar || formData.confirmarContrasena.length > 0)
-                            ? 'Las contraseñas no coinciden'
-                            : ''
-                    }
-                    slotProps={{ htmlInput: { maxLength: MAX_CONTRASENA } }}
-                />
+                        <CampoContrasena
+                            label="Confirmar contraseña"
+                            required
+                            value={formData.confirmarContrasena}
+                            onChange={handleChange('confirmarContrasena', (v) => v.replace(/\s/g, ''))}
+                            error={contrasenaNoCoincide && (intentoGuardar || formData.confirmarContrasena.length > 0)}
+                            helperText={
+                                contrasenaNoCoincide && (intentoGuardar || formData.confirmarContrasena.length > 0)
+                                    ? 'Las contraseñas no coinciden'
+                                    : ''
+                            }
+                            slotProps={{ htmlInput: { maxLength: MAX_CONTRASENA } }}
+                        />
+                    </BloqueFormulario>
+                </Box>
             </DialogContent>
 
             <DialogActions
@@ -278,16 +272,11 @@ export default function ModalCrearEstudiante({ open, onClose, onSave }) {
                     '& > button': { flex: esCelular ? 1 : 'none', minHeight: 40 }
                 }}
             >
-                <Button variant="outlined" color="inherit" onClick={handleCloseModal}>
+                <Button variant="outlined" color="inherit" onClick={handleCloseModal} sx={ESTILO_BOTON_SECUNDARIO}>
                     Cancelar
                 </Button>
-                <Button
-                    variant="contained"
-                    disabled={guardando}
-                    sx={{ backgroundColor: '#244B91', '&:hover': { backgroundColor: '#1B3A73' } }}
-                    onClick={handleCrear}
-                >
-                    Crear Estudiante
+                <Button variant="contained" disabled={guardando} sx={ESTILO_BOTON_AZUL} onClick={handleCrear}>
+                    Crear estudiante
                 </Button>
             </DialogActions>
         </Dialog>

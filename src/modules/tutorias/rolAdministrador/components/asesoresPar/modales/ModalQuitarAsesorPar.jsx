@@ -1,5 +1,8 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import PersonRemoveOutlinedIcon from '@mui/icons-material/PersonRemoveOutlined';
+import { Typography } from '@mui/material';
 import { useState } from 'react';
+
+import ModalConfirmacion from '../../compartidos/ModalConfirmacion';
 
 /**
  * Confirmación para quitarle el rol de asesor a un asesor par.
@@ -21,37 +24,21 @@ export default function ModalQuitarAsesorPar({ open, onClose, onConfirm, data })
     };
 
     return (
-        <Dialog
-            open={Boolean(open)}
+        <ModalConfirmacion
+            open={open}
             onClose={onClose}
-            disableRestoreFocus
-            sx={{
-                '& .MuiPaper-root': {
-                    width: '450px',
-                    maxWidth: '90vw',
-                    borderRadius: '12px',
-                    p: 1
-                }
-            }}
+            onConfirm={handleConfirm}
+            icono={<PersonRemoveOutlinedIcon />}
+            titulo="Quitar rol de asesor"
+            subtitulo="Seguirá siendo estudiante"
+            tono="rojo"
+            textoConfirmar="Quitar rol"
+            deshabilitado={procesando}
         >
-            <DialogTitle sx={{ fontWeight: 'bold' }}>Quitar rol de asesor</DialogTitle>
-
-            <DialogContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 3 }}>
-                <Typography variant="body1" align="center">
-                    ¿Estás seguro de que deseas quitar el rol de asesor a {data?.nombre ? <strong>{data.nombre}</strong> : 'este estudiante'}?
-                    {' '}Seguirá siendo estudiante, pero dejará de aparecer como asesor y se rechazarán las solicitudes
-                    pendientes que le habían pedido.
-                </Typography>
-            </DialogContent>
-
-            <DialogActions sx={{ p: 2, justifyContent: 'flex-end', gap: 1 }}>
-                <Button variant="outlined" color="inherit" onClick={onClose}>
-                    Cancelar
-                </Button>
-                <Button variant="contained" color="error" disabled={procesando} onClick={handleConfirm}>
-                    Quitar rol
-                </Button>
-            </DialogActions>
-        </Dialog>
+            <Typography variant="body1">
+                ¿Estás seguro de que deseas quitar el rol de asesor a {data?.nombre ? <strong>{data.nombre}</strong> : 'este estudiante'}?
+                {' '}Dejará de aparecer como asesor y se rechazarán las solicitudes pendientes que le habían pedido.
+            </Typography>
+        </ModalConfirmacion>
     );
 }

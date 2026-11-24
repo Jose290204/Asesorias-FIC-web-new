@@ -130,10 +130,9 @@ export default function TablaSolicitudes({ rows = [], onAceptar, onRechazar }) {
                     }}
                 >
                     <TableContainer sx={{ maxHeight: '560px', overflowY: 'auto' }}>
-                        <Table stickyHeader sx={{ minWidth: 900 }}>
+                        <Table stickyHeader sx={{ minWidth: 840 }}>
                             <TableHead>
                                 <TableRow sx={{ '& th': ESTILO_ENCABEZADO, '& th:first-of-type': { pl: 3 }, '& th:last-child': { pr: 3 } }}>
-                                    <TableCell sx={{ width: '70px' }} align="center">ID</TableCell>
                                     <TableCell align="left">Materia</TableCell>
                                     <TableCell align="left">Estudiante</TableCell>
                                     <TableCell align="left">Asesor</TableCell>
@@ -148,7 +147,7 @@ export default function TablaSolicitudes({ rows = [], onAceptar, onRechazar }) {
                             <TableBody>
                                 {rows.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={9} align="center" sx={{ py: 5, color: '#6B7280', border: 0 }}>
+                                        <TableCell colSpan={8} align="center" sx={{ py: 5, color: '#6B7280', border: 0 }}>
                                             No se encontraron solicitudes
                                         </TableCell>
                                     </TableRow>
@@ -174,10 +173,6 @@ export default function TablaSolicitudes({ rows = [], onAceptar, onRechazar }) {
                                                     '&:last-child td': { borderBottom: 0 }
                                                 }}
                                             >
-                                                <TableCell align="center" sx={{ color: '#6B7280 !important', fontWeight: 600 }}>
-                                                    #{row.id}
-                                                </TableCell>
-
                                                 <TableCell align="left" sx={{ fontWeight: 600, color: '#111827 !important' }}>
                                                     {row.materia}
                                                 </TableCell>

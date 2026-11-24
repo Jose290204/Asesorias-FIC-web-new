@@ -1,5 +1,5 @@
-import CloseIcon from '@mui/icons-material/Close';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
 import {
     Alert,
     Box,
@@ -7,12 +7,12 @@ import {
     Dialog,
     DialogActions,
     DialogContent,
-    DialogTitle,
-    IconButton,
     LinearProgress,
     Typography
 } from '@mui/material';
 import { useState } from 'react';
+import EncabezadoModal from '../compartidos/EncabezadoModal';
+import { ESTILO_BOTON_SECUNDARIO, ESTILO_BOTON_VERDE, ICONO, paperModal } from '../compartidos/estilosAdmin';
 import { mensajesDeError } from '../../../../../Services/errores';
 import {
     confirmarCargaAsesores,
@@ -20,8 +20,6 @@ import {
     validarCargaAsesores
 } from '../../../../../Services/cargaAsesoresService';
 
-const VERDE = '#2e7d32';
-const VERDE_OSCURO = '#1b5e20';
 
 // Tiempo mínimo que se muestra cada paso: con pocos asesores el servidor responde tan rápido
 // que la barra de progreso casi no se alcanza a ver
@@ -128,26 +126,23 @@ export default function ModalCargaAsesores({ open, onClose, onTerminado }) {
             open={Boolean(open)}
             onClose={cerrar}
             disableRestoreFocus
-            sx={{ '& .MuiPaper-root': { width: '520px', maxWidth: '92vw', borderRadius: '12px', p: 1.5 } }}
+            sx={paperModal(520)}
         >
-            <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold' }}>
-                Cargar asesores disciplinares desde Excel
-                <IconButton
-                    aria-label="Cerrar"
-                    onClick={cerrar}
-                    disabled={trabajando}
-                    sx={{ position: 'absolute', right: 12, top: 12, color: (t) => t.palette.grey[500] }}
-                >
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
+            <EncabezadoModal
+                icono={<UploadFileOutlinedIcon sx={ICONO} />}
+                titulo="Cargar asesores"
+                subtitulo="Disciplinares, desde la plantilla de Excel"
+                tono="verde"
+                onClose={trabajando ? undefined : cerrar}
+            />
 
             <DialogContent
                 dividers
                 sx={{
-                    py: 3,
-                    display: 'flex',
-                    flexDirection: 'column',
+                    py: 2.5,
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(0, 1fr)',
+                    alignContent: 'start',
                     gap: 2,
                     overflowX: 'hidden',
                     '& .MuiAlert-message': { minWidth: 0, overflowWrap: 'anywhere' }
@@ -155,7 +150,7 @@ export default function ModalCargaAsesores({ open, onClose, onTerminado }) {
             >
                 {/* Paso 1: elegir archivo (se oculta al terminar) */}
                 {!resultado && (
-                    <Box className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50">
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed #C8D3EA', borderRadius: '12px', p: 3, backgroundColor: '#F7F9FD' }}>
                         <input
                             type="file"
                             accept=".xlsx,.xls"
@@ -165,9 +160,9 @@ export default function ModalCargaAsesores({ open, onClose, onTerminado }) {
                             className="hidden"
                         />
                         <label htmlFor="file-excel-asesores" className="cursor-pointer flex flex-col items-center gap-2">
-                            <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                            </svg>
+                            <Box sx={{ width: 44, height: 44, borderRadius: '12px', backgroundColor: '#E6ECF8', color: '#08338F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <UploadFileOutlinedIcon />
+                            </Box>
                             <Typography variant="body2" color="textSecondary" align="center">
                                 {archivo ? archivo.name : 'Haz clic para elegir la plantilla de asesores (.xlsx)'}
                             </Typography>
@@ -183,7 +178,7 @@ export default function ModalCargaAsesores({ open, onClose, onTerminado }) {
                         download="plantilla_asesores.xlsx"
                         startIcon={<FileDownloadOutlinedIcon />}
                         disabled={trabajando}
-                        sx={{ alignSelf: 'center', textTransform: 'none', color: VERDE, fontWeight: 600 }}
+                        sx={{ justifySelf: 'center', textTransform: 'none', color: '#2E7D32', fontWeight: 600 }}
                     >
                         Descargar plantilla de Excel
                     </Button>
@@ -249,13 +244,13 @@ export default function ModalCargaAsesores({ open, onClose, onTerminado }) {
             </DialogContent>
 
             <DialogActions sx={{ p: 2, gap: 1 }}>
-                <Button variant="outlined" color="inherit" onClick={cerrar} disabled={trabajando}>
+                <Button variant="outlined" color="inherit" onClick={cerrar} disabled={trabajando} sx={ESTILO_BOTON_SECUNDARIO}>
                     {resultado ? 'Cerrar' : 'Cancelar'}
                 </Button>
                 {!resultado && (
                     <Button
                         variant="contained"
-                        sx={{ backgroundColor: VERDE, '&:hover': { backgroundColor: VERDE_OSCURO } }}
+                        sx={ESTILO_BOTON_VERDE}
                         disabled={trabajando || !revision || revision.validas === 0}
                         onClick={handleConfirmar}
                     >

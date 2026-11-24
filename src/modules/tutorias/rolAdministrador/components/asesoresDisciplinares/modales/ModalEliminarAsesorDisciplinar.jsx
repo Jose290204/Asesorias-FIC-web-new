@@ -1,5 +1,8 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import PersonRemoveOutlinedIcon from '@mui/icons-material/PersonRemoveOutlined';
+import { Typography } from '@mui/material';
 import { useState } from 'react';
+
+import ModalConfirmacion from '../../compartidos/ModalConfirmacion';
 
 /**
  * Confirmación para dar de baja a un asesor disciplinar.
@@ -22,36 +25,21 @@ export default function ModalEliminarAsesorDisciplinar({ open, onClose, onConfir
     };
 
     return (
-        <Dialog
-            open={Boolean(open)}
+        <ModalConfirmacion
+            open={open}
             onClose={onClose}
-            disableRestoreFocus
-            sx={{
-                '& .MuiPaper-root': {
-                    width: '450px',
-                    maxWidth: '90vw',
-                    borderRadius: '12px',
-                    p: 1
-                }
-            }}
+            onConfirm={handleConfirm}
+            icono={<PersonRemoveOutlinedIcon />}
+            titulo="Dar de baja"
+            subtitulo="Su historial se conserva"
+            tono="rojo"
+            textoConfirmar="Dar de baja"
+            deshabilitado={procesando}
         >
-            <DialogTitle sx={{ fontWeight: 'bold' }}>Dar de baja</DialogTitle>
-
-            <DialogContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 3 }}>
-                <Typography variant="body1" align="center">
-                    ¿Estás seguro de que deseas dar de baja a {data?.nombre ? <strong>{data.nombre}</strong> : 'este asesor'}?
-                    {' '}Ya no podrá iniciar sesión y se rechazarán sus solicitudes pendientes. Su historial se conserva.
-                </Typography>
-            </DialogContent>
-
-            <DialogActions sx={{ p: 2, justifyContent: 'flex-end', gap: 1 }}>
-                <Button variant="outlined" color="inherit" onClick={onClose}>
-                    Cancelar
-                </Button>
-                <Button variant="contained" color="error" disabled={procesando} onClick={handleConfirm}>
-                    Dar de baja
-                </Button>
-            </DialogActions>
-        </Dialog>
+            <Typography variant="body1">
+                ¿Estás seguro de que deseas dar de baja a {data?.nombre ? <strong>{data.nombre}</strong> : 'este asesor'}?
+                {' '}Ya no podrá iniciar sesión y se rechazarán sus solicitudes pendientes.
+            </Typography>
+        </ModalConfirmacion>
     );
 }
