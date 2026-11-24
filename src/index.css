@@ -23,6 +23,12 @@
     overscroll-behavior-y: none;
   }
 
+  /* Edge dibuja su propio ojo en los campos de contraseña: lo ocultamos porque ya tenemos el nuestro */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
+
   body {
     font-family: var(--font-inter);
     margin: 0;

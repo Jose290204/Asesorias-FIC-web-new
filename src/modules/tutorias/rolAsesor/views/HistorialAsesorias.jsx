@@ -8,6 +8,7 @@ import ToastNotification from '../../../../components/ui/ToastNotification';
 import TituloVista from '../../../../components/ui/TituloVista';
 import { traerAsesorias } from '../../../../Services/asesoriasAsesorService';
 import { mensajesDeError } from '../../../../Services/errores';
+import { conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 import TablaHistorialAsesorias from '../components/historial/TablaHistorialAsesorias';
 
 export default function HistorialAsesorias() {
@@ -49,7 +50,7 @@ export default function HistorialAsesorias() {
         try {
             setLoading(true);
             setError(false);
-            const { asesorias, meta: metaNueva } = await traerAsesorias({ estatus: 'historial', buscar, page: pagina });
+            const { asesorias, meta: metaNueva } = await conTiempoMinimo(traerAsesorias({ estatus: 'historial', buscar, page: pagina }));
             setHistorial(asesorias);
             setMeta(metaNueva);
         } catch (err) {

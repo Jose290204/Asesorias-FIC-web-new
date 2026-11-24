@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import TituloVista from '../../../../components/ui/TituloVista';
 import { useAuth } from '../../../../context/AuthContext';
 import { traerPerfilAsesor } from '../../../../Services/perfilAsesorService';
+import { conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 import Estadistica from '../components/perfil/Estadistica';
 import FilaDato from '../components/perfil/FilaDato';
 import { PERFIL_ASESOR_PRUEBA, USAR_DATOS_PRUEBA } from '../datosPrueba';
@@ -23,7 +24,7 @@ export default function PerfilAsesor() {
             return;
         }
 
-        traerPerfilAsesor()
+        conTiempoMinimo(traerPerfilAsesor())
             .then(setPerfil)
             .catch((err) => {
                 // Si la ruta aún no existe, se muestran los datos de la sesión

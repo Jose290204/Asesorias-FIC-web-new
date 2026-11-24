@@ -1,22 +1,27 @@
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
+import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import CloseIcon from '@mui/icons-material/Close';
-import {
-    Box,
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    IconButton,
-    TextField
-} from '@mui/material';
+import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import LaptopOutlinedIcon from '@mui/icons-material/LaptopOutlined';
+import NotesOutlinedIcon from '@mui/icons-material/NotesOutlined';
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Typography } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 
-import { CAMPO_BLOQUEADO } from '../../compartidos/estilosModales';
+import SeccionInfo from '../../../../rolEstudiante/components/compartidos/SeccionInfo';
 import ModalSesionesAsesor from '../../compartidos/ModalSesionesAsesor';
-import useMediaQuery from '@mui/material/useMediaQuery';
 
-const ETIQUETA_ESTATUS = { completada: 'Completada', cancelada: 'Cancelada', en_curso: 'En curso' };
+const ICONO = { fontSize: 20 };
+
+const ESTILO_ESTATUS = {
+    completada: { label: 'Completada', color: '#2E7D32' },
+    cancelada: { label: 'Cancelada', color: '#C62828' },
+    en_curso: { label: 'En curso', color: '#2E7D32' }
+};
 
 // Una asesoría del historial ya está cerrada (completada o cancelada) y la API no deja editarla,
 // así que este modal es solo de consulta. Desde aquí se pueden ver sus sesiones.
@@ -26,7 +31,14 @@ export default function ModalInfoHistorialAsesoria({ open, onClose, data, showTo
 
     if (!data) return null;
 
+    const estatus = ESTILO_ESTATUS[data.estatus] ?? { label: data.estatus, color: '#555555' };
     const finalizada = data.finalizada_en ? dayjs(data.finalizada_en).format('DD/MM/YYYY') : '';
+    // Las canceladas no tienen fecha de finalización: solo se muestra la de inicio
+    const periodo = finalizada ? `${data.fecha_inicio_formateada} - ${finalizada}` : data.fecha_inicio_formateada;
+
+    const texto = (valor) => (
+        <Typography variant="body2" sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>{valor || 'N/A'}</Typography>
+    );
 
     return (
         <>
@@ -36,18 +48,40 @@ export default function ModalInfoHistorialAsesoria({ open, onClose, data, showTo
                 fullScreen={esCelular}
                 sx={{
                     '& .MuiPaper-root': esCelular ? { borderRadius: 0 } : {
-                        width: '550px',
+                        width: '520px',
                         maxWidth: '90vw',
                         maxHeight: '90dvh',
-                        borderRadius: '12px',
+                        borderRadius: '16px',
                         display: 'flex',
                         flexDirection: 'column',
                         p: 1.5
                     }
                 }}
             >
-                <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.2rem' }}>
-                    Información Asesoría
+                <DialogTitle sx={{ m: 0, p: 2, pr: 7 }}>
+                    <Typography sx={{ fontWeight: 'bold', fontSize: '1.25rem', lineHeight: 1.2, overflowWrap: 'anywhere' }}>
+                        {data.materia}
+                    </Typography>
+
+                    <Box
+                        sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            mt: '10px',
+                            px: '10px',
+                            py: '3px',
+                            borderRadius: '999px',
+                            border: `1px solid ${estatus.color}`,
+                            backgroundColor: '#FFFFFF'
+                        }}
+                    >
+                        <FiberManualRecordIcon sx={{ fontSize: 12, color: estatus.color }} />
+                        <Typography sx={{ fontSize: '13px', fontWeight: 600, color: estatus.color, lineHeight: 1.4 }}>
+                            {estatus.label}
+                        </Typography>
+                    </Box>
+
                     <IconButton
                         aria-label="close"
                         onClick={onClose}
@@ -57,41 +91,56 @@ export default function ModalInfoHistorialAsesoria({ open, onClose, data, showTo
                     </IconButton>
                 </DialogTitle>
 
-                <DialogContent dividers>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
-                        <TextField label="Nombre del Estudiante" size="small" fullWidth value={data.estudiante ?? ''} {...CAMPO_BLOQUEADO} />
-                        <TextField label="Materia" size="small" fullWidth value={data.materia ?? ''} {...CAMPO_BLOQUEADO} />
-                        <TextField label="Estatus" size="small" fullWidth value={ETIQUETA_ESTATUS[data.estatus] ?? data.estatus ?? ''} {...CAMPO_BLOQUEADO} />
-                        <TextField label="Fecha de Inicio" size="small" fullWidth value={data.fecha_inicio_formateada ?? ''} {...CAMPO_BLOQUEADO} />
-                        {finalizada && (
-                            <TextField label="Fecha de finalización" size="small" fullWidth value={finalizada} {...CAMPO_BLOQUEADO} />
-                        )}
-                        <TextField label="Horario" size="small" fullWidth value={data.horario ?? ''} {...CAMPO_BLOQUEADO} />
-                        <TextField label="Modalidad" size="small" fullWidth value={data.modalidad ?? ''} {...CAMPO_BLOQUEADO} />
-                        <TextField label="Razón de Asesoría" size="small" fullWidth value={data.razon ?? ''} {...CAMPO_BLOQUEADO} />
-                        <TextField label="Sesiones registradas" size="small" fullWidth value={String(data.sesiones_count ?? 0)} {...CAMPO_BLOQUEADO} />
+                <DialogContent dividers sx={{ py: 2 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        <SeccionInfo icono={<PersonOutlineOutlinedIcon sx={ICONO} />} etiqueta="Estudiante">
+                            {texto(data.estudiante)}
+                        </SeccionInfo>
+
+                        <SeccionInfo icono={<HelpOutlineOutlinedIcon sx={ICONO} />} etiqueta="Razón de la asesoría">
+                            {texto(data.razon)}
+                        </SeccionInfo>
+
+                        <SeccionInfo icono={<CalendarMonthOutlinedIcon sx={ICONO} />} etiqueta="Periodo">
+                            {texto(periodo)}
+                        </SeccionInfo>
+
+                        <SeccionInfo icono={<AccessTimeOutlinedIcon sx={ICONO} />} etiqueta="Horario">
+                            {texto(data.horario_con_dia || data.horario)}
+                        </SeccionInfo>
+
+                        <SeccionInfo icono={<LaptopOutlinedIcon sx={ICONO} />} etiqueta="Modalidad">
+                            {texto(data.modalidad)}
+                        </SeccionInfo>
+
+                        <SeccionInfo icono={<EventNoteOutlinedIcon sx={ICONO} />} etiqueta="Sesiones registradas">
+                            {texto(String(data.sesiones_count ?? 0))}
+                        </SeccionInfo>
+
                         {data.estatus === 'cancelada' && data.motivo_cancelacion && (
-                            <TextField
-                                label="Motivo de la cancelación"
-                                size="small"
-                                fullWidth
-                                multiline
-                                rows={3}
-                                value={data.motivo_cancelacion}
-                                {...CAMPO_BLOQUEADO}
-                            />
+                            <SeccionInfo icono={<HelpOutlineOutlinedIcon sx={ICONO} />} etiqueta="Motivo de la cancelación" tono="alerta">
+                                {texto(data.motivo_cancelacion)}
+                            </SeccionInfo>
                         )}
+
                         {data.observaciones && (
-                            <TextField label="Observaciones" size="small" fullWidth multiline rows={3} value={data.observaciones} {...CAMPO_BLOQUEADO} />
+                            <SeccionInfo icono={<NotesOutlinedIcon sx={ICONO} />} etiqueta="Observaciones">
+                                {texto(data.observaciones)}
+                            </SeccionInfo>
                         )}
                     </Box>
                 </DialogContent>
 
-                <DialogActions sx={{ p: 2, pt: 1.5, gap: 1 }}>
-                    <Button variant="outlined" onClick={() => setSesionesOpen(true)} sx={{ textTransform: 'none' }}>
+                <DialogActions sx={{ p: 2, justifyContent: 'flex-end', gap: 1 }}>
+                    <Button
+                        variant="outlined"
+                        onClick={() => setSesionesOpen(true)}
+                        startIcon={<EventNoteOutlinedIcon />}
+                        sx={{ textTransform: 'none', borderRadius: '8px', color: '#08338F', borderColor: '#08338F' }}
+                    >
                         Ver sesiones
                     </Button>
-                    <Button variant="contained" onClick={onClose} sx={{ textTransform: 'none' }}>
+                    <Button variant="contained" onClick={onClose} sx={{ backgroundColor: '#08338F', '&:hover': { backgroundColor: '#062568' } }}>
                         Cerrar
                     </Button>
                 </DialogActions>

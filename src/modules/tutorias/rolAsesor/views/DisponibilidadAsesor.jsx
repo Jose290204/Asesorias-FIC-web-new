@@ -12,6 +12,7 @@ import {
     traerMaterias
 } from '../../../../Services/asesoriasAsesorService';
 import { mensajesDeError } from '../../../../Services/errores';
+import { conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 import ModalMaterias from '../components/disponibilidad/ModalMaterias';
 import TarjetaSeccion from '../components/disponibilidad/TarjetaSeccion';
 
@@ -79,7 +80,7 @@ export default function DisponibilidadAsesor() {
         try {
             setLoading(true);
             setError(false);
-            const datos = await traerDisponibilidad();
+            const datos = await conTiempoMinimo(traerDisponibilidad());
             const estado = aEstadoPantalla(datos);
 
             setMaterias(estado.materias);

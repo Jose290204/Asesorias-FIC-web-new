@@ -125,10 +125,9 @@ export default function TablaHistorialAsesorias({ historial = [] }) {
                     sx={ESTILO_PAPER_TABLA}
                 >
                     <TableContainer sx={{ maxHeight: '560px', overflowY: 'auto' }}>
-                        <Table stickyHeader sx={{ minWidth: 1200 }}>
+                        <Table stickyHeader sx={{ minWidth: 1130 }}>
                             <TableHead>
                                 <TableRow sx={ESTILO_FILA_ENCABEZADO}>
-                                    <TableCell sx={{ width: '70px' }} align="center">ID</TableCell>
                                     <TableCell align="left">Materia</TableCell>
                                     <TableCell align="left">Estudiante</TableCell>
                                     <TableCell align="center">Inicio</TableCell>
@@ -148,10 +147,6 @@ export default function TablaHistorialAsesorias({ historial = [] }) {
                                         hover
                                         sx={ESTILO_FILA}
                                     >
-                                        <TableCell align="center" sx={{ color: '#6B7280 !important', fontWeight: 600 }}>
-                                            #{asesoria.id}
-                                        </TableCell>
-
                                         <TableCell align="left" sx={{ fontWeight: 600, color: '#111827 !important' }}>
                                             {asesoria.materia}
                                         </TableCell>
@@ -256,6 +251,7 @@ export default function TablaHistorialAsesorias({ historial = [] }) {
                 anchorEl={menuAnchor}
                 open={Boolean(menuAnchor)}
                 onClose={closeMenu}
+                slotProps={{ paper: { sx: { borderRadius: '12px', boxShadow: '0px 8px 24px rgba(8, 51, 143, 0.18)' } } }}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                 transformOrigin={{ vertical: 'top', horizontal: 'right' }}
             >

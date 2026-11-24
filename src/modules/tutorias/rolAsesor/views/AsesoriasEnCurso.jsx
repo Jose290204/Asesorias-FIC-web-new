@@ -15,9 +15,27 @@ import {
     traerAsesorias
 } from "../../../../Services/asesoriasAsesorService";
 import { mensajesDeError } from "../../../../Services/errores";
+import { conTiempoMinimo, MINIMO_CARGA_MS } from "../../../../utils/tiempoMinimo";
 import ModalCrearAsesoria from "../components/asesorias/modales/ModalCrearAsesoria";
 import TablaAsesoriasEnCurso from "../components/asesorias/TablaAsesoriasEnCurso";
 import { ASESORIAS_EN_CURSO_PRUEBA, USAR_DATOS_PRUEBA } from "../datosPrueba";
+
+// Estilo del botón "Crear asesoría" (el de escritorio y el flotante del celular)
+const ESTILO_BOTON_CREAR = {
+    textTransform: 'none',
+    fontWeight: 700,
+    letterSpacing: '0.3px',
+    color: '#ffffff',
+    background: 'linear-gradient(135deg, #1E4DB7 0%, #08338F 55%, #052466 100%)',
+    boxShadow: '0 4px 12px rgba(8, 51, 143, 0.45)',
+    transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+    '&:hover': {
+        background: 'linear-gradient(135deg, #08338F 0%, #052466 100%)',
+        boxShadow: '0 6px 16px rgba(5, 36, 102, 0.55)',
+        transform: 'translateY(-1px)'
+    },
+    '&:active': { transform: 'translateY(0)', boxShadow: '0 2px 6px rgba(5, 36, 102, 0.5)' }
+};
 
 export default function AsesoriasEnCurso() {
 
@@ -76,7 +94,10 @@ export default function AsesoriasEnCurso() {
             if (!silencioso) setLoading(true);
             setError(false);
 
-            const { asesorias, meta: metaNueva } = await traerAsesorias({ estatus: 'en_curso', buscar, page: pagina });
+            const { asesorias, meta: metaNueva } = await conTiempoMinimo(
+                traerAsesorias({ estatus: 'en_curso', buscar, page: pagina }),
+                silencioso ? 0 : MINIMO_CARGA_MS
+            );
 
             // Si se atendió la última asesoría de esta página, la página queda vacía:
             // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)
@@ -177,10 +198,8 @@ export default function AsesoriasEnCurso() {
                 <Button
                     variant="contained"
                     sx={{
-                        borderRadius: '5px',
-                        textTransform: 'none',
-                        backgroundColor: '#08338F',
-                        '&:hover': { backgroundColor: '#1B3A73' },
+                        ...ESTILO_BOTON_CREAR,
+                        borderRadius: '8px',
                         flexShrink: 0,
                         // Botón normal: solo tablet y escritorio
                         display: { xs: 'none', sm: 'inline-flex' }
@@ -189,7 +208,7 @@ export default function AsesoriasEnCurso() {
                     startIcon={<AddOutlinedIcon />}
                     onClick={handleOpenCrear}
                 >
-                    Crear Asesoria
+                    Crear asesoría
                 </Button>
             </div>
 
@@ -199,14 +218,11 @@ export default function AsesoriasEnCurso() {
                 aria-label="Crear asesoría"
                 onClick={handleOpenCrear}
                 sx={{
+                    ...ESTILO_BOTON_CREAR,
                     position: 'fixed',
                     right: 16,
                     bottom: 16,
                     zIndex: 10,
-                    textTransform: 'none',
-                    color: '#ffffff',
-                    backgroundColor: '#08338F',
-                    '&:hover': { backgroundColor: '#1B3A73' },
                     display: { xs: 'inline-flex', sm: 'none' }
                 }}
             >

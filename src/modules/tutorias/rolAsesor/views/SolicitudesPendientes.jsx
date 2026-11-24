@@ -14,6 +14,7 @@ import {
     rechazarSolicitud,
     traerSolicitudesPendientes,
 } from '../../../../Services/solicitudesAsesorService';
+import { conTiempoMinimo, MINIMO_CARGA_MS } from '../../../../utils/tiempoMinimo';
 import TablaSolicitudesPendientes from '../components/solicitudes/TablaSolicitudesPendientes';
 
 export default function SolicitudesPendientes() {
@@ -50,7 +51,10 @@ export default function SolicitudesPendientes() {
             if (!silencioso) setLoading(true);
             setError(false);
 
-            const { solicitudes: lista, meta: metaNueva } = await traerSolicitudesPendientes({ page: pagina });
+            const { solicitudes: lista, meta: metaNueva } = await conTiempoMinimo(
+                traerSolicitudesPendientes({ page: pagina }),
+                silencioso ? 0 : MINIMO_CARGA_MS
+            );
 
             // Si se atendió la última solicitud de esta página, la página queda vacía:
             // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)

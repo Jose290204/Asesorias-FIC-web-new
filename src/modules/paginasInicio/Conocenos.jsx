@@ -47,11 +47,11 @@ const EQUIPO = [
   },
   {
     nombre: "MGTI. Óscar Mejía Quintero",
-    roles: ["Analista de desarrollo y calidad"],
+    roles: ["Analista de desarrollo y calidad", "Diseñador UI/UX"],
   },
   {
     nombre: "Leslie Mayram Barrera Rodríguez",
-    roles: ["Gerente de desarrollo", "Diseñadora UI/UX"],
+    roles: ["Gerente de desarrollo"],
   },
   {
     nombre: "Jenifer Guadalupe Tizoc López",
@@ -65,7 +65,7 @@ const ROLES_EQUIPO = [
   ["Gerente de desarrollo", "Gerentes de desarrollo"],
   ["Especialista SEO", "Especialistas SEO"],
   ["Analista de desarrollo y calidad", "Analistas de desarrollo y calidad"],
-  ["Diseñadora UI/UX", "Diseñadora UI/UX"],
+  ["Diseñador UI/UX", "Diseñadores UI/UX"],
 ];
 
 // Pasos de la línea de tiempo de "¿Cómo surgió?"

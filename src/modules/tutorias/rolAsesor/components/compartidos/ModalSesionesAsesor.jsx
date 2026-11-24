@@ -1,7 +1,10 @@
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
+import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import CloseIcon from '@mui/icons-material/Close';
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import {
-    Alert,
     Box,
     Button,
     CircularProgress,
@@ -9,7 +12,6 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    Divider,
     IconButton,
     MenuItem,
     TextField,
@@ -33,6 +35,29 @@ const FORMULARIO_INICIAL = { fecha: null, horarioId: '', tema: '', notas: '' };
 
 // "2026-11-03" -> "03/11/2026"
 const formatearFecha = (fecha) => dayjs(fecha).format('DD/MM/YYYY');
+
+const MESES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+
+// Cuadrito con el día y el mes de la sesión
+function FechaSesion({ fecha }) {
+    const d = dayjs(fecha);
+
+    return (
+        <Box sx={{ width: 52, flexShrink: 0, py: '6px', borderRadius: '10px', backgroundColor: '#E6ECF8', color: '#08338F', textAlign: 'center' }}>
+            <Typography sx={{ fontSize: '20px', fontWeight: 800, lineHeight: 1.1 }}>{d.format('DD')}</Typography>
+            <Typography sx={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px', lineHeight: 1.2 }}>{MESES[d.month()]}</Typography>
+        </Box>
+    );
+}
+
+// Título pequeño de cada sección del modal
+const ETIQUETA_SECCION = {
+    fontSize: '12px',
+    fontWeight: 700,
+    letterSpacing: '0.6px',
+    textTransform: 'uppercase',
+    color: '#6A6A6A'
+};
 
 // Sesiones de una asesoría: lista, registrar y eliminar.
 // data es la asesoría (usa data.id y data.fecha_inicio).
@@ -156,21 +181,40 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
                     '& .MuiPaper-root': esCelular ? { borderRadius: 0 } : {
                         width: '550px',
                         maxWidth: '90vw',
+                        minHeight: '420px',
                         maxHeight: '90dvh',
-                        borderRadius: '12px',
+                        borderRadius: '16px',
                         display: 'flex',
                         flexDirection: 'column',
                         p: 1.5
                     }
                 }}
             >
-                <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.2rem' }}>
-                    Sesiones: {data?.materia}
-                    {data?.estudiante && (
-                        <Typography component="span" variant="body2" color="text.secondary" sx={{ display: 'block', fontWeight: 'normal' }}>
-                            Alumno: {data.estudiante}
+                <DialogTitle sx={{ m: 0, p: 2, pr: 7, display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <Box
+                        sx={{
+                            width: 44,
+                            height: 44,
+                            flexShrink: 0,
+                            borderRadius: '12px',
+                            background: 'linear-gradient(135deg, #1E4DB7 0%, #08338F 100%)',
+                            color: '#FFFFFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <EventNoteOutlinedIcon />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 'bold', fontSize: '1.2rem', lineHeight: 1.2 }}>
+                            Sesiones
                         </Typography>
-                    )}
+                        <Typography sx={{ fontSize: '13px', color: '#6A6A6A', mt: '2px', overflowWrap: 'anywhere' }}>
+                            {data?.materia}
+                            {data?.estudiante && ` · Alumno: ${data.estudiante}`}
+                        </Typography>
+                    </Box>
                     <IconButton
                         aria-label="close"
                         onClick={cerrar}
@@ -180,19 +224,40 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
                     </IconButton>
                 </DialogTitle>
 
-                <DialogContent dividers>
+                <DialogContent dividers sx={{ overflowX: 'hidden' }}>
                     {!soloLectura && (
                         <>
-                            <Typography sx={{ fontWeight: 'bold', mb: 1.5 }}>Registrar sesión</Typography>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+                            <Typography sx={{ ...ETIQUETA_SECCION, mb: 1.5 }}>Registrar sesión</Typography>
+                            <Box
+                                sx={{
+                                    // Una sola columna que nunca se ensancha más que el recuadro
+                                    display: 'grid',
+                                    gridTemplateColumns: 'minmax(0, 1fr)',
+                                    gap: 2,
+                                    mb: 3,
+                                    p: 2,
+                                    borderRadius: '12px',
+                                    backgroundColor: '#F7F9FD',
+                                    border: '1px solid #EEF1F7'
+                                }}
+                            >
                                 {inicioFuturo && (
-                                    // Texto corto y que parta línea dentro del recuadro: así no aparece la barra de desplazamiento horizontal
-                                    <Alert
-                                        severity="info"
-                                        sx={{ minWidth: 0, '& .MuiAlert-message': { minWidth: 0, overflowWrap: 'anywhere' } }}
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'flex-start',
+                                            gap: '10px',
+                                            p: '10px 12px',
+                                            borderRadius: '10px',
+                                            backgroundColor: '#E8F1FB',
+                                            color: '#0B4A8F'
+                                        }}
                                     >
-                                        Esta asesoría inicia el {data.fecha_inicio_formateada}. Podrás registrar sesiones desde esa fecha.
-                                    </Alert>
+                                        <InfoOutlinedIcon sx={{ fontSize: 20, mt: '1px', flexShrink: 0 }} />
+                                        <Typography variant="body2" sx={{ minWidth: 0, overflowWrap: 'break-word' }}>
+                                            Esta asesoría inicia el {data.fecha_inicio_formateada}. Podrás registrar sesiones desde esa fecha.
+                                        </Typography>
+                                    </Box>
                                 )}
 
                                 <DatePicker
@@ -255,51 +320,96 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
                                     variant="contained"
                                     onClick={handleRegistrar}
                                     disabled={!formularioCompleto || guardando || inicioFuturo}
-                                    sx={{ textTransform: 'none' }}
+                                    startIcon={<AddCircleOutlineOutlinedIcon />}
+                                    sx={{
+                                        textTransform: 'none',
+                                        fontWeight: 700,
+                                        borderRadius: '8px',
+                                        background: 'linear-gradient(135deg, #1E4DB7 0%, #08338F 55%, #052466 100%)',
+                                        boxShadow: '0 4px 12px rgba(8, 51, 143, 0.35)',
+                                        '&:hover': { background: 'linear-gradient(135deg, #08338F 0%, #052466 100%)' },
+                                        '&.Mui-disabled': { background: '#E0E0E0', boxShadow: 'none', color: '#9E9E9E' }
+                                    }}
                                 >
                                     Registrar sesión
                                 </Button>
                             </Box>
-                            <Divider sx={{ mb: 2 }} />
                         </>
                     )}
 
-                    <Typography sx={{ fontWeight: 'bold', mb: 1.5 }}>
+                    <Typography sx={{ ...ETIQUETA_SECCION, mb: 1.5 }}>
                         Sesiones registradas ({sesiones.length})
                     </Typography>
 
                     {cargando ? (
                         <Box className="flex justify-center py-4"><CircularProgress size={28} /></Box>
                     ) : sesiones.length === 0 ? (
-                        <Typography color="text.secondary" align="center" sx={{ py: 2 }}>
-                            Todavía no hay sesiones registradas.
-                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', textAlign: 'center', py: 4 }}>
+                            <Box
+                                sx={{
+                                    width: 64,
+                                    height: 64,
+                                    borderRadius: '50%',
+                                    backgroundColor: '#F1F4FA',
+                                    color: '#9AA7C4',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <EventNoteOutlinedIcon sx={{ fontSize: 34 }} />
+                            </Box>
+                            <Typography sx={{ fontWeight: 700, color: '#333333' }}>
+                                Aún no hay sesiones
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Todavía no hay sesiones registradas.
+                            </Typography>
+                        </Box>
                     ) : (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                             {sesiones.map((sesion) => (
                                 <Box
                                     key={sesion.id}
-                                    sx={{ border: '1px solid #e0e0e0', borderRadius: '8px', p: 1.5, display: 'flex', alignItems: 'flex-start', gap: 1 }}
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'flex-start',
+                                        gap: '14px',
+                                        p: '12px 14px',
+                                        borderRadius: '12px',
+                                        backgroundColor: '#F7F9FD',
+                                        border: '1px solid #EEF1F7'
+                                    }}
                                 >
+                                    <FechaSesion fecha={sesion.fecha} />
+
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                                        <Typography sx={{ fontWeight: 600 }}>
-                                            {formatearFecha(sesion.fecha)} · {sesion.horario?.etiqueta}
-                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#08338F' }}>
+                                            <AccessTimeOutlinedIcon sx={{ fontSize: 18 }} />
+                                            <Typography sx={{ fontWeight: 600, fontSize: '15px', color: '#111827' }}>
+                                                {formatearFecha(sesion.fecha)} · {sesion.horario?.etiqueta}
+                                            </Typography>
+                                        </Box>
                                         {sesion.tema && (
-                                            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                                            <Typography variant="body2" sx={{ overflowWrap: 'anywhere', mt: '4px' }}>
                                                 <strong>Tema: </strong>{sesion.tema}
                                             </Typography>
                                         )}
                                         {sesion.notas && (
-                                            <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
+                                            <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap', mt: '2px' }}>
                                                 {sesion.notas}
                                             </Typography>
                                         )}
                                     </Box>
                                     {!soloLectura && (
                                         <Tooltip title="Eliminar sesión">
-                                            <IconButton color="error" size="small" onClick={() => setSesionAEliminar(sesion)}>
-                                                <DeleteIcon />
+                                            <IconButton
+                                                size="small"
+                                                aria-label="Eliminar sesión"
+                                                onClick={() => setSesionAEliminar(sesion)}
+                                                sx={{ flexShrink: 0, color: '#C62828', backgroundColor: '#FDECEC', '&:hover': { backgroundColor: '#F9D6D6' } }}
+                                            >
+                                                <DeleteOutlineOutlinedIcon fontSize="small" />
                                             </IconButton>
                                         </Tooltip>
                                     )}
@@ -309,8 +419,10 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
                     )}
                 </DialogContent>
 
-                <DialogActions sx={{ p: 2, pt: 1.5 }}>
-                    <Button variant="outlined" color="inherit" onClick={cerrar}>Cerrar</Button>
+                <DialogActions sx={{ p: 2, justifyContent: 'flex-end' }}>
+                    <Button variant="contained" onClick={cerrar} sx={{ backgroundColor: '#08338F', '&:hover': { backgroundColor: '#062568' } }}>
+                        Cerrar
+                    </Button>
                 </DialogActions>
             </Dialog>
 
@@ -318,18 +430,50 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
             <Dialog
                 open={Boolean(sesionAEliminar)}
                 onClose={() => setSesionAEliminar(null)}
-                sx={{ '& .MuiPaper-root': { width: '420px', borderRadius: '12px', p: 1 } }}
+                sx={{ '& .MuiPaper-root': { width: '420px', maxWidth: '90vw', borderRadius: '16px', p: 1.5 } }}
             >
-                <DialogTitle sx={{ fontWeight: 'bold' }}>Eliminar sesión</DialogTitle>
-                <DialogContent>
+                <DialogTitle sx={{ m: 0, p: 2, display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <Box
+                        sx={{
+                            width: 44,
+                            height: 44,
+                            flexShrink: 0,
+                            borderRadius: '12px',
+                            background: 'linear-gradient(135deg, #E04848 0%, #C42525 100%)',
+                            color: '#FFFFFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <DeleteOutlineOutlinedIcon />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 'bold', fontSize: '1.2rem', lineHeight: 1.2 }}>
+                            Eliminar sesión
+                        </Typography>
+                        <Typography sx={{ fontSize: '13px', color: '#6A6A6A', mt: '2px' }}>
+                            Esta acción no se puede deshacer
+                        </Typography>
+                    </Box>
+                </DialogTitle>
+                <DialogContent dividers>
                     <Typography variant="body1">
                         ¿Estás seguro de que deseas eliminar la sesión del{' '}
-                        <strong>{sesionAEliminar ? formatearFecha(sesionAEliminar.fecha) : ''}</strong>? Esta acción no se puede deshacer.
+                        <strong>{sesionAEliminar ? formatearFecha(sesionAEliminar.fecha) : ''}</strong>?
                     </Typography>
                 </DialogContent>
                 <DialogActions sx={{ p: 2, gap: 1 }}>
-                    <Button variant="outlined" color="inherit" onClick={() => setSesionAEliminar(null)}>Cancelar</Button>
-                    <Button variant="contained" color="error" onClick={handleConfirmarEliminacion} disabled={eliminando}>
+                    <Button variant="outlined" color="inherit" onClick={() => setSesionAEliminar(null)} sx={{ borderRadius: '8px', textTransform: 'none' }}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        onClick={handleConfirmarEliminacion}
+                        disabled={eliminando}
+                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 700 }}
+                    >
                         Eliminar
                     </Button>
                 </DialogActions>

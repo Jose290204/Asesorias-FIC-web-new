@@ -5,7 +5,6 @@ import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import LaptopOutlinedIcon from '@mui/icons-material/LaptopOutlined';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
-import TagOutlinedIcon from '@mui/icons-material/TagOutlined';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -30,52 +29,76 @@ function LineaDato({ icono, etiqueta, children }) {
     );
 }
 
-// Tarjeta de una asesoría en curso para la vista móvil. Recibe la asesoría y qué hacer al tocar cada botón.
+// Tarjeta de una asesoría en curso para la vista móvil: solo lo esencial para llegar a ella
+// (materia, estudiante, fecha de inicio, horario y modalidad). Recibe la asesoría y qué hacer al tocar cada botón.
 export default function TarjetaAsesoriaEnCurso({ asesoria, onMenu, onMaterial, onChat }) {
     return (
         <Card
             sx={{
                 width: '100%',
                 maxWidth: '400px',
+                height: '100%',
                 background: '#FFFFFF',
-                borderLeft: '20px solid #08338F',
-                borderRadius: '5px',
+                border: '1px solid #E3E8F2',
+                borderRadius: '16px',
+                overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'space-between',
-                boxShadow: '0px 4px 12.3px rgba(0, 0, 0, 0.20)',
+                boxShadow: '0px 2px 10px rgba(8, 51, 143, 0.08)',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                '&:hover': {
+                    transform: 'translateY(-3px)',
+                    boxShadow: '0px 10px 24px rgba(8, 51, 143, 0.16)'
+                }
             }}
         >
-            <CardContent sx={{ padding: '24px 24px 15px' }}>
-                <Box sx={{ marginBottom: '20px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
-                    <Typography sx={{ fontSize: '18px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', minWidth: 0 }}>
-                        {asesoria.materia}
-                    </Typography>
+            {/* Franja verde: la asesoría está en curso */}
+            <Box sx={{ height: '5px', backgroundColor: '#2E7D32' }} />
 
-                    {/* Un solo botón ⋮ con las acciones poco frecuentes */}
-                    <IconButton
-                        aria-label="Más acciones"
-                        aria-haspopup="true"
-                        onClick={(e) => onMenu(asesoria, e)}
-                        sx={{ flexShrink: 0, mr: '-12px', mt: '-10px', color: '#555555' }}
-                    >
-                        <MoreVertIcon />
-                    </IconButton>
-                </Box>
+            {/* Encabezado: materia y botón ⋮ con las acciones poco frecuentes */}
+            <Box
+                sx={{
+                    padding: '16px 22px',
+                    background: 'linear-gradient(180deg, #F4F7FD 0%, #FFFFFF 100%)',
+                    borderBottom: '1px solid #EEF1F7',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    gap: '8px'
+                }}
+            >
+                <Typography
+                    title={asesoria.materia}
+                    sx={{ fontSize: '18px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', minWidth: 0, pt: '2px' }}
+                >
+                    {asesoria.materia}
+                </Typography>
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <IconButton
+                    size="small"
+                    aria-label="Más acciones"
+                    aria-haspopup="true"
+                    onClick={(e) => onMenu(asesoria, e)}
+                    sx={{ flexShrink: 0, mr: '-8px', mt: '-4px', color: '#08338F' }}
+                >
+                    <MoreVertIcon />
+                </IconButton>
+            </Box>
+
+            {/* Datos: ocupan el espacio sobrante para que los botones queden siempre abajo */}
+            <CardContent sx={{ flex: 1, padding: '18px 22px 12px 22px', '&:last-child': { paddingBottom: '12px' } }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <LineaDato icono={<PersonOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Estudiante">{asesoria.estudiante}</LineaDato>
                     <LineaDato icono={<CalendarMonthOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Fecha de inicio">{asesoria.fecha_inicio_formateada}</LineaDato>
                     <LineaDato icono={<AccessTimeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Horario">{asesoria.horario_con_dia}</LineaDato>
                     <LineaDato icono={<LaptopOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Modalidad">{asesoria.modalidad}</LineaDato>
-                    <LineaDato icono={<TagOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Asesoría">{`#${asesoria.id}`}</LineaDato>
                 </Box>
             </CardContent>
 
             {/* Botones: dos columnas iguales; Chat con relleno y Material solo con borde */}
             <CardActions
                 sx={{
-                    padding: '0px 24px 20px 24px',
+                    padding: '6px 22px 20px 22px',
                     display: 'grid',
                     gridTemplateColumns: '1fr 1fr',
                     gap: '10px',
@@ -89,7 +112,7 @@ export default function TarjetaAsesoriaEnCurso({ asesoria, onMenu, onMaterial, o
                         minHeight: 40,
                         color: '#8A6D2B',
                         borderColor: '#C49E0D',
-                        borderRadius: '5px',
+                        borderRadius: '8px',
                         textTransform: 'none',
                         '&:hover': { borderColor: '#8A6D2B', backgroundColor: 'rgba(196, 158, 13, 0.08)' }
                     }}
@@ -107,7 +130,17 @@ export default function TarjetaAsesoriaEnCurso({ asesoria, onMenu, onMaterial, o
                 >
                     <Button
                         variant="contained"
-                        sx={{ minHeight: 40, color: '#ffffff', borderRadius: '5px', textTransform: 'none' }}
+                        sx={{
+                            minHeight: 40,
+                            color: '#ffffff',
+                            fontWeight: 700,
+                            borderRadius: '8px',
+                            textTransform: 'none',
+                            letterSpacing: '0.3px',
+                            background: 'linear-gradient(135deg, #1E4DB7 0%, #08338F 55%, #052466 100%)',
+                            boxShadow: '0 4px 12px rgba(8, 51, 143, 0.35)',
+                            '&:hover': { background: 'linear-gradient(135deg, #08338F 0%, #052466 100%)' }
+                        }}
                         startIcon={<ChatOutlinedIcon />}
                         onClick={(e) => onChat(asesoria, e)}
                     >

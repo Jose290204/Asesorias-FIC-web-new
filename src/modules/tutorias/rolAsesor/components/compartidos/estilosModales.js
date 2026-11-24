@@ -6,7 +6,7 @@ export const PAPER_MODAL = {
         width: '550px',
         maxWidth: '90vw',
         maxHeight: '90dvh',
-        borderRadius: '12px',
+        borderRadius: '16px',
         display: 'flex',
         flexDirection: 'column',
         p: 1.5
@@ -22,8 +22,9 @@ export const PAPER_MODAL_CELULAR = {
 export const PAPER_CONFIRMACION = {
     '& .MuiPaper-root': {
         width: '450px',
-        borderRadius: '12px',
-        p: 1
+        maxWidth: '90vw',
+        borderRadius: '16px',
+        p: 1.5
     }
 };
 

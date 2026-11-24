@@ -1,5 +1,11 @@
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
+import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import LaptopOutlinedIcon from '@mui/icons-material/LaptopOutlined';
+import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
+import NotesOutlinedIcon from '@mui/icons-material/NotesOutlined';
+import PersonSearchOutlinedIcon from '@mui/icons-material/PersonSearchOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import {
     Autocomplete,
@@ -28,6 +34,43 @@ import CampoSelect from '../../compartidos/CampoSelect';
 import { fechaCoincideConDia, opcionesDeHorario } from '../../../utils/horarios';
 import { PAPER_MODAL, PAPER_MODAL_CELULAR } from '../../compartidos/estilosModales';
 import useMediaQuery from '@mui/material/useMediaQuery';
+
+const ICONO = { fontSize: 20 };
+
+// Bloque de formulario: cuadrito con ícono + título y los campos debajo (en una sola columna)
+function BloqueFormulario({ icono, titulo, children }) {
+    return (
+        <Box
+            sx={{
+                p: '14px 16px',
+                borderRadius: '12px',
+                backgroundColor: '#F7F9FD',
+                border: '1px solid #EEF1F7',
+                '& .MuiOutlinedInput-root': { backgroundColor: '#FFFFFF' }
+            }}
+        >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '12px', mb: 2 }}>
+                <Box
+                    sx={{
+                        width: 36,
+                        height: 36,
+                        flexShrink: 0,
+                        borderRadius: '10px',
+                        backgroundColor: '#E6ECF8',
+                        color: '#08338F',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
+                >
+                    {icono}
+                </Box>
+                <Typography sx={{ fontWeight: 'bold', color: '#6A6A6A', fontSize: '0.8125rem' }}>{titulo}</Typography>
+            </Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 2 }}>{children}</Box>
+        </Box>
+    );
+}
 
 // El asesor da de alta una asesoría directa (sin solicitud). Las fechas pasadas se permiten
 // (puede registrar una asesoría que ya empezó); el backend revisa que caiga dentro del ciclo vigente.
@@ -158,8 +201,30 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
             <Dialog open onClose={onClose} fullScreen={esCelular} sx={esCelular ? PAPER_MODAL_CELULAR : PAPER_MODAL}>
-                <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.2rem' }}>
-                    Crear Asesoría
+                <DialogTitle sx={{ m: 0, p: 2, pr: 7, display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <Box
+                        sx={{
+                            width: 44,
+                            height: 44,
+                            flexShrink: 0,
+                            borderRadius: '12px',
+                            background: 'linear-gradient(135deg, #1E4DB7 0%, #08338F 100%)',
+                            color: '#FFFFFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <AddCircleOutlineOutlinedIcon />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 'bold', fontSize: '1.2rem', lineHeight: 1.2 }}>
+                            Crear asesoría
+                        </Typography>
+                        <Typography sx={{ fontSize: '13px', color: '#6A6A6A', mt: '2px' }}>
+                            Registra una asesoría directa con un alumno
+                        </Typography>
+                    </Box>
                     <IconButton
                         aria-label="close"
                         onClick={onClose}
@@ -169,8 +234,9 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                     </IconButton>
                 </DialogTitle>
 
-                <DialogContent dividers>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
+                <DialogContent dividers sx={{ py: 2, overflowX: 'hidden' }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 1.5 }}>
+                        <BloqueFormulario icono={<PersonSearchOutlinedIcon sx={ICONO} />} titulo="Alumno">
                         {/* Buscador de alumno: la API filtra por nombre o número de cuenta mientras se escribe */}
                         <Autocomplete
                             fullWidth
@@ -238,7 +304,7 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
 
                         {/* Leyenda: se muestra mientras no haya alumno elegido */}
                         {!alumnoElegido && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#0B4A8F' }}>
                                 <InfoOutlinedIcon fontSize="small" />
                                 <Typography variant="body2">
                                     Selecciona un alumno para habilitar el resto de los campos.
@@ -246,6 +312,9 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                             </Box>
                         )}
 
+                        </BloqueFormulario>
+
+                        <BloqueFormulario icono={<MenuBookOutlinedIcon sx={ICONO} />} titulo="Materia">
                         <CampoSelect
                             label="Materia"
                             name="materiaId"
@@ -262,6 +331,9 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                             ))}
                         </CampoSelect>
 
+                        </BloqueFormulario>
+
+                        <BloqueFormulario icono={<AccessTimeOutlinedIcon sx={ICONO} />} titulo="Horario y fecha de inicio">
                         <CampoSelect
                             label="Horario"
                             size="small"
@@ -299,6 +371,9 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                             }}
                         />
 
+                        </BloqueFormulario>
+
+                        <BloqueFormulario icono={<LaptopOutlinedIcon sx={ICONO} />} titulo="Modalidad y razón">
                         <CampoSelect
                             label="Modalidad"
                             name="modalidad"
@@ -331,6 +406,9 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                             ))}
                         </CampoSelect>
 
+                        </BloqueFormulario>
+
+                        <BloqueFormulario icono={<NotesOutlinedIcon sx={ICONO} />} titulo="Observaciones">
                         <TextField
                             label="Observaciones (opcional)"
                             name="observaciones"
@@ -343,14 +421,28 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                             onChange={handleChange}
                             slotProps={{ htmlInput: { maxLength: 1000 } }}
                         />
+                        </BloqueFormulario>
                     </Box>
                 </DialogContent>
 
                 <DialogActions sx={{ p: 2, pt: 1.5, justifyContent: 'flex-end', gap: 1 }}>
-                    <Button variant="outlined" color="inherit" onClick={onClose}>
+                    <Button variant="outlined" color="inherit" onClick={onClose} sx={{ borderRadius: '8px', textTransform: 'none' }}>
                         Cancelar
                     </Button>
-                    <Button variant="contained" color="primary" onClick={handleCrear} disabled={!formularioCompleto || guardando}>
+                    <Button
+                        variant="contained"
+                        onClick={handleCrear}
+                        disabled={!formularioCompleto || guardando}
+                        sx={{
+                            borderRadius: '8px',
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            background: 'linear-gradient(135deg, #1E4DB7 0%, #08338F 55%, #052466 100%)',
+                            boxShadow: '0 4px 12px rgba(8, 51, 143, 0.35)',
+                            '&:hover': { background: 'linear-gradient(135deg, #08338F 0%, #052466 100%)' },
+                            '&.Mui-disabled': { background: '#E0E0E0', boxShadow: 'none', color: '#9E9E9E' }
+                        }}
+                    >
                         Crear asesoría
                     </Button>
                 </DialogActions>

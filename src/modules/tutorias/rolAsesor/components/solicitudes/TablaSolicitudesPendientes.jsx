@@ -96,7 +96,6 @@ export default function TablaSolicitudesPendientes({ solicitudes = [], onAceptar
                         <Table stickyHeader sx={{ minWidth: 900 }}>
                             <TableHead>
                                 <TableRow sx={ESTILO_FILA_ENCABEZADO}>
-                                    <TableCell sx={{ width: '70px' }} align="center">ID</TableCell>
                                     <TableCell align="left">Materia</TableCell>
                                     <TableCell align="left">Estudiante</TableCell>
                                     <TableCell align="center">Fecha de inicio</TableCell>
@@ -114,10 +113,6 @@ export default function TablaSolicitudesPendientes({ solicitudes = [], onAceptar
                                         hover
                                         sx={ESTILO_FILA}
                                     >
-                                        <TableCell align="center" sx={{ color: '#6B7280 !important', fontWeight: 600 }}>
-                                            #{solicitud.id_solicitud}
-                                        </TableCell>
-
                                         <TableCell align="left" sx={{ fontWeight: 600, color: '#111827 !important' }}>
                                             {solicitud.materia}
                                         </TableCell>
