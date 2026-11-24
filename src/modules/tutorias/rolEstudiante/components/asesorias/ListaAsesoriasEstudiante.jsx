@@ -6,6 +6,7 @@ import ToastNotification from '../../../../../components/ui/ToastNotification';
 import ModalChatAsesoriaEstudiante from '../compartidos/ModalChatAsesoriaEstudiante';
 import ModalMaterialEstudiante from '../compartidos/ModalMaterialEstudiante';
 import ModalSesionesEstudiante from '../compartidos/ModalSesionesEstudiante';
+import ModalInfoAsesoriaEstudiante from './modales/ModalInfoAsesoriaEstudiante';
 import TarjetaAsesoriaEstudiante from './TarjetaAsesoriaEstudiante';
 
 // Cuadrícula de tarjetas de las asesorías en curso (también en escritorio: aquí no hay tabla).
@@ -15,6 +16,7 @@ import TarjetaAsesoriaEstudiante from './TarjetaAsesoriaEstudiante';
 export default function ListaAsesoriasEstudiante({ asesorias = [], onChatLeido, materialExterno = null, onCerrarMaterialExterno }) {
     // Estados para Modales
     const [selectedAsesoria, setSelectedAsesoria] = useState(null);
+    const [modalInfoOpen, setModalInfoOpen] = useState(false);
     const [modalMaterialOpen, setModalMaterialOpen] = useState(false);
     const [modalSesionesOpen, setModalSesionesOpen] = useState(false);
     const [modalChatOpen, setModalChatOpen] = useState(false);
@@ -42,6 +44,7 @@ export default function ListaAsesoriasEstudiante({ asesorias = [], onChatLeido, 
         setOpen(true);
     };
 
+    const handleOpenInfo = openModal(setModalInfoOpen);
     const handleOpenMaterial = openModal(setModalMaterialOpen);
     const handleOpenSesiones = openModal(setModalSesionesOpen);
     // Al abrir el chat se quita el globito de mensajes sin leer (el chat los marca como leídos)
@@ -67,6 +70,7 @@ export default function ListaAsesoriasEstudiante({ asesorias = [], onChatLeido, 
                     <TarjetaAsesoriaEstudiante
                         key={asesoria.id}
                         asesoria={asesoria}
+                        onInfo={handleOpenInfo}
                         onSesiones={handleOpenSesiones}
                         onMaterial={handleOpenMaterial}
                         onChat={handleOpenChat}
@@ -75,6 +79,12 @@ export default function ListaAsesoriasEstudiante({ asesorias = [], onChatLeido, 
             </Box>
 
             {/* Modales */}
+            <ModalInfoAsesoriaEstudiante
+                open={modalInfoOpen}
+                onClose={() => setModalInfoOpen(false)}
+                asesoria={selectedAsesoria}
+            />
+
             <ModalMaterialEstudiante
                 open={modalMaterialOpen || Boolean(materialExterno)}
                 onClose={() => {

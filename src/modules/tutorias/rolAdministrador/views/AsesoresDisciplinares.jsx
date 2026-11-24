@@ -20,7 +20,7 @@ import {
 import { mensajesDeError } from '../../../../Services/errores';
 import ModalAsesorDisciplinar from '../components/asesoresDisciplinares/modales/ModalAsesorDisciplinar';
 import TablaAsesoresDisciplinares from '../components/asesoresDisciplinares/TablaAsesoresDisciplinares';
-import ModalCargaExcel from '../components/ModalCargaExel';
+import ModalCargaAsesores from '../components/asesores/ModalCargaAsesores';
 import { MINIMO_CARGA_MS, conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 
 // Color de los botones de crear (distinto al verde de la carga masiva)
@@ -140,11 +140,6 @@ export default function AsesoresDisciplinares() {
 
     const handleGuardarDisponibilidad = (asesor, cuerpo) =>
         ejecutar(() => guardarDisponibilidadAsesorAdmin(asesor.id, cuerpo), 'Disponibilidad actualizada');
-
-    // TODO (etapa 2.7): conectar la carga masiva con el backend
-    const handleExcelData = (data) => {
-        console.log('Asesores disciplinares cargados desde Excel:', data);
-    };
 
     const handleCambiarMateria = (e) => {
         setMateriaId(e.target.value);
@@ -268,10 +263,10 @@ export default function AsesoresDisciplinares() {
                 Crear asesor
             </Fab>
 
-            <ModalCargaExcel
+            <ModalCargaAsesores
                 open={modalExcelOpen}
                 onClose={() => setModalExcelOpen(false)}
-                onDataLoaded={handleExcelData}
+                onTerminado={() => cargarAsesores({ silencioso: true })}
             />
 
             <ModalAsesorDisciplinar

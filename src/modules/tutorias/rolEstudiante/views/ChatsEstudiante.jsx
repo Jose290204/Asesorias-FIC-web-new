@@ -8,6 +8,7 @@ import ToastNotification from '../../../../components/ui/ToastNotification';
 import TituloVista from '../../../../components/ui/TituloVista';
 import { encontrarAsesoriaEnCurso, traerAsesorias } from '../../../../Services/asesoriasEstudianteService';
 import { mensajesDeError } from '../../../../Services/errores';
+import { conTiempoMinimo, MINIMO_CARGA_MS } from '../../../../utils/tiempoMinimo';
 import ListaChats from '../../../../components/chats/ListaChats';
 import ModalChatAsesoriaEstudiante from '../components/compartidos/ModalChatAsesoriaEstudiante';
 
@@ -51,7 +52,10 @@ export default function ChatsEstudiante() {
             if (!silencioso) setLoading(true);
             setError(false);
 
-            const { asesorias: lista, meta: metaNueva } = await traerAsesorias({ estatus: 'en_curso', buscar, page: pagina, orden: 'mensaje' });
+            const { asesorias: lista, meta: metaNueva } = await conTiempoMinimo(
+                traerAsesorias({ estatus: 'en_curso', buscar, page: pagina, orden: 'mensaje' }),
+                silencioso ? 0 : MINIMO_CARGA_MS
+            );
 
             if (lista.length === 0 && pagina > 1) {
                 setPagina(pagina - 1);

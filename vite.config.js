@@ -9,6 +9,7 @@ export default defineConfig({
     host: true, // expone el servidor en la red
     port: 5173, // debe coincidir con SANCTUM_STATEFUL_DOMAINS (localhost:5173)
     strictPort: true, // si el 5173 está ocupado, falla en vez de saltar a otro puerto
+    allowedHosts: ['.trycloudflare.com'], // permite entrar por el túnel temporal de Cloudflare
     proxy: {
       // Laravel espera la ruta completa (/api/v1/...), por eso ya no hay "rewrite"
       '/api': {

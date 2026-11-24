@@ -1,4 +1,5 @@
 import DoneAllIcon from '@mui/icons-material/DoneAll';
+import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
 import { Avatar, Badge, Box, ButtonBase, Typography } from '@mui/material';
 
 // Hora si el mensaje es de hoy, "Ayer", o la fecha corta (como la lista de WhatsApp)
@@ -16,9 +17,10 @@ const etiquetaHora = (iso) => {
     return fecha.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: '2-digit' });
 };
 
-// Lista de conversaciones estilo WhatsApp: una fila por asesoría. La usan el asesor y el estudiante.
-// Arriba: nombre de la otra persona y la hora del último mensaje. Luego materia e inicio.
+// Lista de conversaciones: una tarjeta por asesoría. La usan el asesor y el estudiante.
+// Arriba: nombre de la otra persona y la hora del último mensaje. Luego la materia y el inicio.
 // Abajo: el último mensaje y, a la derecha, el globito con los mensajes sin leer.
+// Una conversación con mensajes sin leer lleva una franja azul a la izquierda y el texto más marcado.
 // campoNombre: qué campo trae el nombre de la otra persona ('estudiante' para el asesor, 'asesor' para el estudiante).
 // onAbrir(asesoria) abre el chat.
 export default function ListaChats({ asesorias = [], onAbrir, campoNombre = 'estudiante' }) {
@@ -31,13 +33,12 @@ export default function ListaChats({ asesorias = [], onAbrir, campoNombre = 'est
                 p: 0,
                 width: '100%',
                 maxWidth: '760px',
-                bgcolor: '#FFFFFF',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                boxShadow: '0px 4px 12.3px rgba(0, 0, 0, 0.12)'
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
             }}
         >
-            {asesorias.map((asesoria, i) => {
+            {asesorias.map((asesoria) => {
                 const sinLeer = asesoria.mensajes_sin_leer > 0;
                 const ultimo = asesoria.ultimo_mensaje;
 
@@ -52,20 +53,30 @@ export default function ListaChats({ asesorias = [], onAbrir, campoNombre = 'est
                                 justifyContent: 'flex-start',
                                 gap: '14px',
                                 textAlign: 'left',
-                                px: { xs: 2, sm: 3 },
+                                px: { xs: 2, sm: 2.5 },
                                 py: '14px',
-                                borderTop: i === 0 ? 'none' : '1px solid #EEF0F4',
-                                backgroundColor: sinLeer ? '#F3F7FF' : 'transparent',
-                                '&:hover': { backgroundColor: '#EEF3FB' }
+                                backgroundColor: '#FFFFFF',
+                                border: '1px solid #E3E8F2',
+                                borderLeft: `4px solid ${sinLeer ? '#08338F' : '#E3E8F2'}`,
+                                borderRadius: '16px',
+                                boxShadow: '0px 2px 10px rgba(8, 51, 143, 0.08)',
+                                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: '0px 8px 20px rgba(8, 51, 143, 0.14)'
+                                }
                             }}
                         >
                             <Avatar
                                 sx={{
-                                    width: 50,
-                                    height: 50,
+                                    width: 52,
+                                    height: 52,
                                     bgcolor: '#EBD9B4',
                                     color: '#8A6D2B',
+                                    fontSize: '22px',
                                     fontWeight: 'bold',
+                                    border: '3px solid #FFFFFF',
+                                    boxShadow: '0 0 0 2px #D9C48F',
                                     flexShrink: 0
                                 }}
                             >
@@ -95,12 +106,33 @@ export default function ListaChats({ asesorias = [], onAbrir, campoNombre = 'est
                                     )}
                                 </Box>
 
-                                <Typography noWrap sx={{ fontSize: '13px', color: '#6B7280' }}>
-                                    {asesoria.materia} · Inicio: {asesoria.fecha_inicio_formateada}
-                                </Typography>
+                                {/* Materia (etiqueta) e inicio de la asesoría */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mt: '4px', minWidth: 0 }}>
+                                    <Box
+                                        sx={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            minWidth: 0,
+                                            px: '8px',
+                                            py: '1px',
+                                            borderRadius: '999px',
+                                            backgroundColor: '#EEF3FB',
+                                            color: '#08338F'
+                                        }}
+                                    >
+                                        <MenuBookOutlinedIcon sx={{ fontSize: 14, flexShrink: 0 }} />
+                                        <Typography noWrap sx={{ fontSize: '12px', fontWeight: 600, lineHeight: 1.6 }}>
+                                            {asesoria.materia}
+                                        </Typography>
+                                    </Box>
+                                    <Typography noWrap sx={{ fontSize: '12px', color: '#6B7280', flexShrink: 0 }}>
+                                        Inicio: {asesoria.fecha_inicio_formateada}
+                                    </Typography>
+                                </Box>
 
-                                {/* Último mensaje (con palomitas si lo escribió el asesor) y globito de sin leer */}
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: '2px' }}>
+                                {/* Último mensaje (con palomitas si lo escribió el usuario) y globito de sin leer */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: '6px' }}>
                                     <Typography
                                         noWrap
                                         sx={{

@@ -9,6 +9,7 @@ import Estadistica from '../components/perfil/Estadistica';
 import FilaDato from '../components/perfil/FilaDato';
 import TituloVista from '../../../../components/ui/TituloVista';
 import { traerPerfilEstudiante } from '../../../../Services/estudiantesService';
+import { conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 
 export default function PerfilEstudiante() {
     const [perfil, setPerfil] = useState(null);
@@ -16,7 +17,7 @@ export default function PerfilEstudiante() {
     const [error, setError] = useState(false);
 
     useEffect(() => {
-        traerPerfilEstudiante()
+        conTiempoMinimo(traerPerfilEstudiante())
             .then(setPerfil)
             .catch((err) => {
                 console.error('Error al cargar el perfil', err);

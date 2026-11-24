@@ -2,6 +2,7 @@ import { CircularProgress, MenuItem, Pagination, TextField, Typography } from "@
 import { useCallback, useEffect, useState } from "react";
 import ToastNotification from "../../../../components/ui/ToastNotification";
 import { mensajesDeError } from "../../../../Services/errores";
+import { conTiempoMinimo, MINIMO_CARGA_MS } from '../../../../utils/tiempoMinimo';
 import TituloVista from "../../../../components/ui/TituloVista";
 import { cancelarSolicitud, editarSolicitud, traerSolicitudes } from "../../../../Services/solicitudesEstudianteService";
 import ListaSolicitudesEnRevision from "../components/solicitudes/ListaSolicitudesEnRevision";
@@ -44,7 +45,10 @@ export default function SolicitudesEnRevision() {
             if (!silencioso) setLoading(true);
             setError(false);
 
-            const { solicitudes: lista, meta: metaNueva } = await traerSolicitudes({ estatus: filtroEstatus, page: pagina });
+            const { solicitudes: lista, meta: metaNueva } = await conTiempoMinimo(
+                traerSolicitudes({ estatus: filtroEstatus, page: pagina }),
+                silencioso ? 0 : MINIMO_CARGA_MS
+            );
 
             // Si cambió la lista y esta página quedó vacía, se regresa a la anterior
             // (el efecto de abajo vuelve a cargar solo)

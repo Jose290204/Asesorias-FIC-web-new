@@ -1,6 +1,7 @@
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
-import { Autocomplete, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, InputAdornment, MenuItem, TextField, createFilterOptions } from '@mui/material';
+import { Autocomplete, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, InputAdornment, MenuItem, TextField, Typography, createFilterOptions } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -33,6 +34,17 @@ const filtrarAsesores = createFilterOptions({
 // Convierte el día del enum ("lunes".."viernes") al número que usa dayjs (lunes=1 ... viernes=5)
 const DIA_A_NUMERO = { lunes: 1, martes: 2, miercoles: 3, jueves: 4, viernes: 5 };
 
+// Encabezado pequeño que agrupa campos relacionados
+function Seccion({ titulo }) {
+    return (
+        <Typography
+            sx={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: '#6A6A6A', mt: 0.5 }}
+        >
+            {titulo}
+        </Typography>
+    );
+}
+
 const FORMULARIO_CREAR_INICIAL = {
     asesor: null,
     materiaId: '',
@@ -45,7 +57,8 @@ const FORMULARIO_CREAR_INICIAL = {
 
 // ==========================================
 // 1. MODAL CREAR SOLICITUD (buscador global o, con asesorFijo, desde la tarjeta)
-// Flujo: asesor -> materia -> horario -> fecha (restringida al día del horario) -> modalidad -> nota
+// Flujo en cadena: asesor -> materia -> horario -> fecha (restringida al día del horario) -> modalidad.
+// Razón y nota no dependen de nada: siempre están disponibles.
 // ==========================================
 export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, asesores = [], asesorFijo = null, razones = []}) {
     const esCelular = useMediaQuery('(max-width:599.95px)');
@@ -79,14 +92,15 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
 
     const modalidadesList = disponibilidad?.modalidades ?? [];
 
-    // Cadena: asesor -> materia -> horario -> fecha/modalidad/nota
+    // Cadena: cada campo se habilita cuando el anterior ya tiene valor, y mientras tanto dice qué le falta
     const sinAsesor = !formData.asesor;
     const sinMateria = !formData.materiaId;
     const sinHorario = !formData.horarioKey;
-    const leyendaMateria = sinAsesor ? 'Elige primero al asesor' : '';
-    const leyendaHorario = !sinAsesor && sinMateria ? 'Elige primero una materia' : '';
-    const leyendaFecha = !sinMateria && sinHorario ? 'Elige primero un horario' : '';
-    const leyendaResto = !sinMateria && !sinHorario ? '' : (leyendaHorario || leyendaFecha);
+    const sinFecha = !formData.inicio?.isValid();
+    const leyendaMateria = sinAsesor ? 'Elige primero un asesor' : '';
+    const leyendaHorario = sinMateria ? 'Elige primero una materia' : '';
+    const leyendaFecha = sinHorario ? 'Elige primero un horario' : '';
+    const leyendaModalidad = sinFecha ? 'Elige primero una fecha de inicio' : '';
 
     // Día (lunes..viernes) del horario elegido, usado para bloquear el calendario
     const diaElegido = horariosList.find((h) => h.key === formData.horarioKey)?.dia;
@@ -96,9 +110,10 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    // Al cambiar de horario, una fecha ya elegida puede quedar en un día que ya no corresponde
+    // Al cambiar de horario, una fecha ya elegida puede quedar en un día que ya no corresponde:
+    // se borran la fecha y la modalidad, que dependen de ella
     const handleChangeHorario = (e) => {
-        setFormData((prev) => ({ ...prev, horarioKey: e.target.value, inicio: null }));
+        setFormData((prev) => ({ ...prev, horarioKey: e.target.value, inicio: null, modalidadId: '' }));
     };
 
     const abrirCalendario = () => {
@@ -159,15 +174,37 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                         width: '550px',
                         maxWidth: '90vw',
                         maxHeight: '90vh',
-                        borderRadius: '12px',
+                        borderRadius: '16px',
                         display: 'flex',
                         flexDirection: 'column',
                         p: 1.5
                     }
                 }}
             >
-                <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.2rem' }}>
-                    Solicitar Asesoría
+                <DialogTitle sx={{ m: 0, p: 2, pr: 7, display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <Box
+                        sx={{
+                            width: 44,
+                            height: 44,
+                            flexShrink: 0,
+                            borderRadius: '12px',
+                            background: 'linear-gradient(135deg, #1E4DB7 0%, #08338F 100%)',
+                            color: '#FFFFFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <AssignmentOutlinedIcon />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 'bold', fontSize: '1.2rem', lineHeight: 1.2 }}>
+                            Solicitar Asesoría
+                        </Typography>
+                        <Typography sx={{ fontSize: '13px', color: '#6A6A6A', mt: '2px' }}>
+                            Completa los datos en orden
+                        </Typography>
+                    </Box>
                     <IconButton
                         aria-label="close"
                         onClick={onClose}
@@ -179,6 +216,8 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
 
                 <DialogContent dividers>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
+                        <Seccion titulo="Asesor y materia" />
+
                         {/* 1. ASESOR: lo primero que se elige */}
                         <Autocomplete
                             fullWidth
@@ -188,8 +227,8 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                             options={asesoresList}
                             value={formData.asesor}
                             onChange={(_, nuevoAsesor) =>
-                                // Al cambiar de asesor se limpia todo (menos la nota)
-                                setFormData((prev) => ({ ...FORMULARIO_CREAR_INICIAL, nota: prev.nota, asesor: asesorFijo ?? nuevoAsesor }))
+                                // Al cambiar de asesor se limpia la cadena (razón y nota no dependen de él)
+                                setFormData((prev) => ({ ...FORMULARIO_CREAR_INICIAL, razon: prev.razon, nota: prev.nota, asesor: asesorFijo ?? nuevoAsesor }))
                             }
                             getOptionLabel={(option) => option.asesor || option.nombre || ''}
                             getOptionKey={(option) => option.id}
@@ -244,6 +283,8 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                             </TextField>
                         </Box>
 
+                        <Seccion titulo="Fecha y modalidad" />
+
                         {/* 3. HORARIO: se habilita al elegir materia. Cada opción ya trae su día */}
                         <Box>
                             <TextField
@@ -269,7 +310,7 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                         {/* 4. FECHA: se habilita al elegir horario; el calendario solo permite ese día de la semana */}
                         <Box>
                             <DatePicker
-                                label="Fecha"
+                                label="Fecha de inicio"
                                 value={formData.inicio}
                                 onChange={(nuevaFecha) => setFormData((prev) => ({ ...prev, inicio: nuevaFecha }))}
                                 format="DD/MM/YYYY"
@@ -291,7 +332,7 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                             />
                         </Box>
 
-                        {/* 5. MODALIDAD */}
+                        {/* 5. MODALIDAD: se habilita al elegir fecha */}
                         <Box>
                             <TextField
                                 select
@@ -300,8 +341,8 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                                 name="modalidadId"
                                 size="small"
                                 fullWidth
-                                disabled={sinMateria}
-                                helperText={leyendaResto}
+                                disabled={sinFecha}
+                                helperText={leyendaModalidad}
                                 value={formData.modalidadId}
                                 onChange={handleChange}
                             >
@@ -313,7 +354,9 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                             </TextField>
                         </Box>
 
-                        {/* 6. RAZÓN */}
+                        <Seccion titulo="Detalles" />
+
+                        {/* 6. RAZÓN: independiente, siempre disponible */}
                         <Box>
                             <TextField
                                 select
@@ -322,7 +365,6 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                                 name="razon"
                                 size="small"
                                 fullWidth
-                                disabled={sinMateria}
                                 value={formData.razon}
                                 onChange={handleChange}
                             >
@@ -334,7 +376,7 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                             </TextField>
                         </Box>
 
-                        {/*76. NOTA */}
+                        {/* 7. NOTA: independiente, siempre disponible */}
                         <Box>
                             <TextField
                                 label="Nota para el asesor (opcional)"
@@ -344,7 +386,6 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                                 fullWidth
                                 multiline
                                 rows={3}
-                                disabled={sinMateria}
                                 value={formData.nota}
                                 onChange={handleChange}
                             />
@@ -353,16 +394,25 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                 </DialogContent>
 
                 <DialogActions sx={{ p: 2, pt: 1.5, justifyContent: 'flex-end', gap: 1 }}>
-                    <Button variant="outlined" color="inherit" onClick={onClose}>
+                    <Button variant="outlined" color="inherit" onClick={onClose} sx={{ borderRadius: '8px', textTransform: 'none' }}>
                         Cancelar
                     </Button>
                     <Button
                         variant="contained"
-                        color="primary"
                         onClick={handleCrear}
                         disabled={!formularioCompleto || guardando}
+                        sx={{
+                            borderRadius: '8px',
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            letterSpacing: '0.3px',
+                            background: 'linear-gradient(135deg, #1E4DB7 0%, #08338F 55%, #052466 100%)',
+                            boxShadow: '0 4px 12px rgba(8, 51, 143, 0.35)',
+                            '&:hover': { background: 'linear-gradient(135deg, #08338F 0%, #052466 100%)' },
+                            '&.Mui-disabled': { background: '#E0E0E0', boxShadow: 'none', color: 'rgba(0,0,0,0.26)' }
+                        }}
                     >
-                        Confirmar
+                        {guardando ? 'Enviando...' : 'Confirmar'}
                     </Button>
                 </DialogActions>
             </Dialog>

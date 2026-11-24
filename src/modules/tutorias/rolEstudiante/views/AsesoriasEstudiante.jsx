@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ToastNotification from "../../../../components/ui/ToastNotification";
 import { encontrarAsesoriaEnCurso, traerAsesorias } from "../../../../Services/asesoriasEstudianteService";
 import { mensajesDeError } from "../../../../Services/errores";
+import { conTiempoMinimo, MINIMO_CARGA_MS } from '../../../../utils/tiempoMinimo';
 import TituloVista from "../../../../components/ui/TituloVista";
 import ListaAsesoriasEstudiante from "../components/asesorias/ListaAsesoriasEstudiante";
 
@@ -33,7 +34,10 @@ export default function AsesoriasEstudiante() {
         try {
             if (!silencioso) setLoading(true);
             setError(false);
-            const { asesorias: lista, meta: metaNueva } = await traerAsesorias({ estatus: "en_curso", page: pagina });
+            const { asesorias: lista, meta: metaNueva } = await conTiempoMinimo(
+                traerAsesorias({ estatus: "en_curso", page: pagina }),
+                silencioso ? 0 : MINIMO_CARGA_MS
+            );
             setAsesorias(lista);
             setMeta(metaNueva);
         } catch (err) {

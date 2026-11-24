@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import ToastNotification from "../../../../components/ui/ToastNotification";
 import { traerAsesorias } from "../../../../Services/asesoriasEstudianteService";
 import { mensajesDeError } from "../../../../Services/errores";
+import { conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 import TituloVista from "../../../../components/ui/TituloVista";
 import ListaHistorialEstudiante from "../components/historial/ListaHistorialEstudiante";
 
@@ -25,7 +26,7 @@ export default function HistorialAsesoriasEstudiante() {
         try {
             setLoading(true);
             setError(false);
-            const { asesorias, meta: metaNueva } = await traerAsesorias({ estatus: "historial", page: pagina });
+            const { asesorias, meta: metaNueva } = await conTiempoMinimo(traerAsesorias({ estatus: "historial", page: pagina }));
             setHistorial(asesorias);
             setMeta(metaNueva);
         } catch (err) {

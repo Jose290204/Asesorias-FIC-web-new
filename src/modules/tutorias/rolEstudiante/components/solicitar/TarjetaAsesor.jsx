@@ -16,13 +16,28 @@ import ModalCrearSolicitud from './modales/ModalCrearSolicitud';
 import ModalInfoAsesor from './modales/ModalInfoAsesor';
 
 // Línea con ícono, etiqueta en negritas y valor (Materias:, Modalidad:). Si no hay valor, no se muestra.
-function LineaDato({ icono, etiqueta, children }) {
+// lineas = máximo de renglones antes de cortar con "…" (el detalle completo está en Información)
+function LineaDato({ icono, etiqueta, children, lineas }) {
     if (!children) return null;
 
     return (
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
             <Box sx={{ display: 'flex', color: '#08338F', mt: '1px', flexShrink: 0 }}>{icono}</Box>
-            <Typography sx={{ fontSize: '15px', color: '#333333', overflowWrap: 'anywhere', minWidth: 0 }}>
+            <Typography
+                title={typeof children === 'string' ? children : undefined}
+                sx={{
+                    fontSize: '15px',
+                    color: '#333333',
+                    overflowWrap: 'anywhere',
+                    minWidth: 0,
+                    ...(lineas && {
+                        display: '-webkit-box',
+                        WebkitLineClamp: lineas,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                    })
+                }}
+            >
                 <span className="font-bold">{etiqueta}: </span>
                 {children}
             </Typography>
@@ -54,42 +69,67 @@ export default function TarjetaAsesor({ asesor, onSaveSolicitud, showToast, razo
                 sx={{
                     width: '100%',
                     maxWidth: '400px',
+                    height: '100%',
                     background: '#FFFFFF',
-                    borderLeft: '20px solid #08338F',
-                    borderRadius: '5px',
+                    border: '1px solid #E3E8F2',
+                    borderRadius: '16px',
+                    overflow: 'hidden',
                     display: 'flex',
                     flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    boxShadow: '0px 4px 12.3px rgba(0, 0, 0, 0.20)',
+                    boxShadow: '0px 2px 10px rgba(8, 51, 143, 0.08)',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    '&:hover': {
+                        transform: 'translateY(-3px)',
+                        boxShadow: '0px 10px 24px rgba(8, 51, 143, 0.16)'
+                    }
                 }}
             >
-                <CardContent sx={{ padding: '24px 24px 10px 24px' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', mb: 3 }}>
-                        <Avatar
-                            sx={{
-                                backgroundColor: '#EBD9B4',
-                                color: '#8A6D2B',
-                                width: 50,
-                                height: 50,
-                                fontSize: '24px',
-                                fontWeight: 'bold'
-                            }}
+                {/* Franja de color arriba (azul institucional → dorado) */}
+                <Box sx={{ height: '5px', background: 'linear-gradient(90deg, #08338F 0%, #244B91 60%, #D4B13E 100%)' }} />
+
+                {/* Encabezado: avatar, nombre y correo sobre fondo suave */}
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '14px',
+                        padding: '18px 22px',
+                        background: 'linear-gradient(180deg, #F4F7FD 0%, #FFFFFF 100%)',
+                        borderBottom: '1px solid #EEF1F7'
+                    }}
+                >
+                    <Avatar
+                        sx={{
+                            backgroundColor: '#EBD9B4',
+                            color: '#8A6D2B',
+                            width: 52,
+                            height: 52,
+                            fontSize: '24px',
+                            fontWeight: 'bold',
+                            border: '3px solid #FFFFFF',
+                            boxShadow: '0 0 0 2px #D9C48F'
+                        }}
+                    >
+                        {asesor.asesor ? asesor.asesor.charAt(0) : "A"}
+                    </Avatar>
+
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ fontSize: '16px', fontWeight: "700", color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere' }}>
+                            {asesor.asesor}
+                        </Typography>
+                        <Typography
+                            title={asesor.email}
+                            sx={{ fontSize: '13px', color: '#6A6A6A', mt: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                         >
-                            {asesor.asesor ? asesor.asesor.charAt(0) : "A"}
-                        </Avatar>
-
-                        <Box>
-                            <Typography sx={{ fontSize: '16px', fontWeight: "700", color: '#000000', lineHeight: 1.2 }}>
-                                {asesor.asesor}
-                            </Typography>
-                            <Typography sx={{ fontSize: '13px', color: '#6A6A6A' }}>
-                                {asesor.email}
-                            </Typography>
-                        </Box>
+                            {asesor.email}
+                        </Typography>
                     </Box>
+                </Box>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '6px', mb: '5px' }}>
-                        <LineaDato icono={<MenuBookOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Materias">{materias}</LineaDato>
+                {/* Datos: ocupan el espacio sobrante para que los botones queden siempre abajo */}
+                <CardContent sx={{ flex: 1, padding: '18px 22px 6px 22px', '&:last-child': { paddingBottom: '6px' } }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <LineaDato icono={<MenuBookOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Materias" lineas={3}>{materias}</LineaDato>
                         <LineaDato icono={<LaptopOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Modalidad">{asesor.modalidad || "N/A"}</LineaDato>
                     </Box>
                 </CardContent>
@@ -97,7 +137,7 @@ export default function TarjetaAsesor({ asesor, onSaveSolicitud, showToast, razo
                 {/* Botones: dos columnas iguales; Solicitar con relleno e Información solo con borde */}
                 <CardActions
                     sx={{
-                        padding: '0px 24px 20px 24px',
+                        padding: '14px 22px 20px 22px',
                         display: 'grid',
                         gridTemplateColumns: '1fr 1fr',
                         gap: '10px',
@@ -157,4 +197,4 @@ export default function TarjetaAsesor({ asesor, onSaveSolicitud, showToast, razo
             />
         </>
     );
-}
+}

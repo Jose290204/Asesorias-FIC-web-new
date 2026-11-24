@@ -1,3 +1,5 @@
+import CloseIcon from '@mui/icons-material/Close';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import {
     Box,
     Button,
@@ -5,8 +7,10 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
+    IconButton,
     MenuItem,
-    TextField
+    TextField,
+    Typography
 } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -24,16 +28,26 @@ const MENU_CON_SCROLL = {
     slotProps: { paper: { sx: { maxHeight: 240 } } }
 };
 
-// Campos de solo lectura: se ven sombreados en gris, no se enfocan, no muestran cursor de escritura ni se pueden seleccionar
-const CAMPO_BLOQUEADO_SX = {
-    pointerEvents: 'none',
-    '& .MuiInputBase-root': { backgroundColor: '#EEEEEE' },
-    '& .MuiInputBase-input': { cursor: 'default', caretColor: 'transparent', userSelect: 'none', color: '#757575', WebkitTextFillColor: '#757575' },
-    '& .MuiInputLabel-root': { color: '#9E9E9E' },
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E0E0E0' }
-};
+// Rótulo pequeño que agrupa campos
+function Seccion({ titulo }) {
+    return (
+        <Typography
+            sx={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: '#6A6A6A', mt: 0.5 }}
+        >
+            {titulo}
+        </Typography>
+    );
+}
 
-const SOLO_LECTURA = { input: { readOnly: true }, htmlInput: { tabIndex: -1 } };
+// Un dato fijo del resumen: etiqueta en gris y valor debajo
+function DatoFijo({ etiqueta, valor }) {
+    return (
+        <Box sx={{ minWidth: 0 }}>
+            <Typography variant="caption" sx={{ fontWeight: 'bold', color: '#6A6A6A' }}>{etiqueta}:</Typography>
+            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>{valor || 'N/A'}</Typography>
+        </Box>
+    );
+}
 
 // Modificar una solicitud pendiente: solo se puede cambiar la fecha, el horario y la nota.
 // onSave(id, cambios) regresa true si salió bien (el modal se cierra); la vista muestra el toast.
@@ -157,22 +171,68 @@ function ContenidoEditar({ onClose, solicitud, onSave, showToast }) {
                         width: '550px',
                         maxWidth: '90vw',
                         maxHeight: '90vh',
-                        borderRadius: '12px',
+                        borderRadius: '16px',
                         display: 'flex',
                         flexDirection: 'column',
                         p: 1.5
                     }
                 }}
             >
-                <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.2rem' }}>
-                    Modificar Solicitud
+                <DialogTitle sx={{ m: 0, p: 2, pr: 7, display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <Box
+                        sx={{
+                            width: 44,
+                            height: 44,
+                            flexShrink: 0,
+                            borderRadius: '12px',
+                            background: 'linear-gradient(135deg, #1E4DB7 0%, #08338F 100%)',
+                            color: '#FFFFFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <EditOutlinedIcon />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 'bold', fontSize: '1.2rem', lineHeight: 1.2 }}>
+                            Modificar Solicitud
+                        </Typography>
+                        <Typography sx={{ fontSize: '13px', color: '#6A6A6A', mt: '2px' }}>
+                            Solo puedes cambiar el horario, la fecha y la nota
+                        </Typography>
+                    </Box>
+                    <IconButton
+                        aria-label="close"
+                        onClick={onClose}
+                        sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
                 </DialogTitle>
 
                 <DialogContent dividers>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
-                        {/* Asesor, materia, modalidad y razón no se pueden cambiar */}
-                        <TextField label="Asesor" size="small" fullWidth value={solicitud.asesor} slotProps={SOLO_LECTURA} sx={CAMPO_BLOQUEADO_SX} />
-                        <TextField label="Materia" size="small" fullWidth value={solicitud.materia} slotProps={SOLO_LECTURA} sx={CAMPO_BLOQUEADO_SX} />
+                        {/* Asesor, materia, modalidad y razón no se pueden cambiar: van como resumen */}
+                        <Seccion titulo="Tu solicitud" />
+                        <Box
+                            sx={{
+                                display: 'grid',
+                                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                                gap: '12px 16px',
+                                p: '14px 16px',
+                                borderRadius: '12px',
+                                backgroundColor: '#F7F9FD',
+                                border: '1px solid #EEF1F7'
+                            }}
+                        >
+                            <DatoFijo etiqueta="Asesor" valor={solicitud.asesor} />
+                            <DatoFijo etiqueta="Materia" valor={solicitud.materia} />
+                            <DatoFijo etiqueta="Modalidad" valor={solicitud.modalidad} />
+                            <DatoFijo etiqueta="Razón de la asesoría" valor={solicitud.razon} />
+                        </Box>
+
+                        <Seccion titulo="Puedes modificar" />
 
                         {/* Horario: solo los del asesor */}
                         <TextField
@@ -191,7 +251,7 @@ function ContenidoEditar({ onClose, solicitud, onSave, showToast }) {
 
                         {/* Fecha: solo deja elegir el día de la semana del horario */}
                         <DatePicker
-                            label="Fecha"
+                            label="Fecha de inicio"
                             value={parsedDate}
                             onChange={handleCambiarFecha}
                             format="DD/MM/YYYY"
@@ -212,9 +272,6 @@ function ContenidoEditar({ onClose, solicitud, onSave, showToast }) {
                             }}
                         />
 
-                        <TextField label="Modalidad" size="small" fullWidth value={solicitud.modalidad} slotProps={SOLO_LECTURA} sx={CAMPO_BLOQUEADO_SX} />
-                        <TextField label="Razón de la asesoría" size="small" fullWidth value={solicitud.razon} slotProps={SOLO_LECTURA} sx={CAMPO_BLOQUEADO_SX} />
-
                         {/* Nota para el asesor (editable) */}
                         <TextField
                             label="Nota para el asesor (opcional)"
@@ -231,11 +288,25 @@ function ContenidoEditar({ onClose, solicitud, onSave, showToast }) {
                 </DialogContent>
 
                 <DialogActions sx={{ p: 2, pt: 1.5, justifyContent: 'flex-end', gap: 1 }}>
-                    <Button variant="outlined" color="inherit" onClick={onClose}>
+                    <Button variant="outlined" color="inherit" onClick={onClose} sx={{ borderRadius: '8px', textTransform: 'none' }}>
                         Cancelar
                     </Button>
-                    <Button variant="contained" color="primary" onClick={handleGuardar} disabled={!hasChanged || guardando}>
-                        Confirmar
+                    <Button
+                        variant="contained"
+                        onClick={handleGuardar}
+                        disabled={!hasChanged || guardando}
+                        sx={{
+                            borderRadius: '8px',
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            letterSpacing: '0.3px',
+                            background: 'linear-gradient(135deg, #1E4DB7 0%, #08338F 55%, #052466 100%)',
+                            boxShadow: '0 4px 12px rgba(8, 51, 143, 0.35)',
+                            '&:hover': { background: 'linear-gradient(135deg, #08338F 0%, #052466 100%)' },
+                            '&.Mui-disabled': { background: '#E0E0E0', boxShadow: 'none', color: 'rgba(0,0,0,0.26)' }
+                        }}
+                    >
+                        {guardando ? 'Guardando...' : 'Confirmar'}
                     </Button>
                 </DialogActions>
             </Dialog>
