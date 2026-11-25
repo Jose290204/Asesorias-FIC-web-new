@@ -44,3 +44,12 @@ export const campoConLupa = (params, label, placeholder) => {
         />
     );
 };
+
+// Tiempo mínimo (ms) que se muestra el spinner al buscar, para que no parpadee cuando la consulta es rápida
+export const TIEMPO_MINIMO_CARGA = 800;
+
+// Espera lo que falte para completar el tiempo mínimo, contado desde `inicio` (Date.now())
+export const esperarTiempoMinimo = (inicio, minimo = TIEMPO_MINIMO_CARGA) => {
+    const falta = minimo - (Date.now() - inicio);
+    return falta > 0 ? new Promise((resolve) => setTimeout(resolve, falta)) : Promise.resolve();
+};

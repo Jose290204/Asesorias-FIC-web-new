@@ -16,6 +16,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useState } from 'react';
 
 import ModalAceptarSolicitud from './modales/ModalAceptarSolicitud';
+import ModalInfoSolicitudPendiente from './modales/ModalInfoSolicitudPendiente';
 import ModalRechazarSolicitud from './modales/ModalRechazarSolicitud';
 import TarjetaSolicitudPendiente from './TarjetaSolicitudPendiente';
 import { ESTILO_FILA, ESTILO_FILA_ENCABEZADO, ESTILO_PAPER_TABLA, estiloAccion } from '../compartidos/estilosTabla';
@@ -29,6 +30,7 @@ export default function TablaSolicitudesPendientes({ solicitudes = [], onAceptar
 
     // Estados para Modales
     const [selectedSolicitud, setSelectedSolicitud] = useState(null);
+    const [modalInfoOpen, setModalInfoOpen] = useState(false);
     const [modalAceptarOpen, setModalAceptarOpen] = useState(false);
     const [modalRechazarOpen, setModalRechazarOpen] = useState(false);
 
@@ -39,6 +41,12 @@ export default function TablaSolicitudesPendientes({ solicitudes = [], onAceptar
     };
 
     // Handlers para Abrir Modales
+    const handleOpenInfo = (solicitud, event) => {
+        clearFocus(event);
+        setSelectedSolicitud(solicitud);
+        setModalInfoOpen(true);
+    };
+
     const handleOpenAceptar = (solicitud, event) => {
         clearFocus(event);
         setSelectedSolicitud(solicitud);
@@ -81,6 +89,7 @@ export default function TablaSolicitudesPendientes({ solicitudes = [], onAceptar
                         <TarjetaSolicitudPendiente
                             key={solicitud.id_solicitud}
                             solicitud={solicitud}
+                            onInfo={handleOpenInfo}
                             onAceptar={handleOpenAceptar}
                             onRechazar={handleOpenRechazar}
                         />
@@ -183,6 +192,12 @@ export default function TablaSolicitudesPendientes({ solicitudes = [], onAceptar
             )}
 
             {/* Modales */}
+            <ModalInfoSolicitudPendiente
+                open={modalInfoOpen}
+                onClose={() => setModalInfoOpen(false)}
+                solicitud={selectedSolicitud}
+            />
+
             <ModalAceptarSolicitud
                 open={modalAceptarOpen}
                 onClose={() => setModalAceptarOpen(false)}

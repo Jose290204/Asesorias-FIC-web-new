@@ -2,9 +2,11 @@ import AddIcon from '@mui/icons-material/Add';
 import { Button, CircularProgress, Fab } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import TituloVista from '../../../components/ui/TituloVista';
 import { ToastNotification } from '../../../components/ui/ToastNotification';
 import { useFacultadActiva } from '../../../context/FacultadActivaContext';
 import { mensajesDeError } from '../../../Services/errores';
+import { ESTILO_BOTON_CREAR } from '../../tutorias/rolAdministrador/components/compartidos/estilosAdmin';
 import ModalDesactivarFacultad from '../components/ModalDesactivarFacultad';
 import ModalFacultad from '../components/ModalFacultad';
 import TarjetaFacultad from '../components/TarjetaFacultad';
@@ -19,7 +21,7 @@ import {
 // Tarjeta pequeña del resumen de arriba
 function DatoResumen({ valor, etiqueta }) {
   return (
-    <div className="rounded-[5px] bg-white px-4 py-3 shadow-md">
+    <div className="rounded-[16px] border border-[#E3E8F2] bg-white px-4 py-3 shadow-[0_2px_10px_rgba(8,51,143,0.08)]">
       <p className="text-2xl font-bold text-[#08338F]">{valor}</p>
       <p className="text-sm text-gray-600">{etiqueta}</p>
     </div>
@@ -116,13 +118,15 @@ export default function Facultades() {
   return (
     <div className="mx-auto max-w-6xl p-4 sm:p-6">
       <div className="mb-5 flex flex-wrap items-center gap-3">
-        <h1 className="flex-1 text-2xl font-bold text-[#08338F]">Facultades</h1>
+        <div className="flex-1">
+          <TituloVista titulo="Facultades" subtitulo="Entra al panel de cada una o administra sus datos" />
+        </div>
         {/* Botón normal: solo tablet y escritorio */}
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => abrirModal()}
-          sx={{ textTransform: 'none', display: { xs: 'none', sm: 'inline-flex' } }}
+          sx={{ ...ESTILO_BOTON_CREAR, borderRadius: '8px', display: { xs: 'none', sm: 'inline-flex' } }}
         >
           Nueva facultad
         </Button>
@@ -134,14 +138,11 @@ export default function Facultades() {
         aria-label="Nueva facultad"
         onClick={() => abrirModal()}
         sx={{
+          ...ESTILO_BOTON_CREAR,
           position: 'fixed',
           right: 16,
           bottom: 16,
           zIndex: 10,
-          textTransform: 'none',
-          color: '#ffffff',
-          backgroundColor: '#08338F',
-          '&:hover': { backgroundColor: '#1B3A73' },
           display: { xs: 'inline-flex', sm: 'none' },
         }}
       >

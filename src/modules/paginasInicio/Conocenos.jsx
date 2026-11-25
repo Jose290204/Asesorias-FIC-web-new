@@ -15,6 +15,7 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LogoFic from "../../assets/fic_logo.png";
+import LogoFicFooter from "../../assets/fic_logo_footer.png";
 import LogoUas from "../../assets/logo_uas.png";
 
 import bienestar from '../../assets/dependencias/bienestar.png';
@@ -391,15 +392,13 @@ export default function Conocenos() {
               </div>
             </div>
 
-            {/* Logo de la facultad sobre una tarjeta blanca */}
+            {/* Logo de la facultad: la versión con contorno blanco fino se integra al fondo azul sin tarjeta */}
             <div className="lg:col-span-2 grid place-items-center">
-              <div className="rounded-3xl bg-white p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.35)] ring-4 ring-[#EBD9B4]/60">
-                <img
-                  src={LogoFic}
-                  alt="Facultad de Informática Culiacán, 34 aniversario"
-                  className="h-52 sm:h-72 w-auto object-contain"
-                />
-              </div>
+              <img
+                src={LogoFicFooter}
+                alt="Facultad de Informática Culiacán, 34 aniversario"
+                className="h-60 sm:h-80 w-auto object-contain drop-shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
+              />
             </div>
           </div>
         </section>

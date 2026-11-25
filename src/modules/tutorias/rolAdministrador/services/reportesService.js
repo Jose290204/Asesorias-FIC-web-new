@@ -71,7 +71,9 @@ const adaptarResumenAgrupado = (tipo) => (item) => ({
 
 // Adapta una asesoría del reporte a la forma que usa la UI
 const adaptarAsesoria = (item) => {
-    const licenciaturaCorta = quitarLicenciatura(item.licenciatura);
+    // La licenciatura que se muestra junto al grupo es la del GRUPO del estudiante, no la de la materia
+    // (un estudiante puede pedir asesoría de una materia de otra licenciatura)
+    const licenciaturaCorta = quitarLicenciatura(item.grupo_licenciatura);
     const fin = item.fecha_fin ?? null;
 
     return {

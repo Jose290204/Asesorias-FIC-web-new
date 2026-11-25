@@ -1,7 +1,7 @@
 import { ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LogoBienestar from '../assets/dependencias/bienestar.png';
-import LogoFicFooter from '../assets/fic_logo.png';
+import LogoFicFooter from '../assets/fic_logo_footer.png';
 import fondoInicio from '../assets/fondo_inicio.jpeg';
 import LogoAsesorias from '../assets/logo_asesorias.png';
 import LogoUas from '../assets/logo_uas.png';
@@ -59,24 +59,22 @@ export default function LayoutPublico({ children, mostrarFooter = true }) {
         <footer className="bg-[linear-gradient(180deg,#244B91_0%,#162f66_100%)] text-white rounded-t-[30px] border-t-[3px] border-[#D4A017] shadow-[0_-6px_24px_rgba(0,0,0,0.15)] px-6 sm:px-16 py-8 w-full mt-auto">
           <div className="max-w-[1200px] mx-auto">
 
-            {/* Contenedor de Logos */}
-            <div className="flex justify-center items-center gap-6 sm:gap-12 mb-8 pb-8 border-b border-white/15">
-              <img
-                src={LogoBienestar}
-                alt="Logo Bienestar"
-                className="w-[50px] h-[50px] sm:w-[70px] sm:h-[70px] object-contain"
-              />
-              {/* Logo del 34 aniversario: lleva texto oscuro, por eso va sobre un fondo blanco */}
-              <img
-                src={LogoFicFooter}
-                alt="Logo FIC 34 aniversario"
-                className="h-[64px] w-auto sm:h-[84px] rounded-xl bg-white p-1.5 object-contain shadow-[0_0_14px_rgba(212,176,60,0.4)]"
-              />
-              <img
-                src={LogoAsesorias}
-                alt="Logo Asesorías FIC"
-                className="w-[50px] h-[50px] sm:w-[70px] sm:h-[70px] rounded-full bg-white p-0.5 object-contain shadow-[0_0_14px_rgba(212,176,60,0.4)]"
-              />
+            {/* Contenedor de Logos: los tres van en una caja cuadrada del mismo tamaño, así quedan parejos y con el mismo espacio */}
+            <div className="flex justify-center items-center gap-8 sm:gap-14 mb-8 pb-8 border-b border-white/15">
+              <div className="flex h-[60px] w-[60px] sm:h-[76px] sm:w-[76px] items-center justify-center">
+                <img src={LogoBienestar} alt="Logo Bienestar" className="h-full w-full object-contain" />
+              </div>
+              {/* Logo del 34 aniversario: la imagen ya trae un contorno blanco fino (lleva texto oscuro), así se integra sin caja */}
+              <div className="flex h-[60px] w-[60px] sm:h-[76px] sm:w-[76px] items-center justify-center">
+                <img src={LogoFicFooter} alt="Logo FIC 34 aniversario" className="h-full w-full object-contain" />
+              </div>
+              <div className="flex h-[60px] w-[60px] sm:h-[76px] sm:w-[76px] items-center justify-center">
+                <img
+                  src={LogoAsesorias}
+                  alt="Logo Asesorías FIC"
+                  className="h-full w-full rounded-full bg-white p-0.5 object-contain shadow-[0_0_14px_rgba(212,176,60,0.4)]"
+                />
+              </div>
             </div>
 
             {/* Contenedor de Textos */}

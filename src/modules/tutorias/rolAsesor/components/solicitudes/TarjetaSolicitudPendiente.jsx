@@ -4,6 +4,7 @@ import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 import CloseOutlinedIcon from '@mui/icons-material/CloseOutlined';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import LaptopOutlinedIcon from '@mui/icons-material/LaptopOutlined';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import Box from '@mui/material/Box';
@@ -11,6 +12,8 @@ import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 // Línea con ícono, etiqueta en negritas y valor (Estudiante:, Razón:, Fecha...). Si no hay valor, no se muestra.
@@ -29,8 +32,9 @@ function LineaDato({ icono, etiqueta, children }) {
 }
 
 // Tarjeta de una solicitud pendiente para la vista móvil: lo necesario para decidir
-// (estudiante, razón, fecha de inicio, horario y modalidad). Recibe la solicitud y qué hacer al aceptarla o rechazarla.
-export default function TarjetaSolicitudPendiente({ solicitud, onAceptar, onRechazar }) {
+// (estudiante, razón, fecha de inicio, horario y modalidad). El botón de información abre el detalle con la nota del estudiante.
+// Recibe la solicitud y qué hacer al ver su información, aceptarla o rechazarla.
+export default function TarjetaSolicitudPendiente({ solicitud, onInfo, onAceptar, onRechazar }) {
     return (
         <Card
             sx={{
@@ -62,12 +66,27 @@ export default function TarjetaSolicitudPendiente({ solicitud, onAceptar, onRech
                     borderBottom: '1px solid #EEF1F7'
                 }}
             >
-                <Typography
-                    title={solicitud.materia}
-                    sx={{ fontSize: '18px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', minWidth: 0 }}
-                >
-                    {solicitud.materia}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                    <Typography
+                        title={solicitud.materia}
+                        sx={{ fontSize: '18px', fontWeight: '700', color: '#000000', lineHeight: 1.2, overflowWrap: 'anywhere', minWidth: 0, pt: '2px' }}
+                    >
+                        {solicitud.materia}
+                    </Typography>
+
+                    {onInfo && (
+                        <Tooltip title="Información">
+                            <IconButton
+                                size="small"
+                                aria-label="Ver información"
+                                onClick={(e) => onInfo(solicitud, e)}
+                                sx={{ flexShrink: 0, mr: '-8px', mt: '-4px', color: '#08338F' }}
+                            >
+                                <InfoOutlinedIcon />
+                            </IconButton>
+                        </Tooltip>
+                    )}
+                </Box>
 
                 <Box
                     sx={{
