@@ -21,6 +21,7 @@ import {
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import { useEffect, useState } from 'react';
 
@@ -194,7 +195,9 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
         Boolean(opcionElegida) &&
         Boolean(formData.modalidad) &&
         Boolean(formData.razon) &&
-        Boolean(formData.fecha?.isValid());
+        Boolean(formData.fecha?.isValid()) &&
+        // Aunque se escriba a mano, la fecha de inicio no puede ser anterior a hoy
+        !formData.fecha.isBefore(dayjs(), 'day');
 
     const handleCrear = async () => {
         if (!formularioCompleto || guardando) return;

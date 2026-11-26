@@ -4,6 +4,7 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import { Avatar, Chip } from '@mui/material';
 import { useEffect, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 import TituloVista from '../../../../components/ui/TituloVista';
 import { useAuth } from '../../../../context/AuthContext';
 import { traerPerfilAsesor } from '../../../../Services/perfilAsesorService';
@@ -33,6 +34,12 @@ export default function PerfilAsesor() {
             })
             .finally(() => setLoading(false));
     }, []);
+
+    // Los contadores se actualizan solos (en silencio: si falla, se queda con lo que ya tenía)
+    useRefrescoPorAvisos(() => {
+        if (USAR_DATOS_PRUEBA) return;
+        traerPerfilAsesor().then(setPerfil).catch(() => {});
+    });
 
     if (loading) {
         return (

@@ -44,9 +44,16 @@ export default function FormularioLogin() {
     if (!data) return 'No se pudo conectar con el servidor';
     // Errores del servidor (5xx): no se muestra el detalle técnico al usuario
     if (error.response.status >= 500) return 'Error del servidor. Intenta de nuevo en un momento';
+    // 429: demasiados intentos. El mensaje del servidor viene en inglés, así que se arma aquí
+    if (error.response.status === 429) {
+      const segundos = Number(error.response.headers?.['retry-after']);
+      return segundos > 0
+        ? `Demasiados intentos. Espera ${segundos} segundos e intenta de nuevo`
+        : 'Demasiados intentos. Espera un momento e intenta de nuevo';
+    }
     // 422: un mensaje por campo (el de credenciales viene en español)
     if (data.errors) return Object.values(data.errors).flat().join(' ');
-    // 403 (cuenta inactiva), 429 (demasiados intentos)...: ya vienen en español
+    // 403 (cuenta inactiva)...: ya vienen en español
     return data.message ?? 'Ocurrió un error inesperado';
   };
 
@@ -54,7 +61,7 @@ export default function FormularioLogin() {
     e.preventDefault();
 
     if (!correo || !password) {
-      showToast('Por favor rellene los campos', 'error');
+      showToast('Escribe tu correo y tu contraseña para ingresar', 'error');
       return;
     }
 

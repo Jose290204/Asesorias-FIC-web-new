@@ -1,6 +1,7 @@
 import AddIcon from '@mui/icons-material/Add';
 import { Button, CircularProgress, Fab } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
+import useRefrescoPorAvisos from '../../../hooks/useRefrescoPorAvisos';
 import { useNavigate } from 'react-router-dom';
 import TituloVista from '../../../components/ui/TituloVista';
 import { ToastNotification } from '../../../components/ui/ToastNotification';
@@ -8,12 +9,14 @@ import { useFacultadActiva } from '../../../context/FacultadActivaContext';
 import { mensajesDeError } from '../../../Services/errores';
 import { ESTILO_BOTON_CREAR } from '../../tutorias/rolAdministrador/components/compartidos/estilosAdmin';
 import ModalDesactivarFacultad from '../components/ModalDesactivarFacultad';
+import ModalEliminarFacultad from '../components/ModalEliminarFacultad';
 import ModalFacultad from '../components/ModalFacultad';
 import TarjetaFacultad from '../components/TarjetaFacultad';
 import {
   cambiarEstadoFacultad,
   crearFacultad,
   editarFacultad,
+  eliminarFacultad,
   listarFacultades,
 } from '../services/facultadesService';
 
@@ -42,16 +45,19 @@ export default function Facultades() {
 
   // Facultad que se está por desactivar (null = modal cerrado)
   const [porDesactivar, setPorDesactivar] = useState(null);
+  // Facultad que se está por eliminar (null = modal cerrado)
+  const [porEliminar, setPorEliminar] = useState(null);
 
   const [toast, setToast] = useState({ open: false, message: '', type: 'success' });
   const avisar = (message, type = 'success') => setToast({ open: true, message, type });
 
-  const cargar = useCallback(async () => {
+  // silencioso = recarga sin mostrar error (la usa el refresco automático)
+  const cargar = useCallback(async ({ silencioso = false } = {}) => {
     try {
       setFacultades(await listarFacultades());
       setError(false);
     } catch {
-      setError(true);
+      if (!silencioso) setError(true);
     } finally {
       setCargando(false);
     }
@@ -60,6 +66,8 @@ export default function Facultades() {
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  useRefrescoPorAvisos(() => cargar({ silencioso: true }));
 
   // Totales de todo el sistema, calculados con las facultades que ya cargamos
   const resumen = {
@@ -103,6 +111,19 @@ export default function Facultades() {
       await cargar();
     } catch (e) {
       avisar(mensajesDeError(e)[0] ?? 'No se pudo cambiar el estado.', 'error');
+    }
+  };
+
+  const eliminar = async (facultad) => {
+    try {
+      await eliminarFacultad(facultad.id);
+      // Si era la facultad en la que estaba trabajando, se sale de ese contexto
+      if (facultadActiva?.id === facultad.id) salir();
+      avisar('Facultad eliminada.');
+      await cargar();
+    } catch (e) {
+      // Si tiene usuarios o asesorías, el backend explica el motivo
+      avisar(mensajesDeError(e)[0] ?? 'No se pudo eliminar la facultad.', 'error');
     }
   };
 
@@ -183,6 +204,7 @@ export default function Facultades() {
               onEntrar={handleEntrar}
               onEditar={abrirModal}
               onCambiarEstado={handleCambiarEstado}
+              onEliminar={setPorEliminar}
             />
           ))}
         </div>
@@ -203,6 +225,13 @@ export default function Facultades() {
         data={porDesactivar}
         onClose={() => setPorDesactivar(null)}
         onConfirm={cambiarEstado}
+      />
+
+      <ModalEliminarFacultad
+        open={Boolean(porEliminar)}
+        data={porEliminar}
+        onClose={() => setPorEliminar(null)}
+        onConfirm={eliminar}
       />
 
       <ToastNotification

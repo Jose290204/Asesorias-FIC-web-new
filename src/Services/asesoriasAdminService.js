@@ -127,3 +127,19 @@ export const traerDisponibilidadDeAsesor = async (asesorId) => {
   const { data } = await api.get(`/admin/asesores/${asesorId}/disponibilidad`);
   return data.data;
 };
+
+// POST /admin/sesiones/{id}/evidencias como multipart ("archivos[]"). Responde 201 con las evidencias creadas.
+export const subirEvidenciasAdmin = async (sesionId, archivos) => {
+  const formulario = new FormData();
+  archivos.forEach((archivo) => formulario.append('archivos[]', archivo));
+
+  const { data } = await api.post(`/admin/sesiones/${sesionId}/evidencias`, formulario, {
+    headers: { 'Content-Type': undefined },
+  });
+  return data.data;
+};
+
+// DELETE /admin/evidencias/{id}. El admin puede borrar cualquiera. Responde 204 sin cuerpo.
+export const eliminarEvidenciaAdmin = async (evidenciaId) => {
+  await api.delete(`/admin/evidencias/${evidenciaId}`);
+};

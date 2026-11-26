@@ -18,6 +18,7 @@ import { Badge, ButtonBase, CircularProgress, IconButton, Popover, Tooltip, useM
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { EVENTO_AVISOS } from '../../../hooks/useRefrescoPorAvisos';
 import { tiempoRelativo } from '../../../Services/formatoFechas';
 import {
   borrarNotificacion,
@@ -109,7 +110,10 @@ function Campana({ color }) {
 
           const huella = `${resumen.noLeidas}|${resumen.ultima}|${resumen.ultimaEn}`;
           if (huella === huellaRef.current) return undefined;
+          const habiaAntes = huellaRef.current !== '';
           huellaRef.current = huella;
+          // Avisa a las vistas abiertas para que se recarguen solas (no en la primera consulta)
+          if (habiaAntes) window.dispatchEvent(new Event(EVENTO_AVISOS));
 
           return traerNotificaciones(1).then((r) => vigente && aplicarPrimera(r));
         })

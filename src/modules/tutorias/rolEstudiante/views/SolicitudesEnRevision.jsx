@@ -1,5 +1,6 @@
 import { CircularProgress, MenuItem, Pagination, TextField, Typography } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
+import useRefrescoPorAvisos from "../../../../hooks/useRefrescoPorAvisos";
 import ToastNotification from "../../../../components/ui/ToastNotification";
 import { mensajesDeError } from "../../../../Services/errores";
 import { conTiempoMinimo, MINIMO_CARGA_MS } from '../../../../utils/tiempoMinimo';
@@ -71,6 +72,9 @@ export default function SolicitudesEnRevision() {
     useEffect(() => {
         cargarSolicitudes();
     }, [cargarSolicitudes]);
+
+    // Si llega un aviso nuevo (o se vuelve a la app), la lista se actualiza sola
+    useRefrescoPorAvisos(() => cargarSolicitudes({ silencioso: true }));
 
     // Al cambiar de filtro se vuelve a la primera página
     const handleCambiarFiltro = (e) => {

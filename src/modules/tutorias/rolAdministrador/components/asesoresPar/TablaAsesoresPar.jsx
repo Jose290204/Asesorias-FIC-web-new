@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import TablaAsesores from '../asesores/TablaAsesores';
+import ModalDisponibilidadAsesor from '../asesores/ModalDisponibilidadAsesor';
 import ModalInfoAsesorPar from './modales/ModalInfoAsesorPar';
 import ModalQuitarAsesorPar from './modales/ModalQuitarAsesorPar';
 
@@ -15,6 +16,7 @@ export default function TablaAsesoresPar({ rows = [], onQuitar, onGuardarDisponi
     const [seleccionadoId, setSeleccionadoId] = useState(null);
     const [modalInfoOpen, setModalInfoOpen] = useState(false);
     const [modalQuitarOpen, setModalQuitarOpen] = useState(false);
+    const [modalDisponibilidadOpen, setModalDisponibilidadOpen] = useState(false);
 
     const seleccionado = rows.find((r) => r.id === seleccionadoId) ?? null;
 
@@ -29,8 +31,17 @@ export default function TablaAsesoresPar({ rows = [], onQuitar, onGuardarDisponi
                 rows={rows}
                 onInfo={abrir(setModalInfoOpen)}
                 onBaja={abrir(setModalQuitarOpen)}
+                onDisponibilidad={abrir(setModalDisponibilidadOpen)}
                 textoBaja="Quitar rol"
                 textoVacio="No se encontraron asesores par"
+            />
+
+            {/* Disponibilidad: se abre directo desde el botón de la fila */}
+            <ModalDisponibilidadAsesor
+                open={modalDisponibilidadOpen}
+                onClose={() => setModalDisponibilidadOpen(false)}
+                asesor={seleccionado}
+                onGuardar={(cuerpo) => onGuardarDisponibilidad?.(seleccionado, cuerpo)}
             />
 
             <ModalInfoAsesorPar

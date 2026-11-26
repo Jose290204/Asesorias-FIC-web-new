@@ -4,6 +4,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Fab from '@mui/material/Fab';
 import Pagination from '@mui/material/Pagination';
 import { useCallback, useEffect, useState } from "react";
+import useRefrescoPorAvisos from "../../../../hooks/useRefrescoPorAvisos";
 import InputBuscar from "../../../../components/ui/InputBuscar";
 import ToastNotification from "../../../../components/ui/ToastNotification";
 import TituloVista from "../../../../components/ui/TituloVista";
@@ -132,6 +133,9 @@ export default function AsesoriasEnCurso() {
         }, 20000);
         return () => clearInterval(intervalo);
     }, [cargarAsesorias]);
+
+    // También al llegar un aviso nuevo o al volver a la app
+    useRefrescoPorAvisos(() => cargarAsesorias({ silencioso: true }));
 
     const clearFocus = (event) => {
         if (event?.currentTarget) event.currentTarget.blur();

@@ -21,6 +21,11 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
+      // Logos y archivos públicos (storage:link). Así también cargan por el túnel en el celular
+      '/storage': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
     },
   },
 })

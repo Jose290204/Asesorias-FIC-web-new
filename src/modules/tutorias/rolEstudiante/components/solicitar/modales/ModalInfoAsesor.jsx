@@ -106,7 +106,7 @@ export default function ModalInfoAsesor({ open, onClose, asesor }) {
                         )}
                     </Seccion>
 
-                    <Seccion icono={<AccessTimeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Horarios">
+                    <Seccion icono={<AccessTimeOutlinedIcon sx={{ fontSize: 20 }} />} etiqueta="Horarios disponibles">
                         <Etiquetas items={horariosAsesor} />
                     </Seccion>
 

@@ -40,17 +40,21 @@ export default function BotonExportar({ onExportar, disabled = false, exportando
                 {exportando ? 'Exportando...' : 'Exportar'}
             </Button>
 
+            {/* El menú mide al menos lo mismo que el botón (en celular el botón ocupa todo el ancho) */}
             <Menu
+                disableScrollLock
                 anchorEl={ancla}
                 open={Boolean(ancla)}
                 onClose={() => setAncla(null)}
-                slotProps={{ paper: { sx: { mt: 0.5, borderRadius: '12px', border: '1px solid #E3E8F2', minWidth: 160 } } }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                slotProps={{ paper: { sx: { mt: 0.5, borderRadius: '12px', border: '1px solid #E3E8F2', minWidth: Math.max(ancla?.offsetWidth ?? 0, 160) } } }}
             >
-                <MenuItem onClick={() => elegir('excel')}>
+                <MenuItem onClick={() => elegir('excel')} sx={{ minHeight: 44 }}>
                     <ListItemIcon><TableChartOutlinedIcon fontSize="small" sx={{ color: '#1D7A46' }} /></ListItemIcon>
                     Excel
                 </MenuItem>
-                <MenuItem onClick={() => elegir('pdf')}>
+                <MenuItem onClick={() => elegir('pdf')} sx={{ minHeight: 44 }}>
                     <ListItemIcon><PictureAsPdfOutlinedIcon fontSize="small" sx={{ color: '#C62828' }} /></ListItemIcon>
                     PDF
                 </MenuItem>

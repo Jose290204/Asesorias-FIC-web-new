@@ -40,7 +40,7 @@ export default function BarraContexto() {
   return (
     <div className="sticky top-0 z-10 hidden items-center gap-3 bg-[linear-gradient(90deg,#dcc152_0%,#D2B23D_50%,#c4a22f_100%)] shadow-[0_4px_18px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.35)] border-b border-[#a98a1f]/40 px-6 py-2 lg:flex">
       <img
-        src={enPanelPrincipal ? LogoUas : LogoFic}
+        src={enPanelPrincipal ? LogoUas : (facultad?.logo ?? LogoFic)}
         alt={enPanelPrincipal ? 'Logo de la UAS' : 'Logo de la facultad'}
         className="h-10 w-auto object-contain drop-shadow-[0_1px_3px_rgba(0,0,0,0.25)]"
       />

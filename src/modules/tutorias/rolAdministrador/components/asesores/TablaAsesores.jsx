@@ -1,5 +1,6 @@
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
@@ -45,6 +46,7 @@ const estiloAccion = (color, fondo) => ({
  * Props:
  *  - rows: la página actual que entregó la API (la búsqueda y la paginación las maneja la vista)
  *  - onInfo(row, event), onBaja(row, event); onEditar(row, event) es opcional (los pares no se editan aquí)
+ *  - onDisponibilidad(row, event): opcional; abre directo la disponibilidad del asesor
  *  - textoBaja: 'Dar de baja' (disciplinares) o 'Quitar rol' (pares)
  *  - textoVacio: lo que se muestra si no hay filas
  */
@@ -53,6 +55,7 @@ export default function TablaAsesores({
     onInfo,
     onEditar,
     onBaja,
+    onDisponibilidad,
     textoBaja = 'Dar de baja',
     textoVacio = 'No se encontraron asesores'
 }) {
@@ -73,6 +76,7 @@ export default function TablaAsesores({
     const handleInfo = conFoco(onInfo);
     const handleEditar = onEditar ? conFoco(onEditar) : undefined;
     const handleBaja = conFoco(onBaja);
+    const handleDisponibilidad = onDisponibilidad ? conFoco(onDisponibilidad) : undefined;
 
     if (esMovil) {
         /* ---------- Vista móvil: tarjetas ---------- */
@@ -89,6 +93,7 @@ export default function TablaAsesores({
                                 onInfo={handleInfo}
                                 onEditar={handleEditar}
                                 onBaja={handleBaja}
+                                onDisponibilidad={handleDisponibilidad}
                                 textoBaja={textoBaja}
                             />
                         ))}
@@ -119,7 +124,7 @@ export default function TablaAsesores({
                             <TableCell align="center">Número de Cuenta</TableCell>
                             <TableCell align="center">Teléfono</TableCell>
                             <TableCell align="center">Disponibilidad</TableCell>
-                            <TableCell sx={{ width: '120px' }} align="center">Acciones</TableCell>
+                            <TableCell sx={{ width: '160px' }} align="center">Acciones</TableCell>
                         </TableRow>
                     </TableHead>
 
@@ -180,6 +185,18 @@ export default function TablaAsesores({
                                                     <InfoOutlinedIcon fontSize="small" />
                                                 </IconButton>
                                             </Tooltip>
+
+                                            {handleDisponibilidad && (
+                                                <Tooltip title="Disponibilidad">
+                                                    <IconButton
+                                                        size="small"
+                                                        sx={estiloAccion('#2E7D32', 'rgba(46, 125, 50, 0.10)')}
+                                                        onClick={(e) => handleDisponibilidad(row, e)}
+                                                    >
+                                                        <EventAvailableOutlinedIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
 
                                             {handleEditar && (
                                                 <Tooltip title="Editar">

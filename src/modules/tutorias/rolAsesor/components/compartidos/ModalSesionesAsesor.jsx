@@ -27,8 +27,16 @@ import { useEffect, useState } from 'react';
 
 import { useCatalogos } from '../../../../../context/CatalogosContext';
 import { mensajesDeError } from '../../../../../Services/errores';
+import {
+    descargarEvidencia,
+    eliminarEvidencia as eliminarEvidenciaAsesor,
+    subirEvidencias as subirEvidenciasAsesor,
+    validarEvidencias
+} from '../../../../../Services/evidenciasSesionService';
 import { eliminarSesion, registrarSesion, traerSesiones } from '../../../../../Services/sesionesAsesorService';
 import CampoSelect from './CampoSelect';
+import ListaEvidencias from './ListaEvidencias';
+import SelectorEvidencias from './SelectorEvidencias';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
 const FORMULARIO_INICIAL = { fecha: null, horarioId: '', tema: '', notas: '' };
@@ -63,11 +71,13 @@ const ETIQUETA_SECCION = {
 // data es la asesoría (usa data.id y data.fecha_inicio).
 // soloLectura: sin registrar ni eliminar (la API solo lo permite con la asesoría en curso).
 // onCambio: avisa a la vista que cambió el conteo de sesiones, para que recargue la lista.
-// acciones: { registrar, eliminar } para usar otras rutas (el administrador usa /admin/...);
+// acciones: { registrar, eliminar, subirEvidencias, eliminarEvidencia } para usar otras rutas (el administrador usa /admin/...);
 // por defecto son las del asesor. Listar siempre usa la ruta compartida.
 export default function ModalSesionesAsesor({ open, onClose, data, soloLectura = false, showToast, onCambio, acciones }) {
     const registrar = acciones?.registrar ?? registrarSesion;
     const eliminar = acciones?.eliminar ?? eliminarSesion;
+    const subirEv = acciones?.subirEvidencias ?? subirEvidenciasAsesor;
+    const eliminarEv = acciones?.eliminarEvidencia ?? eliminarEvidenciaAsesor;
     const esCelular = useMediaQuery('(max-width:599.95px)');
     const { catalogos } = useCatalogos();
     const horarios = catalogos?.horarios ?? [];
@@ -80,6 +90,12 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
     const [guardando, setGuardando] = useState(false);
     const [sesionAEliminar, setSesionAEliminar] = useState(null);
     const [eliminando, setEliminando] = useState(false);
+    // Evidencias elegidas para la sesión que se está por registrar (todavía no se suben)
+    const [archivosNuevos, setArchivosNuevos] = useState([]);
+    // Id de la sesión a la que se le están subiendo evidencias (null = ninguna)
+    const [subiendoEvidenciaDe, setSubiendoEvidenciaDe] = useState(null);
+    const [evidenciaAEliminar, setEvidenciaAEliminar] = useState(null);
+    const [eliminandoEvidencia, setEliminandoEvidencia] = useState(false);
 
     const asesoriaId = data?.id;
     const cargando = Boolean(open && asesoriaId && cargadoDe !== asesoriaId);
@@ -135,10 +151,27 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
                 tema: formulario.tema.trim(),
                 notas: formulario.notas.trim(),
             });
+            // La sesión ya existe. Si se eligieron evidencias, se suben aparte: si fallan, la sesión se conserva
+            // y las evidencias se pueden agregar después desde la propia sesión.
+            let evidencias = [];
+            let errorEvidencias = null;
+            if (archivosNuevos.length > 0) {
+                try {
+                    evidencias = await subirEv(nueva.id, archivosNuevos);
+                } catch (error) {
+                    errorEvidencias = mensajesDeError(error)[0];
+                }
+            }
+
             // La API ordena por fecha descendente: se reacomoda la lista igual
-            setSesiones((prev) => [nueva, ...prev].sort((a, b) => (b.fecha === a.fecha ? b.id - a.id : b.fecha.localeCompare(a.fecha))));
+            setSesiones((prev) => [{ ...nueva, evidencias }, ...prev].sort((a, b) => (b.fecha === a.fecha ? b.id - a.id : b.fecha.localeCompare(a.fecha))));
             setFormulario(FORMULARIO_INICIAL);
-            showToast?.('Sesión registrada correctamente', 'success');
+            setArchivosNuevos([]);
+            if (errorEvidencias) {
+                showToast?.(`Sesión registrada, pero no se subieron las evidencias: ${errorEvidencias} Puedes agregarlas desde la sesión.`, 'error');
+            } else {
+                showToast?.('Sesión registrada correctamente', 'success');
+            }
             onCambio?.();
         } catch (error) {
             // Aquí caen, por ejemplo, 409 sesion_duplicada y 422 fecha_anterior_al_inicio
@@ -165,8 +198,74 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
         }
     };
 
+    // Elegir evidencias para la sesión que se va a registrar
+    const handleElegirEvidencias = (event) => {
+        const elegidos = Array.from(event.target.files);
+        event.target.value = null;
+        if (elegidos.length === 0) return;
+
+        const todos = [...archivosNuevos, ...elegidos];
+        const problema = validarEvidencias(todos);
+        if (problema) {
+            showToast?.(problema, 'error');
+            return;
+        }
+        setArchivosNuevos(todos);
+    };
+
+    const quitarArchivoNuevo = (indice) => setArchivosNuevos((prev) => prev.filter((_, i) => i !== indice));
+
+    // Agregar evidencias a una sesión que ya existe
+    const handleAgregarEvidencias = async (sesion, event) => {
+        const elegidos = Array.from(event.target.files);
+        event.target.value = null;
+        if (elegidos.length === 0) return;
+
+        const problema = validarEvidencias(elegidos);
+        if (problema) {
+            showToast?.(problema, 'error');
+            return;
+        }
+
+        setSubiendoEvidenciaDe(sesion.id);
+        try {
+            const creadas = await subirEv(sesion.id, elegidos);
+            setSesiones((prev) => prev.map((s) => (s.id === sesion.id ? { ...s, evidencias: [...(s.evidencias ?? []), ...creadas] } : s)));
+            showToast?.(creadas.length === 1 ? 'Evidencia subida correctamente' : 'Evidencias subidas correctamente', 'success');
+        } catch (error) {
+            showToast?.(mensajesDeError(error)[0], 'error');
+        } finally {
+            setSubiendoEvidenciaDe(null);
+        }
+    };
+
+    const handleDescargarEvidencia = async (evidencia) => {
+        try {
+            await descargarEvidencia(evidencia.id, evidencia.nombre);
+        } catch (error) {
+            showToast?.(mensajesDeError(error)[0], 'error');
+        }
+    };
+
+    const handleConfirmarEliminarEvidencia = async () => {
+        if (!evidenciaAEliminar) return;
+
+        setEliminandoEvidencia(true);
+        try {
+            await eliminarEv(evidenciaAEliminar.id);
+            setSesiones((prev) => prev.map((s) => ({ ...s, evidencias: (s.evidencias ?? []).filter((e) => e.id !== evidenciaAEliminar.id) })));
+            setEvidenciaAEliminar(null);
+            showToast?.('Evidencia eliminada correctamente', 'success');
+        } catch (error) {
+            showToast?.(mensajesDeError(error)[0], 'error');
+        } finally {
+            setEliminandoEvidencia(false);
+        }
+    };
+
     const cerrar = () => {
         setFormulario(FORMULARIO_INICIAL);
+        setArchivosNuevos([]);
         setCalendarioOpen(false);
         onClose?.();
     };
@@ -316,6 +415,23 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
                                     slotProps={{ htmlInput: { maxLength: 2000 } }}
                                 />
 
+                                {/* Evidencias de la sesión (opcional): se suben al registrarla */}
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                    <Typography sx={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Evidencias</Typography>
+                                    <SelectorEvidencias onElegir={handleElegirEvidencias} esCelular={esCelular} deshabilitado={inicioFuturo || guardando} />
+                                    {archivosNuevos.map((archivo, indice) => (
+                                        <Box
+                                            key={`${archivo.name}-${indice}`}
+                                            sx={{ display: 'flex', alignItems: 'center', gap: '6px', pl: '10px', borderRadius: '8px', backgroundColor: '#FFFFFF', border: '1px solid #E3E8F2' }}
+                                        >
+                                            <Typography noWrap title={archivo.name} sx={{ flex: 1, minWidth: 0, fontSize: '13px' }}>{archivo.name}</Typography>
+                                            <IconButton size="small" aria-label={`Quitar ${archivo.name}`} disabled={guardando} onClick={() => quitarArchivoNuevo(indice)}>
+                                                <CloseIcon fontSize="small" />
+                                            </IconButton>
+                                        </Box>
+                                    ))}
+                                </Box>
+
                                 <Button
                                     variant="contained"
                                     onClick={handleRegistrar}
@@ -400,6 +516,23 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
                                                 {sesion.notas}
                                             </Typography>
                                         )}
+
+                                        <ListaEvidencias
+                                            evidencias={sesion.evidencias}
+                                            onDescargar={handleDescargarEvidencia}
+                                            onEliminar={soloLectura ? undefined : setEvidenciaAEliminar}
+                                        />
+
+                                        {!soloLectura && (
+                                            <Box sx={{ mt: 1 }}>
+                                                <SelectorEvidencias
+                                                    onElegir={(event) => handleAgregarEvidencias(sesion, event)}
+                                                    esCelular={esCelular}
+                                                    deshabilitado={subiendoEvidenciaDe === sesion.id}
+                                                    texto={subiendoEvidenciaDe === sesion.id ? 'Subiendo...' : 'Agregar evidencia'}
+                                                />
+                                            </Box>
+                                        )}
                                     </Box>
                                     {!soloLectura && (
                                         <Tooltip title="Eliminar sesión">
@@ -472,6 +605,58 @@ export default function ModalSesionesAsesor({ open, onClose, data, soloLectura =
                         color="error"
                         onClick={handleConfirmarEliminacion}
                         disabled={eliminando}
+                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 700 }}
+                    >
+                        Eliminar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Confirmar eliminación de una evidencia */}
+            <Dialog
+                open={Boolean(evidenciaAEliminar)}
+                onClose={() => setEvidenciaAEliminar(null)}
+                sx={{ '& .MuiPaper-root': { width: '420px', maxWidth: '90vw', borderRadius: '16px', p: 1.5 } }}
+            >
+                <DialogTitle sx={{ m: 0, p: 2, display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <Box
+                        sx={{
+                            width: 44,
+                            height: 44,
+                            flexShrink: 0,
+                            borderRadius: '12px',
+                            background: 'linear-gradient(135deg, #E04848 0%, #C42525 100%)',
+                            color: '#FFFFFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <DeleteOutlineOutlinedIcon />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 'bold', fontSize: '1.2rem', lineHeight: 1.2 }}>
+                            Eliminar evidencia
+                        </Typography>
+                        <Typography sx={{ fontSize: '13px', color: '#6A6A6A', mt: '2px' }}>
+                            Esta acción no se puede deshacer
+                        </Typography>
+                    </Box>
+                </DialogTitle>
+                <DialogContent dividers>
+                    <Typography variant="body1" sx={{ overflowWrap: 'anywhere' }}>
+                        ¿Estás seguro de que deseas eliminar <strong>{evidenciaAEliminar?.nombre}</strong>?
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, gap: 1 }}>
+                    <Button variant="outlined" color="inherit" onClick={() => setEvidenciaAEliminar(null)} sx={{ borderRadius: '8px', textTransform: 'none' }}>
+                        Cancelar
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        onClick={handleConfirmarEliminarEvidencia}
+                        disabled={eliminandoEvidencia}
                         sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 700 }}
                     >
                         Eliminar

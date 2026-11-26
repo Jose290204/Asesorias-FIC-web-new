@@ -2,6 +2,7 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Pagination from "@mui/material/Pagination";
 import { useCallback, useEffect, useState } from "react";
+import useRefrescoPorAvisos from "../../../../hooks/useRefrescoPorAvisos";
 import { useLocation, useNavigate } from "react-router-dom";
 import ToastNotification from "../../../../components/ui/ToastNotification";
 import { encontrarAsesoriaEnCurso, traerAsesorias } from "../../../../Services/asesoriasEstudianteService";
@@ -64,6 +65,9 @@ export default function AsesoriasEstudiante() {
         }, 20000);
         return () => clearInterval(intervalo);
     }, [cargarAsesorias]);
+
+    // También al llegar un aviso nuevo o al volver a la app
+    useRefrescoPorAvisos(() => cargarAsesorias({ silencioso: true }));
 
     // Si se llega desde el aviso de material nuevo, se abre el material de esa asesoría.
     // El estado de la navegación se limpia para que al recargar la página no se vuelva a abrir.

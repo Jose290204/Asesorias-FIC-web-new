@@ -199,7 +199,7 @@ export default function ModalAsesorDisciplinar({ open, onClose, modo = 'info', d
             <EncabezadoModal
                 icono={iconoEncabezado}
                 titulo={TITULOS[modo]}
-                subtitulo={crear ? 'Se crea activo y con la contraseña que escribas' : nombreCompleto}
+                subtitulo={crear ? undefined : nombreCompleto}
                 onClose={handleCloseModal}
             />
 
@@ -344,8 +344,8 @@ export default function ModalAsesorDisciplinar({ open, onClose, modo = 'info', d
                         {/* Disponibilidad: en el alta no hay; se arma después desde Información o Editar */}
                         {crear ? (
                             <Typography variant="body2" sx={{ color: '#6B7280', px: 0.5 }}>
-                                La disponibilidad (materias, horarios y modalidad) se configura después de crearlo, desde Editar.
-                                Hasta entonces no aparecerá para los estudiantes.
+                                La disponibilidad (materias, horarios y modalidad) se puede configurar después de crearlo, desde
+                                Editar o desde el botón Disponibilidad de la lista. Hasta entonces no aparecerá para los estudiantes.
                             </Typography>
                         ) : (
                             data && (

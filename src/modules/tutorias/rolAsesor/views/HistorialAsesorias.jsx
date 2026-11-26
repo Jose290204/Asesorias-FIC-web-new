@@ -2,6 +2,7 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Pagination from '@mui/material/Pagination';
 import { useCallback, useEffect, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 
 import InputBuscar from '../../../../components/ui/InputBuscar';
 import ToastNotification from '../../../../components/ui/ToastNotification';
@@ -46,16 +47,16 @@ export default function HistorialAsesorias() {
     }, [busqueda]);
 
     // El historial son las asesorías ya cerradas: completadas y canceladas
-    const cargarHistorial = useCallback(async () => {
+    const cargarHistorial = useCallback(async ({ silencioso = false } = {}) => {
         try {
-            setLoading(true);
+            if (!silencioso) setLoading(true);
             setError(false);
             const { asesorias, meta: metaNueva } = await conTiempoMinimo(traerAsesorias({ estatus: 'historial', buscar, page: pagina }));
             setHistorial(asesorias);
             setMeta(metaNueva);
         } catch (err) {
             console.error('Error al cargar el historial', err);
-            setError(true);
+            if (!silencioso) setError(true);
             showToast(mensajesDeError(err)[0], 'error');
         } finally {
             setLoading(false);
@@ -65,6 +66,8 @@ export default function HistorialAsesorias() {
     useEffect(() => {
         cargarHistorial();
     }, [cargarHistorial]);
+
+    useRefrescoPorAvisos(() => cargarHistorial({ silencioso: true }));
 
     const total = meta?.total ?? historial.length;
 

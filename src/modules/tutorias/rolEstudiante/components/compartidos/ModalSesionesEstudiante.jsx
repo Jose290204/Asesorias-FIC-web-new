@@ -189,11 +189,7 @@ export default function ModalSesionesEstudiante({ open, onClose, data, showToast
                                                 <strong>Tema: </strong>{sesion.tema}
                                             </Typography>
                                         )}
-                                        {sesion.notas && (
-                                            <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap', mt: '2px' }}>
-                                                {sesion.notas}
-                                            </Typography>
-                                        )}
+                                        {/* Las notas y las evidencias son del asesor: el estudiante no las ve */}
                                     </Box>
                                 </Box>
                             ))}

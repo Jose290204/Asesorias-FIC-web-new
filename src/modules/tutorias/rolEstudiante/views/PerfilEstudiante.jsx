@@ -5,6 +5,7 @@ import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
 import { Avatar, Chip } from '@mui/material';
 import { useEffect, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 import Estadistica from '../components/perfil/Estadistica';
 import FilaDato from '../components/perfil/FilaDato';
 import TituloVista from '../../../../components/ui/TituloVista';
@@ -25,6 +26,11 @@ export default function PerfilEstudiante() {
             })
             .finally(() => setLoading(false));
     }, []);
+
+    // Los contadores se actualizan solos (en silencio: si falla, se queda con lo que ya tenía)
+    useRefrescoPorAvisos(() => {
+        traerPerfilEstudiante().then(setPerfil).catch(() => {});
+    });
 
     if (loading) {
         return (

@@ -4,6 +4,7 @@ import {
 } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useEffect, useRef, useState } from 'react';
+import useRefrescoPorAvisos from '../../../hooks/useRefrescoPorAvisos';
 import ChipAccion from '../components/ChipAccion';
 import TituloVista from '../../../components/ui/TituloVista';
 import TarjetaBitacora from '../components/TarjetaBitacora';
@@ -66,6 +67,8 @@ export default function Bitacora() {
 
   // Contador de peticiones: si llega una respuesta vieja después de una nueva, se ignora
   const pedido = useRef(0);
+  // true cuando la recarga la pidió el refresco automático: no muestra el spinner ni el error
+  const enSilencio = useRef(false);
 
   // Las facultades solo se cargan una vez (para el filtro y las siglas)
   useEffect(() => {
@@ -84,9 +87,11 @@ export default function Bitacora() {
   // Cada cambio de filtros, página o tamaño de página vuelve a pedir al servidor
   useEffect(() => {
     const id = ++pedido.current;
+    const silencioso = enSilencio.current;
+    enSilencio.current = false;
 
     (async () => {
-      setCargando(true);
+      if (!silencioso) setCargando(true);
       try {
         const r = await listarBitacora({ ...filtros, page: page + 1, porPagina: rowsPerPage });
         if (id !== pedido.current) return;
@@ -94,12 +99,18 @@ export default function Bitacora() {
         setTotal(r.total);
         setError(false);
       } catch {
-        if (id === pedido.current) setError(true);
+        if (id === pedido.current && !silencioso) setError(true);
       } finally {
         if (id === pedido.current) setCargando(false);
       }
     })();
   }, [filtros, page, rowsPerPage, intento]);
+
+  // La lista se actualiza sola (en silencio) cada cierto tiempo y al volver a la app
+  useRefrescoPorAvisos(() => {
+    enSilencio.current = true;
+    setIntento((n) => n + 1);
+  });
 
   const cambiarFiltro = (campo) => (e) => {
     setFiltros((f) => ({ ...f, [campo]: e.target.value }));

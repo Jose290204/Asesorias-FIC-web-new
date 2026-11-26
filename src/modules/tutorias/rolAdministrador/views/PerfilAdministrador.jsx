@@ -4,6 +4,7 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import { Avatar, Chip } from '@mui/material';
 import { useEffect, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 import { useAuth } from '../../../../context/AuthContext';
 import { traerPerfilAdmin } from '../../../../Services/perfilAdminService';
 
@@ -49,6 +50,11 @@ export default function PerfilAdministrador() {
             })
             .finally(() => setLoading(false));
     }, []);
+
+    // Los contadores se actualizan solos (en silencio: si falla, se queda con lo que ya tenía)
+    useRefrescoPorAvisos(() => {
+        traerPerfilAdmin().then(setPerfil).catch(() => {});
+    });
 
     if (loading) {
         return (

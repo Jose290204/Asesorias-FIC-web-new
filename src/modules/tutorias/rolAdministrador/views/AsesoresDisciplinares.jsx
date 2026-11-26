@@ -7,6 +7,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Pagination from '@mui/material/Pagination';
 import TextField from '@mui/material/TextField';
 import { useCallback, useEffect, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 import InputBuscar from '../../../../components/ui/InputBuscar';
 import TituloVista from '../../../../components/ui/TituloVista';
 import ToastNotification from '../../../../components/ui/ToastNotification';
@@ -115,6 +116,9 @@ export default function AsesoresDisciplinares() {
     useEffect(() => {
         cargarAsesores();
     }, [cargarAsesores]);
+
+    // Si llega un aviso nuevo, se vuelve a la app o pasan unos segundos, la lista se actualiza sola
+    useRefrescoPorAvisos(() => cargarAsesores({ silencioso: true }));
 
     // Las acciones regresan true si salió bien (el modal se cierra) y false si falló (el modal sigue abierto).
     // Aquí caen los errores de la API, por ejemplo 422 (correo o cuenta repetidos) o 409 (asesorías en curso).

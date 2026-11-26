@@ -16,6 +16,7 @@ export const ACCIONES = {
   'facultad.editada': { etiqueta: 'Facultad editada', tono: 'azul', grupo: 'Facultades' },
   'facultad.activada': { etiqueta: 'Facultad activada', tono: 'verde', grupo: 'Facultades' },
   'facultad.desactivada': { etiqueta: 'Facultad desactivada', tono: 'naranja', grupo: 'Facultades' },
+  'facultad.eliminada': { etiqueta: 'Facultad eliminada', tono: 'rojo', grupo: 'Facultades' },
 
   'administrador.creado': { etiqueta: 'Administrador creado', tono: 'verde', grupo: 'Administradores' },
   'administrador.editado': { etiqueta: 'Administrador editado', tono: 'azul', grupo: 'Administradores' },
@@ -52,6 +53,8 @@ export const ACCIONES = {
   'sesion.eliminada': { etiqueta: 'Sesión eliminada', tono: 'rojo', grupo: 'Trabajo del asesor' },
   'material.subido': { etiqueta: 'Material subido', tono: 'verde', grupo: 'Trabajo del asesor' },
   'material.eliminado': { etiqueta: 'Material eliminado', tono: 'rojo', grupo: 'Trabajo del asesor' },
+  'evidencia.subida': { etiqueta: 'Evidencia subida', tono: 'verde', grupo: 'Trabajo del asesor' },
+  'evidencia.eliminada': { etiqueta: 'Evidencia eliminada', tono: 'rojo', grupo: 'Trabajo del asesor' },
   'disponibilidad.actualizada': { etiqueta: 'Disponibilidad actualizada', tono: 'azul', grupo: 'Trabajo del asesor' },
 };
 

@@ -1,9 +1,10 @@
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import LoginIcon from '@mui/icons-material/Login';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
-import { Avatar, Box, Button, Card, CardActions, CardContent, IconButton, ListItemIcon, Menu, MenuItem, Typography } from '@mui/material';
+import { Avatar, Box, Button, Card, CardActions, CardContent, Divider, IconButton, ListItemIcon, Menu, MenuItem, Typography } from '@mui/material';
 import { useState } from 'react';
 
 import {
@@ -22,8 +23,8 @@ function Dato({ valor, etiqueta }) {
 
 // Tarjeta de una facultad en el panel del super admin. Mismo diseño que las tarjetas del administrador.
 // Solo muestra; las acciones las maneja la vista. "Entrar al panel" queda a la vista y
-// Editar y Desactivar/Activar van en el menú ⋮ de arriba.
-export default function TarjetaFacultad({ facultad, onEntrar, onEditar, onCambiarEstado }) {
+// Editar, Desactivar/Activar y Eliminar van en el menú ⋮ de arriba.
+export default function TarjetaFacultad({ facultad, onEntrar, onEditar, onCambiarEstado, onEliminar }) {
   const { nombre, siglas, logo, activa, administradores, asesores, estudiantes, asesorias } = facultad;
   const color = activa ? '#2E7D32' : '#5F6368';
 
@@ -124,6 +125,11 @@ export default function TarjetaFacultad({ facultad, onEntrar, onEditar, onCambia
               <PowerSettingsNewIcon fontSize="small" sx={{ color: activa ? '#B26A00' : '#2E7D32' }} />
             </ListItemIcon>
             {activa ? 'Desactivar' : 'Activar'}
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={elegir(onEliminar)} sx={{ minHeight: 44, color: '#C62828' }}>
+            <ListItemIcon><DeleteOutlineOutlinedIcon fontSize="small" sx={{ color: '#C62828' }} /></ListItemIcon>
+            Eliminar
           </MenuItem>
         </Menu>
       </Box>

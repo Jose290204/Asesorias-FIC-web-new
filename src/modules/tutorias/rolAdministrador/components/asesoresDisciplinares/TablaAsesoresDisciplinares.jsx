@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import TablaAsesores from '../asesores/TablaAsesores';
+import ModalDisponibilidadAsesor from '../asesores/ModalDisponibilidadAsesor';
 import ModalAsesorDisciplinar from './modales/ModalAsesorDisciplinar';
 import ModalEliminarAsesorDisciplinar from './modales/ModalEliminarAsesorDisciplinar';
 
@@ -14,6 +15,7 @@ export default function TablaAsesoresDisciplinares({ rows = [], onUpdate, onDele
     const [modalInfoOpen, setModalInfoOpen] = useState(false);
     const [modalEditarOpen, setModalEditarOpen] = useState(false);
     const [modalEliminarOpen, setModalEliminarOpen] = useState(false);
+    const [modalDisponibilidadOpen, setModalDisponibilidadOpen] = useState(false);
 
     const seleccionado = rows.find((r) => r.id === seleccionadoId) ?? null;
 
@@ -29,6 +31,7 @@ export default function TablaAsesoresDisciplinares({ rows = [], onUpdate, onDele
                 onInfo={abrir(setModalInfoOpen)}
                 onEditar={abrir(setModalEditarOpen)}
                 onBaja={abrir(setModalEliminarOpen)}
+                onDisponibilidad={abrir(setModalDisponibilidadOpen)}
                 textoBaja="Dar de baja"
                 textoVacio="No se encontraron asesores disciplinares"
             />
@@ -49,6 +52,14 @@ export default function TablaAsesoresDisciplinares({ rows = [], onUpdate, onDele
                 data={seleccionado}
                 onSave={onUpdate}
                 onGuardarDisponibilidad={onGuardarDisponibilidad}
+            />
+
+            {/* Disponibilidad: se abre directo desde el botón de la fila */}
+            <ModalDisponibilidadAsesor
+                open={modalDisponibilidadOpen}
+                onClose={() => setModalDisponibilidadOpen(false)}
+                asesor={seleccionado}
+                onGuardar={(cuerpo) => onGuardarDisponibilidad?.(seleccionado, cuerpo)}
             />
 
             <ModalEliminarAsesorDisciplinar

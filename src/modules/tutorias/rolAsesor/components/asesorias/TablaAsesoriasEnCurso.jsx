@@ -87,7 +87,15 @@ export default function TablaAsesoriasEnCurso({
     };
 
     const handleOpenInfo = openModal(setModalInfoOpen);
-    const handleOpenCompletar = openModal(setModalCompletarOpen);
+    // Sin sesiones registradas no se puede completar: se avisa y no se abre la confirmación
+    const handleOpenCompletar = (asesoria, event) => {
+        if (!asesoria?.sesiones_count) {
+            clearFocus(event);
+            showToast('No se puede completar: la asesoría no tiene sesiones registradas. Registra al menos una sesión.', 'error');
+            return;
+        }
+        openModal(setModalCompletarOpen)(asesoria, event);
+    };
     const handleOpenMaterial = openModal(setModalMaterialOpen);
     const handleOpenCancelar = openModal(setModalCancelarOpen);
     const handleOpenSesiones = openModal(setModalSesionesOpen);

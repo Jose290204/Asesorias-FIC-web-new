@@ -34,7 +34,7 @@ export function FacultadActivaProvider({ children }) {
 
   const entrar = (facultad) => {
     guardarFacultadActiva(facultad);
-    setGuardada({ id: facultad.id, nombre: facultad.nombre, siglas: facultad.siglas });
+    setGuardada({ id: facultad.id, nombre: facultad.nombre, siglas: facultad.siglas, logo: facultad.logo ?? null });
   };
 
   const salir = () => {

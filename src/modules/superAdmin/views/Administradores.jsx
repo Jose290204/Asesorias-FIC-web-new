@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useCallback, useEffect, useState } from 'react';
+import useRefrescoPorAvisos from '../../../hooks/useRefrescoPorAvisos';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import TituloVista from '../../../components/ui/TituloVista';
 import { ToastNotification } from '../../../components/ui/ToastNotification';
@@ -71,7 +72,8 @@ export default function Administradores() {
   const [toast, setToast] = useState({ open: false, message: '', type: 'success' });
   const avisar = (message, type = 'success') => setToast({ open: true, message, type });
 
-  const cargar = useCallback(async (facultadId) => {
+  // silencioso = recarga sin mostrar error (la usa el refresco automático)
+  const cargar = useCallback(async (facultadId, silencioso = false) => {
     try {
       const [fac, adm] = await Promise.all([
         listarFacultades(),
@@ -81,7 +83,7 @@ export default function Administradores() {
       setAdministradores(adm);
       setError(false);
     } catch {
-      setError(true);
+      if (!silencioso) setError(true);
     } finally {
       setCargando(false);
     }
@@ -90,6 +92,8 @@ export default function Administradores() {
   useEffect(() => {
     cargar(filtro);
   }, [cargar, filtro]);
+
+  useRefrescoPorAvisos(() => cargar(filtro, true));
 
   const nombreFacultad = (id) => facultades.find((f) => f.id === id)?.siglas ?? '—';
 

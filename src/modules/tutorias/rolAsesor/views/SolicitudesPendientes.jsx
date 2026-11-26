@@ -3,6 +3,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Pagination from '@mui/material/Pagination';
 import { useCallback, useEffect, useState } from 'react';
 
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 import { SOLICITUDES_PRUEBA, USAR_DATOS_PRUEBA } from '../datosPrueba';
 
 // Ajusta estas rutas según dónde esté ubicado este archivo en tu proyecto
@@ -77,6 +78,9 @@ export default function SolicitudesPendientes() {
     useEffect(() => {
         cargarSolicitudes();
     }, [cargarSolicitudes]);
+
+    // Si llega un aviso nuevo (o se vuelve a la app), la lista se actualiza sola
+    useRefrescoPorAvisos(() => cargarSolicitudes({ silencioso: true }));
 
     // Regresan true si salió bien (la tarjeta cierra el modal) y false si falló
     const handleRechazar = async (id_solicitud, motivo) => {

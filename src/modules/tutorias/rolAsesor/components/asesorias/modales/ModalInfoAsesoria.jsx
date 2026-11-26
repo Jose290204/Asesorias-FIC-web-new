@@ -159,6 +159,12 @@ function ContenidoInfoAsesoria({ onClose, data, onSave, showToast }) {
             return;
         }
 
+        // Si la fecha cambió, no puede ser anterior a hoy (la original de una asesoría en curso sí puede serlo)
+        if (formData.fecha !== inicial.fecha && dayjs(formData.fecha).isBefore(dayjs(), 'day')) {
+            showToast?.('La fecha de inicio no puede ser anterior a hoy', 'error');
+            return;
+        }
+
         // Solo lo que cambió. El día de la semana sale de la fecha, así que horario y fecha viajan juntos.
         const cambios = {};
         if (formData.horarioClave !== inicial.horarioClave || formData.fecha !== inicial.fecha) {
@@ -254,6 +260,7 @@ function ContenidoInfoAsesoria({ onClose, data, onSave, showToast }) {
                                 value={parsedDate}
                                 onChange={handleCambiarFecha}
                                 format="DD/MM/YYYY"
+                                disablePast
                                 shouldDisableDate={(fecha) => !fechaCoincideConDia(fecha, diaElegido)}
                                 open={calendarioOpen}
                                 onOpen={abrirCalendario}

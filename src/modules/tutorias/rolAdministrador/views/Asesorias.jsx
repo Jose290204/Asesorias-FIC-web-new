@@ -4,6 +4,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Fab from '@mui/material/Fab';
 import Pagination from '@mui/material/Pagination';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 import BotonFiltro from '../../../../components/ui/BotonFlitro';
 import InputBuscar from '../../../../components/ui/InputBuscar';
 import TituloVista from '../../../../components/ui/TituloVista';
@@ -137,6 +138,9 @@ export default function Asesorias() {
   useEffect(() => {
     cargarAsesorias();
   }, [cargarAsesorias]);
+
+  // Si llega un aviso nuevo, se vuelve a la app o pasan unos segundos, la lista se actualiza sola
+  useRefrescoPorAvisos(() => cargarAsesorias({ silencioso: true }));
 
   // Las acciones regresan true si salió bien (el modal se cierra) y false si falló (el modal sigue abierto).
   // Aquí caen los errores de la API, por ejemplo 409 asesoria_no_en_curso.
