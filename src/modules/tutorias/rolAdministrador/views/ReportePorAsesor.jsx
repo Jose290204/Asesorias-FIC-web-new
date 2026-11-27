@@ -1,5 +1,4 @@
 
-import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import Autocomplete from '@mui/material/Autocomplete';
 import Button from '@mui/material/Button';
@@ -9,17 +8,21 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import { useEffect, useMemo, useState } from 'react';
 import ToastNotification from '../../../../components/ui/ToastNotification';
+import TituloVista from '../../../../components/ui/TituloVista';
 import BarrasReporte from '../components/reportes/BarrasReporte';
 import { estiloEstatus, estiloTipoAsesor } from '../components/reportes/estilosReporte';
+import BotonExportar from '../components/reportes/BotonExportar';
+import { exportarExcel } from '../components/reportes/exportarExcel';
 import { exportarPdf, PDF_NO_DISPONIBLE } from '../components/reportes/exportarPdf';
 import ModalDetalleAsesorias from '../components/reportes/ModalDetalleAsesorias';
 import PanelReporte from '../components/reportes/PanelReporte';
 import ResumenReporte from '../components/reportes/ResumenReporte';
+import { esperarTiempoMinimo } from '../components/reportes/utilidadesReporte';
 import TablaReporte from '../components/reportes/TablaReporte';
+import { ESTILO_BOTON_AZUL } from '../components/compartidos/estilosAdmin';
 import { reportesService } from '../services/reportesService';
 
 const AZUL = '#244B91';
-const AZUL_OSCURO = '#1B3A73';
 
 // Columnas del reporte general (un renglón por asesor)
 const COLUMNAS_GENERAL = [
@@ -113,6 +116,7 @@ export default function ReportePorAsesor() {
 
     // Hace la consulta con los filtros dados y deja el resultado en pantalla
     const buscar = async (asesorElegido, cicloElegido, listaCiclos) => {
+        const inicio = Date.now();
         try {
             setCargando(true);
 
@@ -139,6 +143,7 @@ export default function ReportePorAsesor() {
             setAsesorias([]);
             showToast('Error al obtener el reporte', 'error');
         } finally {
+            await esperarTiempoMinimo(inicio);
             setCargando(false);
         }
     };
@@ -259,7 +264,7 @@ export default function ReportePorAsesor() {
 
     const hayDatos = esDetalle ? asesorias.length > 0 : filas.length > 0;
 
-    const handleExportarPdf = async () => {
+    const handleExportar = async (formato) => {
         if (!hayDatos) {
             showToast('No hay datos para exportar', 'info');
             return;
@@ -275,14 +280,19 @@ export default function ReportePorAsesor() {
 
         try {
             setExportando(true);
-            await exportarPdf({ titulo: 'Reporte por asesor', filtros: textoFiltros, resumen, secciones });
-            showToast('PDF generado correctamente', 'success');
+            if (formato === 'excel') {
+                await exportarExcel({ titulo: 'Reporte por asesor', filtros: textoFiltros, resumen, secciones });
+                showToast('Excel generado correctamente', 'success');
+            } else {
+                await exportarPdf({ titulo: 'Reporte por asesor', filtros: textoFiltros, resumen, secciones });
+                showToast('PDF generado correctamente', 'success');
+            }
         } catch (error) {
             if (error?.message === PDF_NO_DISPONIBLE) {
                 showToast('La exportación a PDF estará disponible próximamente', 'info');
             } else {
-                console.error('Error al exportar el PDF:', error);
-                showToast('No se pudo exportar el PDF', 'error');
+                console.error('Error al exportar el reporte:', error);
+                showToast('No se pudo exportar el reporte', 'error');
             }
         } finally {
             setExportando(false);
@@ -291,12 +301,10 @@ export default function ReportePorAsesor() {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <div className="flex flex-col gap-1">
-                <p className="text-2xl font-bold">Reporte por asesor</p>
-                <p className="text-sm text-gray-600">
-                    Elige un asesor para ver todo lo que ha hecho en el semestre, o déjalo vacío para compararlos a todos. Pulsa Buscar.
-                </p>
-            </div>
+            <TituloVista
+                titulo="Reporte por asesor"
+                subtitulo="Elige un asesor para ver todo lo que ha hecho en el semestre, o déjalo vacío para compararlos a todos. Pulsa Buscar."
+            />
 
             {/* Filtros: en celular van apilados */}
             <div className="w-full flex flex-col items-start gap-3 lg:flex-row lg:items-center lg:gap-4">
@@ -342,10 +350,8 @@ export default function ReportePorAsesor() {
                     onClick={handleBuscar}
                     disabled={cargando || cargandoListas}
                     sx={{
-                        borderRadius: '5px',
-                        textTransform: 'none',
-                        backgroundColor: AZUL,
-                        '&:hover': { backgroundColor: AZUL_OSCURO },
+                        ...ESTILO_BOTON_AZUL,
+                        minHeight: 40,
                         flexShrink: 0,
                         width: { xs: '100%', lg: 'auto' }
                     }}
@@ -353,24 +359,7 @@ export default function ReportePorAsesor() {
                     Buscar
                 </Button>
 
-                <Button
-                    variant="outlined"
-                    startIcon={<PictureAsPdfOutlinedIcon />}
-                    onClick={handleExportarPdf}
-                    disabled={cargando || exportando}
-                    sx={{
-                        borderRadius: '5px',
-                        textTransform: 'none',
-                        color: '#C62828',
-                        borderColor: '#C62828',
-                        backgroundColor: '#FFFFFF',
-                        '&:hover': { borderColor: '#8E1B1B', backgroundColor: 'rgba(198, 40, 40, 0.06)' },
-                        flexShrink: 0,
-                        width: { xs: '100%', lg: 'auto' }
-                    }}
-                >
-                    Exportar PDF
-                </Button>
+                <BotonExportar onExportar={handleExportar} disabled={cargando} exportando={exportando} />
             </div>
 
             <div className="w-full flex flex-1 flex-col gap-4 pb-5">

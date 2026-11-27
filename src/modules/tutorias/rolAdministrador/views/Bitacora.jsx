@@ -1,0 +1,234 @@
+// rolAdministrador/views/Bitacora.jsx
+// Bitácora de la facultad del administrador: qué pasó, quién lo hizo, cuándo y desde dónde.
+// Misma base que la del super admin, pero sin filtro ni columna de facultad (el backend ya limita a la facultad activa).
+// Solo lectura: la bitácora no se edita ni se borra desde la app.
+import {
+    CircularProgress, ListSubheader, MenuItem, Paper, Table, TableBody, TableCell, TableContainer,
+    TableHead, TablePagination, TableRow, TextField
+} from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useEffect, useRef, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
+import TituloVista from '../../../../components/ui/TituloVista';
+import ChipAccion from '../../../superAdmin/components/ChipAccion';
+import TarjetaBitacoraAdmin from '../components/bitacora/TarjetaBitacoraAdmin';
+import { GRUPOS_ACCIONES_ADMIN, listarBitacoraAdmin } from '../services/bitacoraAdminService';
+
+// Encabezado de la tabla: igual que las demás tablas del administrador
+const ESTILO_ENCABEZADO = {
+    backgroundColor: '#244B91',
+    color: '#FFFFFF',
+    fontSize: '12px',
+    fontWeight: 700,
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
+    borderBottom: 0,
+    py: 1.75,
+    whiteSpace: 'nowrap'
+};
+
+const FILTROS_VACIOS = { accion: '', buscar: '', desde: '', hasta: '' };
+
+// Menú de los selects: no más alto que ~8 opciones (con scroll adentro) ni más ancho que la pantalla
+const PROPS_MENU = {
+    slotProps: {
+        paper: {
+            sx: {
+                maxHeight: 320,
+                maxWidth: 'calc(100vw - 32px)',
+                '& .MuiMenuItem-root': { whiteSpace: 'normal', overflowWrap: 'anywhere' }
+            }
+        }
+    }
+};
+
+// "8 nov 2026, 4:31 p.m." en la zona horaria del navegador
+const formatoFecha = new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+const mostrarFecha = (iso) => formatoFecha.format(new Date(iso));
+
+export default function Bitacora() {
+    // Mismo corte que el resto del admin: menos de 768 px = celular (tarjetas en vez de tabla)
+    const esMovil = useMediaQuery('(max-width:767px)');
+
+    const [registros, setRegistros] = useState([]);
+    const [total, setTotal] = useState(0);
+    const [filtros, setFiltros] = useState(FILTROS_VACIOS);
+    // Lo que se escribe en "Buscar"; pasa a `filtros.buscar` con una pausa para no pedir una página por letra
+    const [textoBuscar, setTextoBuscar] = useState('');
+    const [cargando, setCargando] = useState(true);
+    const [error, setError] = useState(false);
+    const [intento, setIntento] = useState(0); // sube al pulsar "Reintentar"
+
+    const [page, setPage] = useState(0); // MUI cuenta desde 0; la API desde 1
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+
+    // Contador de peticiones: si llega una respuesta vieja después de una nueva, se ignora
+    const pedido = useRef(0);
+    // true cuando la recarga la pidió el refresco automático: no muestra el spinner ni el error
+    const enSilencio = useRef(false);
+
+    // Pausa de 400 ms al escribir en "Buscar"
+    useEffect(() => {
+        const espera = setTimeout(() => {
+            setFiltros((f) => (f.buscar === textoBuscar ? f : { ...f, buscar: textoBuscar }));
+            setPage(0);
+        }, 400);
+        return () => clearTimeout(espera);
+    }, [textoBuscar]);
+
+    // Cada cambio de filtros, página o tamaño de página vuelve a pedir al servidor
+    useEffect(() => {
+        const id = ++pedido.current;
+        const silencioso = enSilencio.current;
+        enSilencio.current = false;
+
+        (async () => {
+            if (!silencioso) setCargando(true);
+            try {
+                const r = await listarBitacoraAdmin({ ...filtros, page: page + 1, porPagina: rowsPerPage });
+                if (id !== pedido.current) return;
+                setRegistros(r.registros);
+                setTotal(r.total);
+                setError(false);
+            } catch {
+                if (id === pedido.current && !silencioso) setError(true);
+            } finally {
+                if (id === pedido.current) setCargando(false);
+            }
+        })();
+    }, [filtros, page, rowsPerPage, intento]);
+
+    // La lista se actualiza sola (en silencio) cada cierto tiempo y al volver a la app
+    useRefrescoPorAvisos(() => {
+        enSilencio.current = true;
+        setIntento((n) => n + 1);
+    });
+
+    const cambiarFiltro = (campo) => (e) => {
+        setFiltros((f) => ({ ...f, [campo]: e.target.value }));
+        setPage(0); // al filtrar se vuelve a la primera página
+    };
+
+    const limpiarFiltros = () => {
+        setFiltros(FILTROS_VACIOS);
+        setTextoBuscar('');
+        setPage(0);
+    };
+
+    const hayFiltros = Object.values(filtros).some(Boolean) || textoBuscar !== '';
+    const primeraCarga = cargando && registros.length === 0 && !error;
+
+    const campoFiltro = { size: 'small', fullWidth: true, sx: { bgcolor: '#fff', minWidth: 0 } };
+
+    return (
+        <div className="mx-auto max-w-6xl p-4 sm:p-6">
+            <div className="mb-5">
+                <TituloVista titulo="Bitácora" subtitulo="Registro de las acciones importantes de esta facultad. Solo lectura." />
+            </div>
+
+            {/* Filtros: en celular uno debajo del otro; en escritorio en una cuadrícula */}
+            <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))]">
+                <TextField {...campoFiltro} label="Buscar" placeholder="Usuario, registro…" value={textoBuscar} onChange={(e) => setTextoBuscar(e.target.value)} />
+                <TextField {...campoFiltro} select label="Acción" value={filtros.accion} onChange={cambiarFiltro('accion')} slotProps={{ select: { MenuProps: PROPS_MENU } }}>
+                    <MenuItem value="">Todas</MenuItem>
+                    {GRUPOS_ACCIONES_ADMIN.flatMap(({ grupo, acciones }) => [
+                        <ListSubheader key={`grupo-${grupo}`}>{grupo}</ListSubheader>,
+                        ...acciones.map(([codigo, { etiqueta }]) => (
+                            <MenuItem key={codigo} value={codigo}>{etiqueta}</MenuItem>
+                        ))
+                    ])}
+                </TextField>
+                {/* Desde y Hasta: en celular van en la misma fila, mitad y mitad; desde sm se acomodan como los demás filtros */}
+                <div className="grid grid-cols-2 gap-3 sm:contents">
+                    <TextField {...campoFiltro} type="date" label="Desde" value={filtros.desde} onChange={cambiarFiltro('desde')} slotProps={{ inputLabel: { shrink: true } }} />
+                    <TextField {...campoFiltro} type="date" label="Hasta" value={filtros.hasta} onChange={cambiarFiltro('hasta')} slotProps={{ inputLabel: { shrink: true } }} />
+                </div>
+            </div>
+
+            {hayFiltros && (
+                <button className="mb-4 text-sm text-blue-700 underline" onClick={limpiarFiltros}>
+                    Limpiar filtros
+                </button>
+            )}
+
+            {primeraCarga && <div className="flex justify-center py-16"><CircularProgress /></div>}
+
+            {error && (
+                <p className="py-10 text-center text-gray-600">
+                    No se pudo cargar la bitácora.{' '}
+                    <button className="text-blue-700 underline" onClick={() => setIntento((n) => n + 1)}>Reintentar</button>
+                </p>
+            )}
+
+            {!cargando && !error && total === 0 && (
+                <p className="py-10 text-center text-gray-600">No hay registros con esos filtros.</p>
+            )}
+
+            {/* Mientras llega otra página se atenúa la actual en vez de saltar a un spinner */}
+            <div style={{ opacity: cargando && !primeraCarga ? 0.5 : 1, transition: 'opacity .15s' }}>
+                {/* Celular: tarjetas */}
+                {!error && esMovil && registros.length > 0 && (
+                    <div className="flex flex-col gap-5">
+                        {registros.map((r) => (
+                            <TarjetaBitacoraAdmin key={r.id} registro={r} fecha={mostrarFecha(r.fecha)} />
+                        ))}
+                    </div>
+                )}
+
+                {/* Escritorio: tabla */}
+                {!error && !esMovil && registros.length > 0 && (
+                    <TableContainer
+                        component={Paper}
+                        variant="outlined"
+                        sx={{ borderRadius: '12px', borderColor: '#E5E7EB', overflow: 'hidden', boxShadow: '0px 2px 8px rgba(16, 24, 40, 0.06)' }}
+                    >
+                        <Table>
+                            <TableHead>
+                                <TableRow sx={{ '& th': ESTILO_ENCABEZADO, '& th:first-of-type': { pl: 3 }, '& th:last-child': { pr: 3 } }}>
+                                    {['Fecha', 'Usuario', 'Acción', 'Registro', 'Detalle'].map((h) => (
+                                        <TableCell key={h}>{h}</TableCell>
+                                    ))}
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {registros.map((r) => (
+                                    <TableRow
+                                        key={r.id}
+                                        hover
+                                        sx={{
+                                            '& td': { fontSize: '14.5px', borderBottom: '1px solid #EEF1F6', py: 1.5 },
+                                            '& td:first-of-type': { pl: 3 },
+                                            '& td:last-child': { pr: 3 },
+                                            '&:hover': { backgroundColor: '#EAF0FB !important' },
+                                            '&:last-child td': { borderBottom: 0 }
+                                        }}
+                                    >
+                                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{mostrarFecha(r.fecha)}</TableCell>
+                                        <TableCell sx={{ maxWidth: 180, overflowWrap: 'anywhere' }}>{r.usuario}</TableCell>
+                                        <TableCell><ChipAccion accion={r.accion} /></TableCell>
+                                        <TableCell sx={{ maxWidth: 220, overflowWrap: 'anywhere' }}>{r.entidad}</TableCell>
+                                        <TableCell sx={{ color: '#555', maxWidth: 320, overflowWrap: 'anywhere' }}>{r.detalle}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
+            </div>
+
+            {!error && total > 0 && (
+                <TablePagination
+                    component="div"
+                    count={total}
+                    page={page}
+                    onPageChange={(_, nueva) => setPage(nueva)}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(0); }}
+                    rowsPerPageOptions={esMovil ? [] : [10, 25, 50]}
+                    labelRowsPerPage="Filas por página"
+                    labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
+                />
+            )}
+        </div>
+    );
+}

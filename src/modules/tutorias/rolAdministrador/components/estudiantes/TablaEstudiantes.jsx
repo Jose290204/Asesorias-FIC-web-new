@@ -121,7 +121,6 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
                         <Table stickyHeader sx={{ minWidth: 950 }}>
                             <TableHead>
                                 <TableRow sx={{ '& th': ESTILO_ENCABEZADO, '& th:first-of-type': { pl: 3 }, '& th:last-child': { pr: 3 } }}>
-                                    <TableCell sx={{ width: '70px' }} align="center">ID</TableCell>
                                     <TableCell align="left">Nombre</TableCell>
                                     <TableCell align="left">Correo</TableCell>
                                     <TableCell align="center">Número de Cuenta</TableCell>
@@ -134,7 +133,7 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
                             <TableBody>
                                 {rows.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} align="center" sx={{ py: 5, color: '#6B7280', border: 0 }}>
+                                        <TableCell colSpan={6} align="center" sx={{ py: 5, color: '#6B7280', border: 0 }}>
                                             No se encontraron estudiantes
                                         </TableCell>
                                     </TableRow>
@@ -156,10 +155,6 @@ export default function TablaEstudiantes({ rows = [], onUpdate, onDelete }) {
                                                 '&:last-child td': { borderBottom: 0 }
                                             }}
                                         >
-                                            <TableCell align="center" sx={{ color: '#6B7280 !important', fontWeight: 600 }}>
-                                                #{row.id}
-                                            </TableCell>
-
                                             <TableCell align="left" sx={{ fontWeight: 600, color: '#111827 !important' }}>
                                                 {row.nombre}
                                             </TableCell>

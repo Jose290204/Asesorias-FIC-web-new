@@ -62,7 +62,11 @@ export default function ModalMaterias({ open, onClose, catalogo, seleccionadas, 
                                         sx={{ color: '#9e9e9e', '&.Mui-checked': { color: '#2e7d32' } }}
                                     />
                                 </ListItemIcon>
-                                <ListItemText primary={m.nombre} slotProps={{ primary: { sx: { fontSize: '14px' } } }} />
+                                <ListItemText
+                                    primary={m.nombre}
+                                    secondary={m.licenciatura}
+                                    slotProps={{ primary: { sx: { fontSize: '14px' } }, secondary: { sx: { fontSize: '12px' } } }}
+                                />
                             </ListItemButton>
                         ))
                     )}

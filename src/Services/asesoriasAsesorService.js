@@ -31,13 +31,16 @@ export const aFormatoAsesoria = (a) => ({
   sesiones_count: a.sesiones_count ?? 0,
   // Mensajes del chat que la otra persona escribió y este usuario aún no ha leído (globito del botón Chat)
   mensajes_sin_leer: a.mensajes_sin_leer ?? 0,
+  // Último mensaje del chat ({ texto, fecha, propio }) o null si aún no hay; lo usa la lista de Chats
+  ultimo_mensaje: a.ultimo_mensaje ?? null,
 });
 
 // GET /asesor/asesorias (paginada de 10 en 10)
 // estatus: 'en_curso' | 'completada' | 'cancelada' | 'historial' (completadas + canceladas)
-export const traerAsesorias = async ({ estatus, buscar, page } = {}) => {
+// orden: 'mensaje' pone primero las que tienen el mensaje más reciente (lista de Chats)
+export const traerAsesorias = async ({ estatus, buscar, page, orden } = {}) => {
   const { data } = await api.get('/asesor/asesorias', {
-    params: { estatus: estatus || undefined, buscar: buscar || undefined, page: page || undefined },
+    params: { estatus: estatus || undefined, buscar: buscar || undefined, page: page || undefined, orden: orden || undefined },
   });
   return { asesorias: data.data.map(aFormatoAsesoria), meta: data.meta };
 };

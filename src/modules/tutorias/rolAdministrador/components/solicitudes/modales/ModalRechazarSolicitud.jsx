@@ -1,11 +1,7 @@
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Typography
-} from '@mui/material';
+import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined';
+import { Typography } from '@mui/material';
+
+import ModalConfirmacion from '../../compartidos/ModalConfirmacion';
 
 /**
  * Confirmación para rechazar una solicitud.
@@ -22,44 +18,25 @@ export default function ModalRechazarSolicitud({ open, onClose, onConfirm, data 
     };
 
     return (
-        <Dialog
-            open={Boolean(open)}
+        <ModalConfirmacion
+            open={open}
             onClose={onClose}
-            sx={{
-                '& .MuiPaper-root': {
-                    width: '450px',
-                    maxWidth: '90vw',
-                    borderRadius: '12px',
-                    p: 1
-                }
-            }}
+            onConfirm={handleConfirm}
+            icono={<HighlightOffOutlinedIcon />}
+            titulo="Rechazar solicitud"
+            subtitulo="Esta acción no se puede deshacer"
+            tono="rojo"
+            textoConfirmar="Rechazar"
         >
-            <DialogTitle sx={{ fontWeight: 'bold' }}>Rechazar solicitud</DialogTitle>
-            <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1, py: 3 }}>
-                <Typography variant="body1" align="center">
-                    ¿Estás seguro de que deseas rechazar esta solicitud?
-                </Typography>
+            <Typography variant="body1">¿Estás seguro de que deseas rechazar esta solicitud?</Typography>
 
-                {(data?.materia || data?.estudiante) && (
-                    <Typography variant="body2" align="center" sx={{ fontWeight: 600, overflowWrap: 'anywhere' }}>
-                        {data?.materia}
-                        {data?.materia && data?.estudiante && ' · '}
-                        {data?.estudiante}
-                    </Typography>
-                )}
-
-                <Typography variant="body2" align="center" color="text.secondary">
-                    Esta acción no se puede deshacer.
+            {(data?.materia || data?.estudiante) && (
+                <Typography variant="body2" sx={{ fontWeight: 600, mt: 1.5 }}>
+                    {data?.materia}
+                    {data?.materia && data?.estudiante && ' · '}
+                    {data?.estudiante}
                 </Typography>
-            </DialogContent>
-            <DialogActions sx={{ p: 2, justifyContent: 'flex-end', gap: 1 }}>
-                <Button variant="outlined" color="inherit" onClick={onClose}>
-                    Cancelar
-                </Button>
-                <Button variant="contained" color="error" onClick={handleConfirm}>
-                    Rechazar
-                </Button>
-            </DialogActions>
-        </Dialog>
+            )}
+        </ModalConfirmacion>
     );
 }

@@ -1,17 +1,21 @@
-import { CircularProgress, MenuItem, Pagination, TextField, Typography } from "@mui/material";
+import { Chip, CircularProgress, Pagination, Typography } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
+import useRefrescoPorAvisos from "../../../../hooks/useRefrescoPorAvisos";
 import ToastNotification from "../../../../components/ui/ToastNotification";
 import { mensajesDeError } from "../../../../Services/errores";
+import { conTiempoMinimo, MINIMO_CARGA_MS } from '../../../../utils/tiempoMinimo';
+import TituloVista from "../../../../components/ui/TituloVista";
 import { cancelarSolicitud, editarSolicitud, traerSolicitudes } from "../../../../Services/solicitudesEstudianteService";
 import ListaSolicitudesEnRevision from "../components/solicitudes/ListaSolicitudesEnRevision";
 
-// Opciones del filtro: el valor es el estatus que entiende la API ("" = todas)
+// Opciones del filtro: el valor es el estatus que entiende la API ("" = todas).
+// El color es el de la tarjeta de cada estatus.
 const FILTROS = [
-    { valor: "", etiqueta: "Todas" },
-    { valor: "pendiente", etiqueta: "En revisión" },
-    { valor: "aceptada", etiqueta: "Aceptadas" },
-    { valor: "rechazada", etiqueta: "Rechazadas" },
-    { valor: "cancelada", etiqueta: "Canceladas" },
+    { valor: "", etiqueta: "Todas", color: "#244B91" },
+    { valor: "pendiente", etiqueta: "En revisión", color: "#8A6D00" },
+    { valor: "aceptada", etiqueta: "Aceptadas", color: "#2E7D32" },
+    { valor: "rechazada", etiqueta: "Rechazadas", color: "#C62828" },
+    { valor: "cancelada", etiqueta: "Canceladas", color: "#555555" },
 ];
 
 export default function SolicitudesEnRevision() {
@@ -43,7 +47,10 @@ export default function SolicitudesEnRevision() {
             if (!silencioso) setLoading(true);
             setError(false);
 
-            const { solicitudes: lista, meta: metaNueva } = await traerSolicitudes({ estatus: filtroEstatus, page: pagina });
+            const { solicitudes: lista, meta: metaNueva } = await conTiempoMinimo(
+                traerSolicitudes({ estatus: filtroEstatus, page: pagina }),
+                silencioso ? 0 : MINIMO_CARGA_MS
+            );
 
             // Si cambió la lista y esta página quedó vacía, se regresa a la anterior
             // (el efecto de abajo vuelve a cargar solo)
@@ -67,9 +74,13 @@ export default function SolicitudesEnRevision() {
         cargarSolicitudes();
     }, [cargarSolicitudes]);
 
+    // Si llega un aviso nuevo (o se vuelve a la app), la lista se actualiza sola
+    useRefrescoPorAvisos(() => cargarSolicitudes({ silencioso: true }));
+
     // Al cambiar de filtro se vuelve a la primera página
-    const handleCambiarFiltro = (e) => {
-        setFiltroEstatus(e.target.value);
+    const handleCambiarFiltro = (valor) => {
+        if (valor === filtroEstatus) return;
+        setFiltroEstatus(valor);
         setPagina(1);
     };
 
@@ -102,21 +113,31 @@ export default function SolicitudesEnRevision() {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full px-4 md:px-17 py-6 md:py-10 flex flex-col items-start justify-start gap-6 md:gap-8 bg-transparent">
-            <p className="text-xl md:text-2xl font-bold">Solicitudes en revisión</p>
+            <TituloVista titulo="Solicitudes en revisión" />
 
             {/* SECCIÓN DE FILTRO */}
-            <TextField
-                select
-                label="Filtro por estados"
-                size="small"
-                value={filtroEstatus}
-                onChange={handleCambiarFiltro}
-                sx={{ width: '100%', maxWidth: { sm: 320 }, backgroundColor: '#FFFFFF' }}
-            >
-                {FILTROS.map((f) => (
-                    <MenuItem key={f.valor} value={f.valor}>{f.etiqueta}</MenuItem>
-                ))}
-            </TextField>
+            <div className="flex w-full flex-wrap gap-2" role="group" aria-label="Filtrar por estatus">
+                {FILTROS.map((f) => {
+                    const activo = filtroEstatus === f.valor;
+                    return (
+                        <Chip
+                            key={f.valor || "todas"}
+                            label={f.etiqueta}
+                            onClick={() => handleCambiarFiltro(f.valor)}
+                            aria-pressed={activo}
+                            variant={activo ? "filled" : "outlined"}
+                            sx={{
+                                fontWeight: 600,
+                                borderColor: f.color,
+                                color: activo ? "#fff" : f.color,
+                                backgroundColor: activo ? f.color : "transparent",
+                                "&:hover": { backgroundColor: activo ? f.color : `${f.color}1A` },
+                                "&:focus": { backgroundColor: activo ? f.color : "transparent" },
+                            }}
+                        />
+                    );
+                })}
+            </div>
 
             {/* TARJETAS (el scroll lo hace la página, no este contenedor) */}
             <div className="w-full pb-6">

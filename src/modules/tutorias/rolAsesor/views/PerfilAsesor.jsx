@@ -4,8 +4,11 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import { Avatar, Chip } from '@mui/material';
 import { useEffect, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
+import TituloVista from '../../../../components/ui/TituloVista';
 import { useAuth } from '../../../../context/AuthContext';
 import { traerPerfilAsesor } from '../../../../Services/perfilAsesorService';
+import { conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 import Estadistica from '../components/perfil/Estadistica';
 import FilaDato from '../components/perfil/FilaDato';
 import { PERFIL_ASESOR_PRUEBA, USAR_DATOS_PRUEBA } from '../datosPrueba';
@@ -22,7 +25,7 @@ export default function PerfilAsesor() {
             return;
         }
 
-        traerPerfilAsesor()
+        conTiempoMinimo(traerPerfilAsesor())
             .then(setPerfil)
             .catch((err) => {
                 // Si la ruta aún no existe, se muestran los datos de la sesión
@@ -31,6 +34,12 @@ export default function PerfilAsesor() {
             })
             .finally(() => setLoading(false));
     }, []);
+
+    // Los contadores se actualizan solos (en silencio: si falla, se queda con lo que ya tenía)
+    useRefrescoPorAvisos(() => {
+        if (USAR_DATOS_PRUEBA) return;
+        traerPerfilAsesor().then(setPerfil).catch(() => {});
+    });
 
     if (loading) {
         return (
@@ -55,7 +64,7 @@ export default function PerfilAsesor() {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <p className="text-2xl font-bold">Perfil</p>
+            <TituloVista titulo="Perfil" />
 
             <div className="w-full flex flex-col items-center gap-5">
 

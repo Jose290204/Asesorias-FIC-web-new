@@ -34,12 +34,19 @@ import ModalSesionesAsesor from '../../../rolAsesor/components/compartidos/Modal
 import {
     eliminarMaterialAdmin,
     eliminarSesionAdmin,
+    eliminarEvidenciaAdmin,
     registrarSesionAdmin,
+    subirEvidenciasAdmin,
     subirMaterialAdmin
 } from '../../../../../Services/asesoriasAdminService';
 
 // Sesiones: se usa el mismo modal del asesor, apuntando a las rutas /admin/...
-const ACCIONES_SESIONES_ADMIN = { registrar: registrarSesionAdmin, eliminar: eliminarSesionAdmin };
+const ACCIONES_SESIONES_ADMIN = {
+    registrar: registrarSesionAdmin,
+    eliminar: eliminarSesionAdmin,
+    subirEvidencias: subirEvidenciasAdmin,
+    eliminarEvidencia: eliminarEvidenciaAdmin
+};
 // Material: el mismo modal del asesor, apuntando a /admin/... (el admin puede borrar cualquier archivo)
 const ACCIONES_MATERIAL_ADMIN = { subir: subirMaterialAdmin, eliminar: eliminarMaterialAdmin };
 
@@ -108,7 +115,15 @@ export default function TablaAsesorias({ rows = [], onCompletar, onCancelar, onG
     const handleOpenMaterial = openModal(setModalMaterialOpen);
     // El administrador solo puede leer el chat, no escribir
     const handleOpenChat = openModal(setModalChatOpen);
-    const handleOpenCompletar = openModal(setModalCompletarOpen);
+    // Sin sesiones registradas no se puede completar: se avisa y no se abre la confirmación
+    const handleOpenCompletar = (row, event) => {
+        if (!row?.sesiones_count) {
+            clearFocus(event);
+            showToast('No se puede completar: la asesoría no tiene sesiones registradas. Registra al menos una sesión.', 'error');
+            return;
+        }
+        openModal(setModalCompletarOpen)(row, event);
+    };
     const handleOpenCancelar = openModal(setModalCancelarOpen);
 
     const handleConfirmCompletar = () => onCompletar?.(selectedRow);
@@ -157,7 +172,6 @@ export default function TablaAsesorias({ rows = [], onCompletar, onCancelar, onG
                         <Table stickyHeader sx={{ minWidth: 700 }}>
                             <TableHead>
                                 <TableRow sx={{ '& th': ESTILO_ENCABEZADO, '& th:first-of-type': { pl: 3 }, '& th:last-child': { pr: 3 } }}>
-                                    <TableCell sx={{ width: '70px' }} align="center">ID</TableCell>
                                     <TableCell align="left">Materia</TableCell>
                                     <TableCell align="left">Estudiante</TableCell>
                                     <TableCell align="left">Asesor</TableCell>
@@ -170,7 +184,7 @@ export default function TablaAsesorias({ rows = [], onCompletar, onCancelar, onG
                             <TableBody>
                                 {rows.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} align="center" sx={{ py: 5, color: '#6B7280', border: 0 }}>
+                                        <TableCell colSpan={6} align="center" sx={{ py: 5, color: '#6B7280', border: 0 }}>
                                             No se encontraron registros
                                         </TableCell>
                                     </TableRow>
@@ -192,10 +206,6 @@ export default function TablaAsesorias({ rows = [], onCompletar, onCancelar, onG
                                                 '&:last-child td': { borderBottom: 0 }
                                             }}
                                         >
-                                            <TableCell align="center" sx={{ color: '#6B7280 !important', fontWeight: 600 }}>
-                                                #{row.id}
-                                            </TableCell>
-
                                             <TableCell align="left" sx={{ fontWeight: 600, color: '#111827 !important' }}>
                                                 {row.materia}
                                             </TableCell>

@@ -10,7 +10,7 @@ import TarjetaHistorialEstudiante from './TarjetaHistorialEstudiante';
 
 // Cuadrícula de tarjetas del historial (también en escritorio: aquí no hay tabla).
 // Las asesorías las carga la vista; esto las muestra y maneja los modales de cada tarjeta.
-export default function ListaHistorialEstudiante({ historial = [] }) {
+export default function ListaHistorialEstudiante({ historial = [], textoVacio = 'No tienes asesorías en tu historial.' }) {
     // Estados para Modales
     const [selectedAsesoria, setSelectedAsesoria] = useState(null);
     const [modalInfoOpen, setModalInfoOpen] = useState(false);
@@ -48,7 +48,7 @@ export default function ListaHistorialEstudiante({ historial = [] }) {
         return (
             <Box className="w-full text-center py-10">
                 <Typography sx={{ fontSize: '16px', color: '#666666' }}>
-                    No tienes asesorías en tu historial.
+                    {textoVacio}
                 </Typography>
             </Box>
         );

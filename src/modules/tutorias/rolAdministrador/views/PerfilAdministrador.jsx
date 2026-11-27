@@ -4,6 +4,7 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import { Avatar, Chip } from '@mui/material';
 import { useEffect, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 import { useAuth } from '../../../../context/AuthContext';
 import { traerPerfilAdmin } from '../../../../Services/perfilAdminService';
 
@@ -11,7 +12,7 @@ import { traerPerfilAdmin } from '../../../../Services/perfilAdminService';
 function Estadistica({ valor, etiqueta }) {
     return (
         <div className="flex flex-col items-center justify-center gap-0.5 px-2 py-4">
-            <span className="text-2xl font-bold text-[#244B91]">{valor ?? 0}</span>
+            <span className="text-2xl font-bold text-[#08338F]">{valor ?? 0}</span>
             <span className="text-center text-xs font-medium text-gray-600">{etiqueta}</span>
         </div>
     );
@@ -21,7 +22,7 @@ function Estadistica({ valor, etiqueta }) {
 function FilaDato({ icono, label, value }) {
     return (
         <div className="flex items-center gap-4 py-4 first:pt-0 last:pb-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E8EEF9] text-[#244B91]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#E6ECF8] text-[#08338F]">
                 {icono}
             </div>
             <div className="min-w-0">
@@ -31,6 +32,8 @@ function FilaDato({ icono, label, value }) {
         </div>
     );
 }
+
+import TituloVista from '../../../../components/ui/TituloVista';
 
 export default function PerfilAdministrador() {
     const { usuario } = useAuth();
@@ -47,6 +50,11 @@ export default function PerfilAdministrador() {
             })
             .finally(() => setLoading(false));
     }, []);
+
+    // Los contadores se actualizan solos (en silencio: si falla, se queda con lo que ya tenía)
+    useRefrescoPorAvisos(() => {
+        traerPerfilAdmin().then(setPerfil).catch(() => {});
+    });
 
     if (loading) {
         return (
@@ -72,13 +80,13 @@ export default function PerfilAdministrador() {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <p className="text-2xl font-bold">Perfil</p>
+            <TituloVista titulo="Perfil" />
 
             <div className="w-full flex flex-col items-center gap-5">
 
                 {/* Tarjeta principal: franja azul, avatar y nombre */}
-                <div className="w-full max-w-xl overflow-hidden rounded-[10px] border border-gray-200 bg-white shadow-sm">
-                    <div className="h-20 bg-[#244B91]" />
+                <div className="w-full max-w-xl overflow-hidden rounded-[16px] border border-[#E3E8F2] bg-white shadow-[0_2px_10px_rgba(8,51,143,0.08)]">
+                    <div className="h-20 bg-[linear-gradient(135deg,#1E4DB7_0%,#08338F_55%,#052466_100%)]" />
 
                     <div className="-mt-12 flex flex-col items-center gap-1 px-5 pb-6 text-center md:px-8">
                         <Avatar
@@ -106,7 +114,7 @@ export default function PerfilAdministrador() {
 
                     {/* Contadores de la facultad: solo si el backend los manda */}
                     {estadisticas && (
-                        <div className="grid grid-cols-3 divide-x divide-gray-200 border-t border-gray-200">
+                        <div className="grid grid-cols-3 divide-x divide-[#EEF1F7] border-t border-[#EEF1F7] bg-[#F7F9FD]">
                             <Estadistica valor={estadisticas.asesorias_en_curso} etiqueta="Asesorías en curso" />
                             <Estadistica valor={estadisticas.solicitudes_pendientes} etiqueta="Solicitudes pendientes" />
                             <Estadistica valor={estadisticas.usuarios_activos} etiqueta="Usuarios activos" />
@@ -115,7 +123,7 @@ export default function PerfilAdministrador() {
                 </div>
 
                 {/* Datos personales */}
-                <div className="w-full max-w-xl rounded-[10px] border border-gray-200 bg-white p-5 shadow-sm md:p-8">
+                <div className="w-full max-w-xl rounded-[16px] border border-[#E3E8F2] bg-white p-5 shadow-[0_2px_10px_rgba(8,51,143,0.08)] md:p-8">
                     <p className="mb-5 text-base font-bold text-gray-900">Información personal</p>
 
                     <div className="flex flex-col divide-y divide-gray-100">

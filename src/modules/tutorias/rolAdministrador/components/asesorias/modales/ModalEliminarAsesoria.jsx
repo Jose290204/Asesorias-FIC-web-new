@@ -1,11 +1,7 @@
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Typography
-} from '@mui/material';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import { Typography } from '@mui/material';
+
+import ModalConfirmacion from '../../compartidos/ModalConfirmacion';
 
 export default function ModalEliminarAsesoria({ open, onClose, onConfirm, showToast }) {
     const handleConfirm = () => {
@@ -15,31 +11,17 @@ export default function ModalEliminarAsesoria({ open, onClose, onConfirm, showTo
     };
 
     return (
-        <Dialog
+        <ModalConfirmacion
             open={open}
             onClose={onClose}
-            sx={{
-                '& .MuiPaper-root': {
-                    width: '450px',
-                    borderRadius: '12px',
-                    p: 1
-                }
-            }}
+            onConfirm={handleConfirm}
+            icono={<DeleteOutlineOutlinedIcon />}
+            titulo="Eliminar asesoría"
+            subtitulo="Esta acción no se puede deshacer"
+            tono="rojo"
+            textoConfirmar="Eliminar"
         >
-            <DialogTitle sx={{ fontWeight: 'bold' }}>Eliminación</DialogTitle>
-            <DialogContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 3 }}>
-                <Typography variant="body1" align="center">
-                    ¿Estás seguro de que deseas eliminar esta asesoría? Esta acción no se puede deshacer.
-                </Typography>
-            </DialogContent>
-            <DialogActions sx={{ p: 2, justifyContent: 'flex-end', gap: 1 }}>
-                <Button variant="outlined" color="inherit" onClick={onClose}>
-                    Cancelar
-                </Button>
-                <Button variant="contained" color="error" onClick={handleConfirm}>
-                    Aceptar
-                </Button>
-            </DialogActions>
-        </Dialog>
+            <Typography variant="body1">¿Estás seguro de que deseas eliminar esta asesoría?</Typography>
+        </ModalConfirmacion>
     );
 }

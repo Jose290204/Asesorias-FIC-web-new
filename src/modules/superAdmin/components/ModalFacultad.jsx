@@ -1,11 +1,30 @@
 import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
-import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import AccountBalanceOutlinedIcon from '@mui/icons-material/AccountBalanceOutlined';
+import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import { Avatar, Box, Button, Dialog, DialogActions, DialogContent, TextField, useMediaQuery } from '@mui/material';
 import { useRef, useState } from 'react';
 import { mensajesDeError } from '../../../Services/errores';
+import BloqueFormulario from '../../tutorias/rolAdministrador/components/compartidos/BloqueFormulario';
+import EncabezadoModal from '../../tutorias/rolAdministrador/components/compartidos/EncabezadoModal';
+import {
+  ESTILO_BOTON_AZUL,
+  ESTILO_BOTON_SECUNDARIO,
+  ICONO,
+  PAPER_MODAL_CELULAR,
+  paperModal,
+} from '../../tutorias/rolAdministrador/components/compartidos/estilosAdmin';
 
 const VACIO = { nombre: '', siglas: '' };
 const TIPOS_LOGO = ['image/png', 'image/jpeg', 'image/webp'];
 const MAX_LOGO_MB = 2;
+// Extensiones (no tipos MIME): en el celular con "image/*" solo abre la galería de fotos; con extensiones abre el explorador de archivos.
+const EXTENSIONES_LOGO = '.png,.jpg,.jpeg,.webp';
+
+// Limpia lo que se escribe en cada campo: el nombre solo letras, números y espacios; las siglas solo letras.
+const LIMPIAR = {
+  nombre: (v) => v.replace(/[^\p{L}\p{N}\s]/gu, ''),
+  siglas: (v) => v.replace(/[^\p{L}]/gu, ''),
+};
 
 // Crear o editar una facultad. Si recibe `facultad` es edición.
 // Logo: se adjunta un archivo de imagen (PNG, JPG o WEBP, máx. 2 MB).
@@ -15,6 +34,9 @@ const MAX_LOGO_MB = 2;
 //   undefined -> no se tocó (en edición se conserva el actual)
 // El padre lo monta con `key` distinto en cada apertura, así el formulario siempre inicia limpio.
 export default function ModalFacultad({ open, onClose, onGuardar, facultad = null }) {
+  // Celular: pantalla completa. Resto: ventana centrada.
+  const esCelular = useMediaQuery('(max-width:599.95px)');
+
   const [form, setForm] = useState(
     facultad ? { nombre: facultad.nombre, siglas: facultad.siglas } : VACIO
   );
@@ -25,7 +47,7 @@ export default function ModalFacultad({ open, onClose, onGuardar, facultad = nul
   const inputArchivo = useRef(null);
 
   const cambiar = (campo) => (e) => {
-    setForm((f) => ({ ...f, [campo]: e.target.value }));
+    setForm((f) => ({ ...f, [campo]: LIMPIAR[campo](e.target.value) }));
     setErrores((er) => ({ ...er, [campo]: undefined, general: undefined }));
   };
 
@@ -101,83 +123,105 @@ export default function ModalFacultad({ open, onClose, onGuardar, facultad = nul
       open={Boolean(open)}
       onClose={guardando ? undefined : onClose}
       disableRestoreFocus
-      sx={{ '& .MuiPaper-root': { width: '480px', maxWidth: '92vw', borderRadius: '12px', p: 1 } }}
+      fullScreen={esCelular}
+      sx={esCelular ? PAPER_MODAL_CELULAR : paperModal(480)}
     >
-      <DialogTitle sx={{ fontWeight: 'bold' }}>{facultad ? 'Editar facultad' : 'Nueva facultad'}</DialogTitle>
+      <EncabezadoModal
+        icono={<AccountBalanceOutlinedIcon />}
+        titulo={facultad ? 'Editar facultad' : 'Nueva facultad'}
+        subtitulo={facultad ? facultad.nombre : 'Datos y logo de la facultad'}
+        onClose={guardando ? undefined : onClose}
+      />
 
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '8px !important' }}>
-        <TextField
-          label="Nombre"
-          value={form.nombre}
-          onChange={cambiar('nombre')}
-          error={Boolean(errores.nombre)}
-          helperText={errores.nombre}
-          fullWidth
-          autoFocus
-        />
-        <TextField
-          label="Siglas"
-          value={form.siglas}
-          onChange={cambiar('siglas')}
-          error={Boolean(errores.siglas)}
-          helperText={errores.siglas ?? 'Deben ser únicas. Ej.: FIC'}
-          fullWidth
-        />
-
-        {/* Logo */}
-        <div>
-          <div className="flex items-center gap-3">
-            <Avatar
-              variant="rounded"
-              src={logoVista ?? undefined}
-              slotProps={{ img: { style: { objectFit: 'contain' } } }}
-              sx={{ width: 64, height: 64, bgcolor: '#F1F3F4', color: '#9AA0A6', border: '1px solid #E0E0E0' }}
-            >
-              <AddPhotoAlternateOutlinedIcon />
-            </Avatar>
-
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => inputArchivo.current?.click()}
-                disabled={guardando}
-                sx={{ textTransform: 'none' }}
-              >
-                {logoVista ? 'Cambiar logo' : 'Adjuntar logo'}
-              </Button>
-              {logoVista && (
-                <Button
-                  size="small"
-                  color="error"
-                  onClick={handleQuitarLogo}
-                  disabled={guardando}
-                  sx={{ textTransform: 'none' }}
-                >
-                  Quitar
-                </Button>
-              )}
-            </div>
-
-            <input
-              ref={inputArchivo}
-              type="file"
-              accept={TIPOS_LOGO.join(',')}
-              onChange={handleArchivo}
-              hidden
+      <DialogContent dividers sx={{ py: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <BloqueFormulario icono={<AccountBalanceOutlinedIcon sx={ICONO} />} titulo="Datos de la facultad">
+            <TextField
+              label="Nombre"
+              size="small"
+              value={form.nombre}
+              onChange={cambiar('nombre')}
+              error={Boolean(errores.nombre)}
+              helperText={errores.nombre ?? 'Solo letras y números.'}
+              fullWidth
+              autoFocus
             />
-          </div>
-          <p className={`mt-1 text-xs ${errores.logo ? 'text-red-600' : 'text-gray-500'}`}>
-            {errores.logo ?? `PNG, JPG o WEBP. Máximo ${MAX_LOGO_MB} MB. Opcional.`}
-          </p>
-        </div>
+            <TextField
+              label="Siglas"
+              size="small"
+              value={form.siglas}
+              onChange={cambiar('siglas')}
+              error={Boolean(errores.siglas)}
+              helperText={errores.siglas ?? 'Solo letras. Deben ser únicas. Ej.: FIC'}
+              fullWidth
+            />
+          </BloqueFormulario>
 
-        {errores.general && <p className="text-sm text-red-600">{errores.general}</p>}
+          {/* Logo */}
+          <BloqueFormulario icono={<ImageOutlinedIcon sx={ICONO} />} titulo="Logo">
+            <div className="flex items-center gap-3">
+              <Avatar
+                variant="rounded"
+                src={logoVista ?? undefined}
+                slotProps={{ img: { style: { objectFit: 'contain' } } }}
+                sx={{ width: 64, height: 64, bgcolor: '#FFFFFF', color: '#9AA0A6', border: '1px solid #E3E8F2', borderRadius: '12px' }}
+              >
+                <AddPhotoAlternateOutlinedIcon />
+              </Avatar>
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => inputArchivo.current?.click()}
+                  disabled={guardando}
+                  sx={{ ...ESTILO_BOTON_SECUNDARIO, color: '#08338F', borderColor: '#08338F' }}
+                >
+                  {logoVista ? 'Cambiar logo' : 'Adjuntar logo'}
+                </Button>
+                {logoVista && (
+                  <Button
+                    size="small"
+                    color="error"
+                    onClick={handleQuitarLogo}
+                    disabled={guardando}
+                    sx={ESTILO_BOTON_SECUNDARIO}
+                  >
+                    Quitar
+                  </Button>
+                )}
+              </div>
+
+              <input
+                ref={inputArchivo}
+                type="file"
+                accept={EXTENSIONES_LOGO}
+                onChange={handleArchivo}
+                hidden
+              />
+            </div>
+            <p className={`text-xs ${errores.logo ? 'text-red-600' : 'text-gray-500'}`}>
+              {errores.logo ?? `PNG, JPG o WEBP. Máximo ${MAX_LOGO_MB} MB. Opcional.`}
+            </p>
+          </BloqueFormulario>
+
+          {errores.general && <p className="text-sm text-red-600">{errores.general}</p>}
+        </Box>
       </DialogContent>
 
-      <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button variant="outlined" color="inherit" onClick={onClose} disabled={guardando}>Cancelar</Button>
-        <Button variant="contained" onClick={handleGuardar} disabled={guardando}>
+      <DialogActions
+        sx={{
+          p: 2,
+          pt: 1.5,
+          gap: 1,
+          pb: esCelular ? 'calc(16px + env(safe-area-inset-bottom))' : 2,
+          '& > button': { flex: esCelular ? 1 : 'none', minHeight: 40 },
+        }}
+      >
+        <Button variant="outlined" color="inherit" onClick={onClose} disabled={guardando} sx={ESTILO_BOTON_SECUNDARIO}>
+          Cancelar
+        </Button>
+        <Button variant="contained" onClick={handleGuardar} disabled={guardando} sx={ESTILO_BOTON_AZUL}>
           {guardando ? 'Guardando…' : 'Guardar'}
         </Button>
       </DialogActions>

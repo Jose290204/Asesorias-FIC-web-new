@@ -4,7 +4,9 @@ import MenuItem from '@mui/material/MenuItem';
 import Pagination from '@mui/material/Pagination';
 import TextField from '@mui/material/TextField';
 import { useCallback, useEffect, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 import InputBuscar from '../../../../components/ui/InputBuscar';
+import TituloVista from '../../../../components/ui/TituloVista';
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import { mensajesDeError } from '../../../../Services/errores';
 import {
@@ -14,6 +16,7 @@ import {
 } from '../../../../Services/solicitudesAdminService';
 import { ETIQUETA_ESTATUS } from '../components/solicitudes/estatusSolicitud';
 import TablaSolicitudes from '../components/solicitudes/TablaSolicitudes';
+import { MINIMO_CARGA_MS, conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 
 // Al entrar se muestran las pendientes: son las únicas que se pueden aceptar o rechazar
 const ESTATUS_INICIAL = 'pendiente';
@@ -22,6 +25,8 @@ export default function Solicitudes() {
   // Lo que se escribe en el buscador, y el texto que ya se mandó a la API (con una pausa al escribir)
   const [busqueda, setBusqueda] = useState('');
   const [buscar, setBuscar] = useState('');
+  // Mientras se busca por texto, el filtro de estatus no cuenta: la búsqueda es sobre todas las solicitudes
+  const buscando = Boolean(busqueda.trim());
 
   // La API pagina de 10 en 10: "meta" trae la última página y el total
   const [pagina, setPagina] = useState(1);
@@ -60,11 +65,11 @@ export default function Solicitudes() {
       if (!silencioso) setCargando(true);
       setError(false);
 
-      const { solicitudes: lista, meta: metaNueva } = await traerSolicitudesAdmin({
+      const { solicitudes: lista, meta: metaNueva } = await conTiempoMinimo(traerSolicitudesAdmin({
         buscar,
         page: pagina,
-        estatus
-      });
+        estatus: buscar ? '' : estatus
+      }), silencioso ? 0 : MINIMO_CARGA_MS);
 
       // Si se atendió la última solicitud de esta página, la página queda vacía:
       // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)
@@ -89,6 +94,9 @@ export default function Solicitudes() {
   useEffect(() => {
     cargarSolicitudes();
   }, [cargarSolicitudes]);
+
+  // Si llega un aviso nuevo, se vuelve a la app o pasan unos segundos, la lista se actualiza sola
+  useRefrescoPorAvisos(() => cargarSolicitudes({ silencioso: true }));
 
   // Las acciones regresan true si salió bien (el modal se cierra) y false si falló (el modal sigue abierto).
   // Aquí caen los errores de la API, por ejemplo 409 solicitud_no_pendiente u horario_ocupado.
@@ -123,7 +131,10 @@ export default function Solicitudes() {
 
   return (
     <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-      <p className="text-2xl font-bold">Solicitudes</p>
+      <TituloVista
+        titulo="Solicitudes"
+        subtitulo={!cargando && !error ? `${total} ${total === 1 ? 'solicitud' : 'solicitudes'}${buscar || hayFiltros ? ' encontradas' : ' pendientes'}` : null}
+      />
 
       {/* Barra de herramientas: en celular el filtro va arriba y el buscador abajo */}
       <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
@@ -133,7 +144,8 @@ export default function Solicitudes() {
           label="Estatus"
           value={estatus}
           onChange={handleCambiarEstatus}
-          sx={{ width: { xs: '100%', sm: 200 }, flexShrink: 0, backgroundColor: '#FFFFFF' }}
+          disabled={buscando}
+          sx={{ minWidth: { xs: 150, sm: 200 }, width: { xs: 170, sm: 'auto' }, flexShrink: 0, backgroundColor: '#FFFFFF' }}
           slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
         >
           <MenuItem value="">
@@ -155,13 +167,6 @@ export default function Solicitudes() {
         </div>
       </div>
 
-      {/* Leyenda de resultados */}
-      {!cargando && !error && (
-        <p className="-mt-3 text-sm text-gray-600 md:-mt-4">
-          {total} {total === 1 ? 'solicitud' : 'solicitudes'}
-          {buscar || hayFiltros ? ' encontradas' : ' pendientes'}
-        </p>
-      )}
 
       <div className="w-full flex flex-1 flex-col pb-5">
         {cargando ? (

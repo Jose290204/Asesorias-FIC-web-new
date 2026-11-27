@@ -27,13 +27,28 @@ export const aFormatoAsesoria = (a) => ({
   sesiones_count: a.sesiones_count ?? 0,
   // Mensajes del chat que la otra persona escribió y este usuario aún no ha leído (globito del botón Chat)
   mensajes_sin_leer: a.mensajes_sin_leer ?? 0,
+  // Último mensaje del chat ({ texto, fecha, propio }) o null si aún no hay; lo usa la lista de Chats
+  ultimo_mensaje: a.ultimo_mensaje ?? null,
 });
 
 // GET /estudiante/asesorias (paginada de 10 en 10)
 // estatus: 'en_curso' | 'completada' | 'cancelada' | 'historial' (completadas + canceladas)
-export const traerAsesorias = async ({ estatus, page } = {}) => {
+// buscar: materia o nombre del asesor. orden: 'mensaje' pone primero el mensaje más reciente (lista de Chats)
+export const traerAsesorias = async ({ estatus, page, buscar, orden } = {}) => {
   const { data } = await api.get('/estudiante/asesorias', {
-    params: { estatus: estatus || undefined, page: page || undefined },
+    params: { estatus: estatus || undefined, page: page || undefined, buscar: buscar || undefined, orden: orden || undefined },
   });
   return { asesorias: data.data.map(aFormatoAsesoria), meta: data.meta };
+};
+
+// Busca una asesoría en curso por id recorriendo las páginas (la API no tiene consulta por id).
+// Se usa al llegar desde un aviso de mensaje, cuando la conversación puede estar en otra página.
+export const encontrarAsesoriaEnCurso = async (id) => {
+  for (let page = 1; page <= 20; page++) {
+    const { asesorias, meta } = await traerAsesorias({ estatus: 'en_curso', page });
+    const encontrada = asesorias.find((a) => a.id === id);
+    if (encontrada) return encontrada;
+    if (page >= meta.last_page) return null;
+  }
+  return null;
 };

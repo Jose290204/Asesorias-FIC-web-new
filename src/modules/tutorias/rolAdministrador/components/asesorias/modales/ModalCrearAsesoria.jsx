@@ -1,5 +1,10 @@
-import CloseIcon from '@mui/icons-material/Close';
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
+import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import LaptopOutlinedIcon from '@mui/icons-material/LaptopOutlined';
+import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
+import NotesOutlinedIcon from '@mui/icons-material/NotesOutlined';
+import PersonSearchOutlinedIcon from '@mui/icons-material/PersonSearchOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import {
     Autocomplete,
@@ -8,8 +13,6 @@ import {
     Dialog,
     DialogActions,
     DialogContent,
-    DialogTitle,
-    IconButton,
     InputAdornment,
     MenuItem,
     TextField,
@@ -18,6 +21,7 @@ import {
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import { useEffect, useState } from 'react';
 
@@ -26,12 +30,16 @@ import { buscarAsesoresAdmin, buscarEstudiantesAdmin } from '../../../../../../S
 import CampoSelect from '../../../../rolAsesor/components/compartidos/CampoSelect';
 import { fechaCoincideConDia, opcionesDeHorario } from '../../../../rolAsesor/utils/horarios';
 import { PAPER_MODAL, PAPER_MODAL_CELULAR } from '../../../../rolAsesor/components/compartidos/estilosModales';
+import BloqueFormulario from '../../compartidos/BloqueFormulario';
+import EncabezadoModal from '../../compartidos/EncabezadoModal';
+import { ESTILO_BOTON_AZUL, ESTILO_BOTON_SECUNDARIO, ICONO } from '../../compartidos/estilosAdmin';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { useDiasInhabiles } from '../../../../compartidos/diasInhabiles';
 
 // El administrador da de alta una asesoría a nombre de un asesor. Primero se elige el asesor (de ahí salen
 // las materias, horarios y modalidades que se ofrecen), luego el alumno y después el resto de los campos.
-// Las fechas pasadas se permiten; el backend revisa que caiga dentro del ciclo vigente y que el asesor
-// de verdad imparta lo elegido.
+// La fecha de inicio solo puede ser de hoy en adelante (igual que en la solicitud del estudiante); el backend revisa
+// que caiga dentro del ciclo vigente y que el asesor de verdad imparta lo elegido.
 // onSave({ asesorId, estudianteId, materiaId, horarioId, fechaInicio, modalidad, razon, observaciones }) regresa true si salió bien.
 export default function ModalCrearAsesoria({ open, onClose, onSave }) {
     if (!open) return null;
@@ -65,6 +73,8 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
     const [cargandoEstudiantes, setCargandoEstudiantes] = useState(false);
     const [calendarioOpen, setCalendarioOpen] = useState(false);
     const [guardando, setGuardando] = useState(false);
+    // Vacaciones y suspensiones de la facultad: esos días no se pueden elegir
+    const { esInhabil } = useDiasInhabiles();
 
     // Busca asesores en la API mientras se escribe (la lista ya trae la disponibilidad de cada uno)
     useEffect(() => {
@@ -188,7 +198,9 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
         Boolean(opcionElegida) &&
         Boolean(formData.modalidad) &&
         Boolean(formData.razon) &&
-        Boolean(formData.fecha?.isValid());
+        Boolean(formData.fecha?.isValid()) &&
+        // Aunque se escriba a mano, la fecha de inicio no puede ser anterior a hoy
+        !formData.fecha.isBefore(dayjs(), 'day');
 
     const handleCrear = async () => {
         if (!formularioCompleto || guardando) return;
@@ -214,19 +226,16 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
             <Dialog open onClose={onClose} fullScreen={esCelular} sx={esCelular ? PAPER_MODAL_CELULAR : PAPER_MODAL}>
-                <DialogTitle sx={{ m: 0, p: 2, fontWeight: 'bold', fontSize: '1.2rem' }}>
-                    Crear Asesoría
-                    <IconButton
-                        aria-label="close"
-                        onClick={onClose}
-                        sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </DialogTitle>
+                <EncabezadoModal
+                    icono={<AddCircleOutlineOutlinedIcon />}
+                    titulo="Crear asesoría"
+                    subtitulo="Registra una asesoría a nombre de un asesor"
+                    onClose={onClose}
+                />
 
-                <DialogContent dividers>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 1 }}>
+                <DialogContent dividers sx={{ py: 2, overflowX: 'hidden' }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 1.5 }}>
+                        <BloqueFormulario icono={<PersonSearchOutlinedIcon sx={ICONO} />} titulo="Asesor y alumno">
                         {/* Buscador de asesor: la API filtra por nombre mientras se escribe */}
                         <Autocomplete
                             fullWidth
@@ -287,7 +296,7 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
 
                         {/* Leyenda: mientras no haya asesor, el campo de alumno está bloqueado */}
                         {!asesorElegido && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#0B4A8F' }}>
                                 <InfoOutlinedIcon fontSize="small" />
                                 <Typography variant="body2">
                                     Selecciona un asesor para habilitar el campo de alumno.
@@ -357,7 +366,7 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
 
                         {/* Leyenda: con asesor elegido, falta elegir alumno para habilitar el resto */}
                         {asesorElegido && !alumnoElegido && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#0B4A8F' }}>
                                 <InfoOutlinedIcon fontSize="small" />
                                 <Typography variant="body2">
                                     Selecciona un alumno para habilitar el resto de los campos.
@@ -365,6 +374,9 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                             </Box>
                         )}
 
+                        </BloqueFormulario>
+
+                        <BloqueFormulario icono={<MenuBookOutlinedIcon sx={ICONO} />} titulo="Materia">
                         <CampoSelect
                             label="Materia"
                             name="materiaId"
@@ -381,6 +393,9 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                             ))}
                         </CampoSelect>
 
+                        </BloqueFormulario>
+
+                        <BloqueFormulario icono={<AccessTimeOutlinedIcon sx={ICONO} />} titulo="Horario y fecha de inicio">
                         <CampoSelect
                             label="Horario"
                             size="small"
@@ -402,7 +417,8 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                             value={formData.fecha}
                             onChange={(nueva) => setFormData((prev) => ({ ...prev, fecha: nueva }))}
                             format="DD/MM/YYYY"
-                            shouldDisableDate={(fecha) => !fechaCoincideConDia(fecha, opcionElegida?.dia)}
+                            disablePast
+                            shouldDisableDate={(fecha) => !fechaCoincideConDia(fecha, opcionElegida?.dia) || esInhabil(fecha)}
                             disabled={!alumnoElegido || !opcionElegida}
                             open={calendarioOpen && alumnoElegido}
                             onOpen={abrirCalendario}
@@ -418,6 +434,9 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                             }}
                         />
 
+                        </BloqueFormulario>
+
+                        <BloqueFormulario icono={<LaptopOutlinedIcon sx={ICONO} />} titulo="Modalidad y razón">
                         <CampoSelect
                             label="Modalidad"
                             name="modalidad"
@@ -450,6 +469,9 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                             ))}
                         </CampoSelect>
 
+                        </BloqueFormulario>
+
+                        <BloqueFormulario icono={<NotesOutlinedIcon sx={ICONO} />} titulo="Observaciones">
                         <TextField
                             label="Observaciones (opcional)"
                             name="observaciones"
@@ -462,14 +484,15 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                             onChange={handleChange}
                             slotProps={{ htmlInput: { maxLength: 1000 } }}
                         />
+                        </BloqueFormulario>
                     </Box>
                 </DialogContent>
 
                 <DialogActions sx={{ p: 2, pt: 1.5, justifyContent: 'flex-end', gap: 1 }}>
-                    <Button variant="outlined" color="inherit" onClick={onClose}>
+                    <Button variant="outlined" color="inherit" onClick={onClose} sx={ESTILO_BOTON_SECUNDARIO}>
                         Cancelar
                     </Button>
-                    <Button variant="contained" color="primary" onClick={handleCrear} disabled={!formularioCompleto || guardando}>
+                    <Button variant="contained" onClick={handleCrear} disabled={!formularioCompleto || guardando} sx={ESTILO_BOTON_AZUL}>
                         Crear asesoría
                     </Button>
                 </DialogActions>

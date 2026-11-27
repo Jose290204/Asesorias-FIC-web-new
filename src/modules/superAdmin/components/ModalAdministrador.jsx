@@ -1,6 +1,20 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, TextField } from '@mui/material';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
+import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
+import PersonAddAlt1OutlinedIcon from '@mui/icons-material/PersonAddAlt1Outlined';
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
+import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import { Box, Button, Dialog, DialogActions, DialogContent, MenuItem, TextField, useMediaQuery } from '@mui/material';
 import { useState } from 'react';
 import { mensajesDeError } from '../../../Services/errores';
+import BloqueFormulario from '../../tutorias/rolAdministrador/components/compartidos/BloqueFormulario';
+import EncabezadoModal from '../../tutorias/rolAdministrador/components/compartidos/EncabezadoModal';
+import {
+  ESTILO_BOTON_AZUL,
+  ESTILO_BOTON_SECUNDARIO,
+  ICONO,
+  PAPER_MODAL_CELULAR,
+  paperModal,
+} from '../../tutorias/rolAdministrador/components/compartidos/estilosAdmin';
 import CampoContrasena from '../../tutorias/rolAdministrador/components/asesoresDisciplinares/modales/CampoContrasena';
 
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -24,6 +38,9 @@ const CAMPO_DE_API = {
 // (vacía = no cambiarla). Cambiarla o mover al administrador de facultad le cierra la sesión.
 // El padre lo monta con `key` distinto en cada apertura para que inicie limpio.
 export default function ModalAdministrador({ open, onClose, onGuardar, facultades, facultadInicial = '', administrador = null }) {
+  // Celular: pantalla completa. Resto: ventana centrada.
+  const esCelular = useMediaQuery('(max-width:599.95px)');
+
   const [form, setForm] = useState({
     facultadId: administrador?.facultadId ?? facultadInicial,
     nombre: administrador?.nombre ?? '',
@@ -101,6 +118,7 @@ export default function ModalAdministrador({ open, onClose, onGuardar, facultade
   const campo = (name, label, extra = {}) => (
     <TextField
       label={label}
+      size="small"
       value={form[name]}
       onChange={cambiar(name)}
       error={Boolean(errores[name])}
@@ -118,51 +136,75 @@ export default function ModalAdministrador({ open, onClose, onGuardar, facultade
       open={Boolean(open)}
       onClose={guardando ? undefined : onClose}
       disableRestoreFocus
-      fullWidth
-      sx={{ '& .MuiPaper-root': { maxWidth: '520px', borderRadius: '12px', p: 1 } }}
+      fullScreen={esCelular}
+      sx={esCelular ? PAPER_MODAL_CELULAR : paperModal(520)}
     >
-      <DialogTitle sx={{ fontWeight: 'bold' }}>{administrador ? 'Editar administrador' : 'Nuevo administrador'}</DialogTitle>
+      <EncabezadoModal
+        icono={administrador ? <ManageAccountsOutlinedIcon /> : <PersonAddAlt1OutlinedIcon />}
+        titulo={administrador ? 'Editar administrador' : 'Nuevo administrador'}
+        subtitulo={administrador ? administrador.nombreCompleto : 'Administrador de una facultad'}
+        onClose={guardando ? undefined : onClose}
+      />
 
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '8px !important' }}>
-        {campo('facultadId', 'Facultad', {
-          select: true,
-          helperText: errores.facultadId ?? (moviendo ? 'Al moverlo de facultad se cerrará su sesión.' : undefined),
-          children: facultades.map((f) => (
-            <MenuItem
-              key={f.id}
-              value={f.id}
-              // El backend no deja asignar a una facultad inactiva (salvo la que ya tiene)
-              disabled={!f.activa && f.id !== administrador?.facultadId}
-            >
-              {f.siglas} · {f.nombre}{f.activa ? '' : ' (inactiva)'}
-            </MenuItem>
-          )),
-        })}
-        {campo('nombre', 'Nombre(s)')}
-        {campo('apellidoPaterno', 'Apellido paterno')}
-        {campo('apellidoMaterno', 'Apellido materno (opcional)')}
-        {campo('correo', 'Correo', { type: 'email' })}
+      <DialogContent dividers sx={{ py: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <BloqueFormulario icono={<SchoolOutlinedIcon sx={ICONO} />} titulo="Facultad">
+            {campo('facultadId', 'Facultad', {
+              select: true,
+              helperText: errores.facultadId ?? (moviendo ? 'Al moverlo de facultad se cerrará su sesión.' : undefined),
+              children: facultades.map((f) => (
+                <MenuItem
+                  key={f.id}
+                  value={f.id}
+                  // El backend no deja asignar a una facultad inactiva (salvo la que ya tiene)
+                  disabled={!f.activa && f.id !== administrador?.facultadId}
+                >
+                  {f.siglas} · {f.nombre}{f.activa ? '' : ' (inactiva)'}
+                </MenuItem>
+              )),
+            })}
+          </BloqueFormulario>
 
-        <CampoContrasena
-          size="medium"
-          label={administrador ? 'Nueva contraseña (opcional)' : 'Contraseña'}
-          value={form.password}
-          onChange={cambiar('password')}
-          error={Boolean(errores.password)}
-          helperText={
-            errores.password ??
-            (administrador
-              ? 'Déjala vacía para no cambiarla. Si la cambias, se cierra su sesión.'
-              : 'Mínimo 8 caracteres. Compártesela al administrador; él podrá cambiarla desde "Olvidé mi contraseña".')
-          }
-        />
+          <BloqueFormulario icono={<PersonOutlineOutlinedIcon sx={ICONO} />} titulo="Datos personales">
+            {campo('nombre', 'Nombre(s)')}
+            {campo('apellidoPaterno', 'Apellido paterno')}
+            {campo('apellidoMaterno', 'Apellido materno (opcional)')}
+          </BloqueFormulario>
 
-        {errores.general && <p className="text-sm text-red-600">{errores.general}</p>}
+          <BloqueFormulario icono={<BadgeOutlinedIcon sx={ICONO} />} titulo="Cuenta">
+            {campo('correo', 'Correo', { type: 'email' })}
+
+            <CampoContrasena
+              label={administrador ? 'Nueva contraseña (opcional)' : 'Contraseña'}
+              value={form.password}
+              onChange={cambiar('password')}
+              error={Boolean(errores.password)}
+              helperText={
+                errores.password ??
+                (administrador
+                  ? 'Déjala vacía para no cambiarla. Si la cambias, se cierra su sesión.'
+                  : 'Mínimo 8 caracteres. Compártesela al administrador; él podrá cambiarla desde "Olvidé mi contraseña".')
+              }
+            />
+          </BloqueFormulario>
+
+          {errores.general && <p className="text-sm text-red-600">{errores.general}</p>}
+        </Box>
       </DialogContent>
 
-      <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button variant="outlined" color="inherit" onClick={onClose} disabled={guardando}>Cancelar</Button>
-        <Button variant="contained" onClick={handleGuardar} disabled={guardando}>
+      <DialogActions
+        sx={{
+          p: 2,
+          pt: 1.5,
+          gap: 1,
+          pb: esCelular ? 'calc(16px + env(safe-area-inset-bottom))' : 2,
+          '& > button': { flex: esCelular ? 1 : 'none', minHeight: 40 },
+        }}
+      >
+        <Button variant="outlined" color="inherit" onClick={onClose} disabled={guardando} sx={ESTILO_BOTON_SECUNDARIO}>
+          Cancelar
+        </Button>
+        <Button variant="contained" onClick={handleGuardar} disabled={guardando} sx={ESTILO_BOTON_AZUL}>
           {guardando ? 'Guardando…' : administrador ? 'Guardar' : 'Crear'}
         </Button>
       </DialogActions>

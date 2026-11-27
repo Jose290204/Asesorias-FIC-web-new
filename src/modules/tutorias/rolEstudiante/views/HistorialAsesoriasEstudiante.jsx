@@ -1,11 +1,22 @@
 import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Pagination from "@mui/material/Pagination";
 import { useCallback, useEffect, useState } from "react";
+import useRefrescoPorAvisos from "../../../../hooks/useRefrescoPorAvisos";
 import ToastNotification from "../../../../components/ui/ToastNotification";
 import { traerAsesorias } from "../../../../Services/asesoriasEstudianteService";
 import { mensajesDeError } from "../../../../Services/errores";
+import { conTiempoMinimo } from '../../../../utils/tiempoMinimo';
+import TituloVista from "../../../../components/ui/TituloVista";
 import ListaHistorialEstudiante from "../components/historial/ListaHistorialEstudiante";
+
+// Filtro por estatus del historial. "valor" es lo que entiende la API (estatus) y "color" el de la tarjeta
+const FILTROS = [
+    { valor: "historial", label: "Todas", color: "#244B91" },
+    { valor: "completada", label: "Completadas", color: "#2E7D32" },
+    { valor: "cancelada", label: "Canceladas", color: "#C62828" },
+];
 
 export default function HistorialAsesoriasEstudiante() {
     const [historial, setHistorial] = useState([]);
@@ -16,42 +27,79 @@ export default function HistorialAsesoriasEstudiante() {
     const [pagina, setPagina] = useState(1);
     const [meta, setMeta] = useState(null);
 
+    // Estatus elegido: "historial" = completadas y canceladas juntas
+    const [filtro, setFiltro] = useState("historial");
+
     // Toast para errores de carga
     const [toast, setToast] = useState({ open: false, message: "", type: "info" });
 
     // El historial son las asesorías ya cerradas: completadas y canceladas
-    const cargarHistorial = useCallback(async () => {
+    const cargarHistorial = useCallback(async ({ silencioso = false } = {}) => {
         try {
-            setLoading(true);
+            if (!silencioso) setLoading(true);
             setError(false);
-            const { asesorias, meta: metaNueva } = await traerAsesorias({ estatus: "historial", page: pagina });
+            const { asesorias, meta: metaNueva } = await conTiempoMinimo(traerAsesorias({ estatus: filtro, page: pagina }));
             setHistorial(asesorias);
             setMeta(metaNueva);
         } catch (err) {
             console.error("Error al cargar el historial", err);
-            setError(true);
+            if (!silencioso) setError(true);
             setToast({ open: true, message: mensajesDeError(err)[0], type: "error" });
         } finally {
             setLoading(false);
         }
-    }, [pagina]);
+    }, [pagina, filtro]);
 
     useEffect(() => {
         cargarHistorial();
     }, [cargarHistorial]);
 
+    useRefrescoPorAvisos(() => cargarHistorial({ silencioso: true }));
+
     const total = meta?.total ?? historial.length;
+
+    // Al cambiar de filtro se vuelve a la primera página
+    const cambiarFiltro = (valor) => {
+        if (valor === filtro) return;
+        setFiltro(valor);
+        setPagina(1);
+    };
+
+    const textoVacio = filtro === "completada"
+        ? "No tienes asesorías completadas."
+        : filtro === "cancelada"
+            ? "No tienes asesorías canceladas."
+            : "No tienes asesorías en tu historial.";
 
     return (
         <div className="min-h-[calc(100dvh-4.5rem)] w-full px-4 py-6 md:px-17 md:py-10 flex flex-col items-start justify-start gap-6 md:gap-11 bg-transparent">
-            <div>
-                <p className="text-2xl font-bold">Historial de asesorias</p>
-                {!loading && !error && (
-                    <p className="mt-1 text-sm text-gray-600">
-                        <span className="font-bold">{total}</span>{" "}
-                        {total === 1 ? "resultado" : "resultados"}
-                    </p>
-                )}
+            <TituloVista
+                titulo="Historial de asesorías"
+                subtitulo={!loading && !error ? `${total} ${total === 1 ? "resultado" : "resultados"}` : null}
+            />
+
+            {/* Filtro por estatus */}
+            <div className="flex w-full flex-wrap gap-2" role="group" aria-label="Filtrar por estatus">
+                {FILTROS.map((f) => {
+                    const activo = filtro === f.valor;
+                    return (
+                        <Chip
+                            key={f.valor}
+                            label={f.label}
+                            onClick={() => cambiarFiltro(f.valor)}
+                            aria-pressed={activo}
+                            variant={activo ? "filled" : "outlined"}
+                            sx={{
+                                fontWeight: 600,
+                                borderColor: f.color,
+                                color: activo ? "#fff" : f.color,
+                                backgroundColor: activo ? f.color : "transparent",
+                                "&:hover": { backgroundColor: activo ? f.color : `${f.color}1A` },
+                                "&:focus": { backgroundColor: activo ? f.color : "transparent" },
+                            }}
+                        />
+                    );
+                })}
             </div>
 
             {/* Contenedor de las tarjetas (el scroll lo hace la página, no este contenedor) */}
@@ -70,7 +118,7 @@ export default function HistorialAsesoriasEstudiante() {
                     </div>
                 ) : (
                     <>
-                        <ListaHistorialEstudiante historial={historial} />
+                        <ListaHistorialEstudiante historial={historial} textoVacio={textoVacio} />
 
                         {/* Paginación: solo aparece si hay más de una página */}
                         {meta && meta.last_page > 1 && (

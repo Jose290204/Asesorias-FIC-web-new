@@ -1,4 +1,5 @@
 import PersonAddAlt1OutlinedIcon from '@mui/icons-material/PersonAddAlt1Outlined';
+import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Fab from '@mui/material/Fab';
@@ -6,9 +7,12 @@ import MenuItem from '@mui/material/MenuItem';
 import Pagination from '@mui/material/Pagination';
 import TextField from '@mui/material/TextField';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 import InputBuscar from '../../../../components/ui/InputBuscar';
+import TituloVista from '../../../../components/ui/TituloVista';
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import { useCatalogos } from '../../../../context/CatalogosContext';
+import { compararGrupos, etiquetaGrupo } from '../../../../utils/etiquetaGrupo';
 import {
     crearEstudianteAdmin,
     darDeBajaEstudianteAdmin,
@@ -16,17 +20,20 @@ import {
     traerEstudiantesAdmin
 } from '../../../../Services/estudiantesAdminService';
 import { mensajesDeError } from '../../../../Services/errores';
+import { ESTILO_BOTON_AZUL, ESTILO_BOTON_CREAR, ESTILO_BOTON_VERDE } from '../components/compartidos/estilosAdmin';
+import ModalCargaEstudiantes from '../components/estudiantes/modales/ModalCargaEstudiantes';
 import ModalCrearEstudiante from '../components/estudiantes/modales/ModalCrearEstudiante';
 import TablaEstudiantes from '../components/estudiantes/TablaEstudiantes';
-import ModalCargaExcel from '../components/ModalCargaExel';
-import { uploadEstudiantes } from '../services/estudianteService';
+import { MINIMO_CARGA_MS, conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 
 // Color de los botones de crear (distinto al verde de la carga masiva)
 const AZUL = '#244B91';
-const AZUL_OSCURO = '#1B3A73';
 
 // Estilo de las listas de filtro (licenciatura y grupo)
-const ESTILO_FILTRO = { width: { xs: '100%', sm: 220 }, flexShrink: 0, backgroundColor: '#FFFFFF' };
+const ESTILO_FILTRO = { width: { xs: 230, sm: 220 }, maxWidth: '100%', flexShrink: 0, backgroundColor: '#FFFFFF' };
+
+// Altura máxima del menú de las listas desplegables, para que no se desborden de la pantalla
+const MENU_LISTA = { slotProps: { paper: { sx: { maxHeight: 320 } } } };
 
 export default function Estudiantes() {
     const { catalogos } = useCatalogos();
@@ -34,6 +41,8 @@ export default function Estudiantes() {
     // Lo que se escribe en el buscador, y el texto que ya se mandó a la API (con una pausa al escribir)
     const [busqueda, setBusqueda] = useState('');
     const [buscar, setBuscar] = useState('');
+    // Mientras se busca por texto, los filtros no cuentan: la búsqueda es sobre todos los estudiantes
+    const buscando = Boolean(busqueda.trim());
 
     // Filtros ('' = todas). El grupo depende de la licenciatura elegida
     const [licenciaturaId, setLicenciaturaId] = useState('');
@@ -60,7 +69,8 @@ export default function Estudiantes() {
     // Grupos que ofrece el filtro: los de la licenciatura elegida, o todos si no hay ninguna
     const gruposFiltro = useMemo(() => {
         const grupos = catalogos?.grupos ?? [];
-        return licenciaturaId ? grupos.filter((g) => g.licenciatura_id === licenciaturaId) : grupos;
+        const visibles = licenciaturaId ? grupos.filter((g) => g.licenciatura_id === licenciaturaId) : grupos;
+        return [...visibles].sort(compararGrupos);
     }, [catalogos, licenciaturaId]);
 
     // Al dejar de escribir 400 ms se busca en la API y se vuelve a la página 1
@@ -79,12 +89,12 @@ export default function Estudiantes() {
             if (!silencioso) setCargando(true);
             setError(false);
 
-            const { estudiantes: lista, meta: metaNueva } = await traerEstudiantesAdmin({
+            const { estudiantes: lista, meta: metaNueva } = await conTiempoMinimo(traerEstudiantesAdmin({
                 buscar,
                 page: pagina,
-                licenciaturaId,
-                grupoId
-            });
+                licenciaturaId: buscar ? '' : licenciaturaId,
+                grupoId: buscar ? '' : grupoId
+            }), silencioso ? 0 : MINIMO_CARGA_MS);
 
             // Si se dio de baja al último de esta página, la página queda vacía:
             // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)
@@ -110,6 +120,9 @@ export default function Estudiantes() {
         cargarEstudiantes();
     }, [cargarEstudiantes]);
 
+    // Si llega un aviso nuevo, se vuelve a la app o pasan unos segundos, la lista se actualiza sola
+    useRefrescoPorAvisos(() => cargarEstudiantes({ silencioso: true }));
+
     // Las acciones regresan true si salió bien (el modal se cierra) y false si falló (el modal sigue abierto).
     // Aquí caen los errores de la API, por ejemplo 422 (correo o cuenta repetidos) o 409 (asesorías en curso).
     const ejecutar = async (accion, mensajeExito) => {
@@ -132,18 +145,6 @@ export default function Estudiantes() {
 
     const handleDeleteEstudiante = (estudiante) =>
         ejecutar(() => darDeBajaEstudianteAdmin(estudiante.id), 'Estudiante dado de baja');
-
-    // TODO (etapa 2.7): conectar la carga masiva con el backend; por ahora el servicio es una simulación
-    const handleExcelData = async (data) => {
-        try {
-            await uploadEstudiantes(data);
-            showToast('Estudiantes cargados exitosamente', 'success');
-            cargarEstudiantes({ silencioso: true });
-        } catch (err) {
-            console.error('Error al procesar el archivo de estudiantes:', err);
-            showToast('Error al procesar el archivo de estudiantes', 'error');
-        }
-    };
 
     // Al cambiar de licenciatura se limpia el grupo; cualquier filtro regresa a la página 1
     const handleCambiarLicenciatura = (e) => {
@@ -178,7 +179,10 @@ export default function Estudiantes() {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <p className="text-2xl font-bold">Estudiantes</p>
+            <TituloVista
+                titulo="Estudiantes"
+                subtitulo={!cargando && !error ? `${total} ${total === 1 ? 'estudiante' : 'estudiantes'}${buscar || hayFiltros ? ' encontrados' : ''}` : null}
+            />
 
             {/* Filtros: en celular van arriba, uno bajo otro */}
             <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -189,7 +193,8 @@ export default function Estudiantes() {
                     value={licenciaturaId}
                     onChange={handleCambiarLicenciatura}
                     sx={ESTILO_FILTRO}
-                    slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
+                    disabled={buscando}
+                    slotProps={{ select: { displayEmpty: true, MenuProps: MENU_LISTA }, inputLabel: { shrink: true } }}
                 >
                     <MenuItem value="">
                         <em>Todas</em>
@@ -208,14 +213,15 @@ export default function Estudiantes() {
                     value={grupoId}
                     onChange={handleCambiarGrupo}
                     sx={ESTILO_FILTRO}
-                    slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
+                    disabled={buscando}
+                    slotProps={{ select: { displayEmpty: true, MenuProps: MENU_LISTA }, inputLabel: { shrink: true } }}
                 >
                     <MenuItem value="">
                         <em>Todos</em>
                     </MenuItem>
                     {gruposFiltro.map((g) => (
                         <MenuItem key={g.id} value={g.id}>
-                            {g.modalidad === 'virtual' ? `${g.nombre} (virtual)` : g.nombre}
+                            {etiquetaGrupo(g, catalogos?.licenciaturas)}
                         </MenuItem>
                     ))}
                 </TextField>
@@ -231,15 +237,14 @@ export default function Estudiantes() {
                     />
                 </div>
 
-                <button
+                <Button
+                    variant="contained"
+                    startIcon={<UploadFileOutlinedIcon />}
                     onClick={handleOpenModalExcel}
-                    className="w-1/2 sm:w-auto shrink-0 justify-center bg-[#2e7d32] hover:bg-[#1b5e20] text-sm text-white font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
+                    sx={{ ...ESTILO_BOTON_VERDE, flexShrink: 0, width: { xs: '50%', sm: 'auto' }, minHeight: 40 }}
                 >
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1.8 14.8l-1.4 1.4L12 15.8l-2.4 2.4-1.4-1.4 2.4-2.4-2.4-2.4 1.4-1.4 2.4 2.4 2.4-2.4 1.4 1.4-2.4 2.4 2.4 2.4zM13 9V3.5L18.5 9H13z" />
-                    </svg>
-                    Cargar Estudiantes
-                </button>
+                    Cargar estudiantes
+                </Button>
 
                 {/* Botón normal: solo tablet y escritorio */}
                 <Button
@@ -248,15 +253,13 @@ export default function Estudiantes() {
                     startIcon={<PersonAddAlt1OutlinedIcon />}
                     onClick={handleOpenModalCrear}
                     sx={{
-                        borderRadius: '5px',
-                        textTransform: 'none',
-                        backgroundColor: AZUL,
-                        '&:hover': { backgroundColor: AZUL_OSCURO },
+                        ...ESTILO_BOTON_CREAR,
+                        borderRadius: '8px',
                         flexShrink: 0,
                         display: { xs: 'none', sm: 'inline-flex' }
                     }}
                 >
-                    Crear Estudiante
+                    Crear estudiante
                 </Button>
             </div>
 
@@ -266,14 +269,11 @@ export default function Estudiantes() {
                 aria-label="Crear estudiante"
                 onClick={handleOpenModalCrear}
                 sx={{
+                    ...ESTILO_BOTON_CREAR,
                     position: 'fixed',
                     right: 16,
                     bottom: 16,
                     zIndex: 10,
-                    textTransform: 'none',
-                    color: '#ffffff',
-                    backgroundColor: AZUL,
-                    '&:hover': { backgroundColor: AZUL_OSCURO },
                     display: { xs: 'inline-flex', sm: 'none' }
                 }}
             >
@@ -287,20 +287,13 @@ export default function Estudiantes() {
                 onSave={handleCrearEstudiante}
             />
 
-            {/* Modal reutilizable de carga masiva desde Excel */}
-            <ModalCargaExcel
+            {/* Carga masiva desde la plantilla de Excel (valida, muestra errores y crea) */}
+            <ModalCargaEstudiantes
                 open={modalExcelOpen}
                 onClose={() => setModalExcelOpen(false)}
-                onDataLoaded={handleExcelData}
+                onTerminado={() => cargarEstudiantes({ silencioso: true })}
             />
 
-            {/* Leyenda de resultados */}
-            {!cargando && !error && (
-                <p className="-mt-3 text-sm text-gray-600 md:-mt-4">
-                    {total} {total === 1 ? 'estudiante' : 'estudiantes'}
-                    {buscar || hayFiltros ? ' encontrados' : ''}
-                </p>
-            )}
 
             {/* Contenido: en celular se deja espacio abajo para que el botón flotante no tape la paginación */}
             <div className="w-full flex flex-1 flex-col pb-24 sm:pb-5">
@@ -316,7 +309,7 @@ export default function Estudiantes() {
                             variant="contained"
                             size="small"
                             onClick={() => cargarEstudiantes()}
-                            sx={{ textTransform: 'none', borderRadius: '5px', backgroundColor: AZUL }}
+                            sx={{ ...ESTILO_BOTON_AZUL, minHeight: 36 }}
                         >
                             Reintentar
                         </Button>

@@ -4,8 +4,10 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Fab from '@mui/material/Fab';
 import Pagination from '@mui/material/Pagination';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 import BotonFiltro from '../../../../components/ui/BotonFlitro';
 import InputBuscar from '../../../../components/ui/InputBuscar';
+import TituloVista from '../../../../components/ui/TituloVista';
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import {
   cancelarAsesoriaAdmin,
@@ -19,6 +21,8 @@ import { mensajesDeError } from '../../../../Services/errores';
 import ModalCrearAsesoria from '../components/asesorias/modales/ModalCrearAsesoria';
 import ModalFiltrosAdmin from '../components/asesorias/modales/ModalFiltrosAdmin';
 import TablaAsesorias from '../components/asesorias/TablaAsesorias';
+import { MINIMO_CARGA_MS, conTiempoMinimo } from '../../../../utils/tiempoMinimo';
+import { ESTILO_BOTON_CREAR } from '../components/compartidos/estilosAdmin';
 
 const initialFiltros = {
   licenciatura: '',
@@ -32,6 +36,8 @@ export default function Asesorias() {
   // Lo que se escribe en el buscador, y el texto que ya se mandó a la API (con una pausa al escribir)
   const [busqueda, setBusqueda] = useState('');
   const [buscar, setBuscar] = useState('');
+  // Mientras se busca por texto, los filtros no cuentan: la búsqueda es sobre todas las asesorías
+  const buscando = Boolean(busqueda.trim());
 
   // La API pagina de 10 en 10: "meta" trae la última página y el total
   const [pagina, setPagina] = useState(1);
@@ -103,11 +109,11 @@ export default function Asesorias() {
       if (!silencioso) setCargando(true);
       setError(false);
 
-      const { asesorias: lista, meta: metaNueva } = await traerAsesoriasAdmin({
+      const { asesorias: lista, meta: metaNueva } = await conTiempoMinimo(traerAsesoriasAdmin({
         buscar,
         page: pagina,
-        filtros: aplicados
-      });
+        filtros: buscar ? initialFiltros : aplicados
+      }), silencioso ? 0 : MINIMO_CARGA_MS);
 
       // Si se atendió la última asesoría de esta página, la página queda vacía:
       // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)
@@ -132,6 +138,9 @@ export default function Asesorias() {
   useEffect(() => {
     cargarAsesorias();
   }, [cargarAsesorias]);
+
+  // Si llega un aviso nuevo, se vuelve a la app o pasan unos segundos, la lista se actualiza sola
+  useRefrescoPorAvisos(() => cargarAsesorias({ silencioso: true }));
 
   // Las acciones regresan true si salió bien (el modal se cierra) y false si falló (el modal sigue abierto).
   // Aquí caen los errores de la API, por ejemplo 409 asesoria_no_en_curso.
@@ -224,12 +233,15 @@ export default function Asesorias() {
 
   return (
     <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-      <p className="text-2xl font-bold">Asesorías</p>
+      <TituloVista
+        titulo="Asesorías"
+        subtitulo={!cargando && !error ? `${total} ${total === 1 ? 'asesoría' : 'asesorías'}${buscar || hayFiltros ? ' encontradas' : ' en curso'}` : null}
+      />
 
       {/* Barra de herramientas: en celular el filtro va arriba y el buscador abajo (igual que las otras vistas) */}
       <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
         <div className="flex flex-col items-start gap-3">
-          <BotonFiltro onClick={handleOpenModalFiltros} />
+          <BotonFiltro onClick={handleOpenModalFiltros} disabled={buscando} />
           {hayFiltros && (
             <button
               type="button"
@@ -252,9 +264,8 @@ export default function Asesorias() {
         <Button
           variant="contained"
           sx={{
-            borderRadius: '5px',
-            textTransform: 'none',
-            backgroundColor: '#2E7D32',
+            ...ESTILO_BOTON_CREAR,
+            borderRadius: '8px',
             flexShrink: 0,
             // Botón normal: solo tablet y escritorio
             display: { xs: 'none', sm: 'inline-flex' }
@@ -263,29 +274,27 @@ export default function Asesorias() {
           startIcon={<AddOutlinedIcon />}
           onClick={handleOpenModalCrear}
         >
-          Crear Asesoria
+          Crear asesoría
         </Button>
       </div>
 
       {/* Botón flotante: solo celular */}
       <Fab
         variant="extended"
-        color="success"
         aria-label="Crear asesoría"
         onClick={handleOpenModalCrear}
-        sx={{ position: 'fixed', right: 16, bottom: 16, zIndex: 10, textTransform: 'none', display: { xs: 'inline-flex', sm: 'none' } }}
+        sx={{
+          ...ESTILO_BOTON_CREAR,
+          position: 'fixed',
+          right: 16,
+          bottom: 16,
+          zIndex: 10,
+          display: { xs: 'inline-flex', sm: 'none' },
+        }}
       >
         <AddOutlinedIcon sx={{ mr: 1 }} />
         Crear asesoría
       </Fab>
-
-      {/* Leyenda de resultados */}
-      {!cargando && !error && (
-        <p className="-mt-3 text-sm text-gray-600 md:-mt-4">
-          {total} {total === 1 ? 'asesoría' : 'asesorías'}
-          {buscar || hayFiltros ? ' encontradas' : ' en curso'}
-        </p>
-      )}
 
       {/* Contenido: título y filtros quedan visibles, el estado va al centro del área */}
       <div className="w-full flex flex-1 flex-col pb-24 sm:pb-5">

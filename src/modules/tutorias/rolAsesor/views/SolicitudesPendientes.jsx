@@ -3,16 +3,19 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Pagination from '@mui/material/Pagination';
 import { useCallback, useEffect, useState } from 'react';
 
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 import { SOLICITUDES_PRUEBA, USAR_DATOS_PRUEBA } from '../datosPrueba';
 
 // Ajusta estas rutas según dónde esté ubicado este archivo en tu proyecto
 import ToastNotification from '../../../../components/ui/ToastNotification';
+import TituloVista from '../../../../components/ui/TituloVista';
 import { mensajesDeError } from '../../../../Services/errores';
 import {
     aceptarSolicitud,
     rechazarSolicitud,
     traerSolicitudesPendientes,
 } from '../../../../Services/solicitudesAsesorService';
+import { conTiempoMinimo, MINIMO_CARGA_MS } from '../../../../utils/tiempoMinimo';
 import TablaSolicitudesPendientes from '../components/solicitudes/TablaSolicitudesPendientes';
 
 export default function SolicitudesPendientes() {
@@ -49,7 +52,10 @@ export default function SolicitudesPendientes() {
             if (!silencioso) setLoading(true);
             setError(false);
 
-            const { solicitudes: lista, meta: metaNueva } = await traerSolicitudesPendientes({ page: pagina });
+            const { solicitudes: lista, meta: metaNueva } = await conTiempoMinimo(
+                traerSolicitudesPendientes({ page: pagina }),
+                silencioso ? 0 : MINIMO_CARGA_MS
+            );
 
             // Si se atendió la última solicitud de esta página, la página queda vacía:
             // se regresa a la anterior (el efecto de abajo vuelve a cargar solo)
@@ -72,6 +78,9 @@ export default function SolicitudesPendientes() {
     useEffect(() => {
         cargarSolicitudes();
     }, [cargarSolicitudes]);
+
+    // Si llega un aviso nuevo (o se vuelve a la app), la lista se actualiza sola
+    useRefrescoPorAvisos(() => cargarSolicitudes({ silencioso: true }));
 
     // Regresan true si salió bien (la tarjeta cierra el modal) y false si falló
     const handleRechazar = async (id_solicitud, motivo) => {
@@ -104,14 +113,10 @@ export default function SolicitudesPendientes() {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <div>
-                <p className="text-2xl font-bold">Solicitudes Pendientes</p>
-                {!loading && !error && (
-                    <p className="mt-1 text-sm text-gray-600">
-                        {total} {total === 1 ? 'solicitud pendiente' : 'solicitudes pendientes'}
-                    </p>
-                )}
-            </div>
+            <TituloVista
+                titulo="Solicitudes pendientes"
+                subtitulo={!loading && !error ? `${total} ${total === 1 ? 'solicitud pendiente' : 'solicitudes pendientes'}` : null}
+            />
 
             {/* Contenido: el título queda visible y el estado va al centro del área */}
             <div className="w-full flex flex-1 flex-col">

@@ -1,48 +1,44 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import PersonRemoveOutlinedIcon from '@mui/icons-material/PersonRemoveOutlined';
+import { Typography } from '@mui/material';
+import { useState } from 'react';
+
+import ModalConfirmacion from '../../compartidos/ModalConfirmacion';
 
 /**
- * Confirmación para quitar el rol de Asesor Par a un estudiante.
- * El estudiante no se elimina: solo deja de ser asesor par.
- * El aviso de éxito lo muestra quien usa el modal (la tabla), no este componente.
+ * Confirmación para quitarle el rol de asesor a un asesor par.
+ * Sigue siendo estudiante y conserva su disponibilidad; se rechazan las solicitudes pendientes que le habían pedido.
+ *
+ * Props:
+ *  - onConfirm: regresa una promesa con true si salió bien (el modal se cierra) o false si falló
+ *    (por ejemplo, tiene asesorías en curso como asesor; el aviso lo da quien lo usa)
  */
 export default function ModalQuitarAsesorPar({ open, onClose, onConfirm, data }) {
-    const handleConfirm = () => {
+    const [procesando, setProcesando] = useState(false);
+
+    const handleConfirm = async () => {
         document.activeElement?.blur();
-        onConfirm?.(data);
-        onClose();
+        setProcesando(true);
+        const ok = await onConfirm?.(data);
+        setProcesando(false);
+        if (ok) onClose();
     };
 
     return (
-        <Dialog
-            open={Boolean(open)}
+        <ModalConfirmacion
+            open={open}
             onClose={onClose}
-            disableRestoreFocus
-            sx={{
-                '& .MuiPaper-root': {
-                    width: '450px',
-                    maxWidth: '90vw',
-                    borderRadius: '12px',
-                    p: 1
-                }
-            }}
+            onConfirm={handleConfirm}
+            icono={<PersonRemoveOutlinedIcon />}
+            titulo="Quitar rol de asesor"
+            subtitulo="Seguirá siendo estudiante"
+            tono="rojo"
+            textoConfirmar="Quitar rol"
+            deshabilitado={procesando}
         >
-            <DialogTitle sx={{ fontWeight: 'bold' }}>Quitar rol de Asesor Par</DialogTitle>
-
-            <DialogContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 3 }}>
-                <Typography variant="body1" align="center">
-                    ¿Deseas quitar el rol de Asesor Par a {data?.nombre ? <strong>{data.nombre}</strong> : 'este estudiante'}?
-                    Seguirá registrado como estudiante.
-                </Typography>
-            </DialogContent>
-
-            <DialogActions sx={{ p: 2, justifyContent: 'flex-end', gap: 1 }}>
-                <Button variant="outlined" color="inherit" onClick={onClose}>
-                    Cancelar
-                </Button>
-                <Button variant="contained" color="error" onClick={handleConfirm}>
-                    Aceptar
-                </Button>
-            </DialogActions>
-        </Dialog>
+            <Typography variant="body1">
+                ¿Estás seguro de que deseas quitar el rol de asesor a {data?.nombre ? <strong>{data.nombre}</strong> : 'este estudiante'}?
+                {' '}Dejará de aparecer como asesor y se rechazarán las solicitudes pendientes que le habían pedido.
+            </Typography>
+        </ModalConfirmacion>
     );
 }

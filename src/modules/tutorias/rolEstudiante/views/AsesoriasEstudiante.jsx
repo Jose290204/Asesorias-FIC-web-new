@@ -2,12 +2,22 @@ import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Pagination from "@mui/material/Pagination";
 import { useCallback, useEffect, useState } from "react";
+import useRefrescoPorAvisos from "../../../../hooks/useRefrescoPorAvisos";
+import { useLocation, useNavigate } from "react-router-dom";
 import ToastNotification from "../../../../components/ui/ToastNotification";
-import { traerAsesorias } from "../../../../Services/asesoriasEstudianteService";
+import { encontrarAsesoriaEnCurso, traerAsesorias } from "../../../../Services/asesoriasEstudianteService";
 import { mensajesDeError } from "../../../../Services/errores";
+import { conTiempoMinimo, MINIMO_CARGA_MS } from '../../../../utils/tiempoMinimo';
+import TituloVista from "../../../../components/ui/TituloVista";
 import ListaAsesoriasEstudiante from "../components/asesorias/ListaAsesoriasEstudiante";
 
 export default function AsesoriasEstudiante() {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Asesoría cuyo material se abre al llegar desde el aviso de material nuevo
+    const [materialDesdeAviso, setMaterialDesdeAviso] = useState(null);
+
     const [asesorias, setAsesorias] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -25,7 +35,10 @@ export default function AsesoriasEstudiante() {
         try {
             if (!silencioso) setLoading(true);
             setError(false);
-            const { asesorias: lista, meta: metaNueva } = await traerAsesorias({ estatus: "en_curso", page: pagina });
+            const { asesorias: lista, meta: metaNueva } = await conTiempoMinimo(
+                traerAsesorias({ estatus: "en_curso", page: pagina }),
+                silencioso ? 0 : MINIMO_CARGA_MS
+            );
             setAsesorias(lista);
             setMeta(metaNueva);
         } catch (err) {
@@ -53,6 +66,25 @@ export default function AsesoriasEstudiante() {
         return () => clearInterval(intervalo);
     }, [cargarAsesorias]);
 
+    // También al llegar un aviso nuevo o al volver a la app
+    useRefrescoPorAvisos(() => cargarAsesorias({ silencioso: true }));
+
+    // Si se llega desde el aviso de material nuevo, se abre el material de esa asesoría.
+    // El estado de la navegación se limpia para que al recargar la página no se vuelva a abrir.
+    useEffect(() => {
+        const id = Number(location.state?.abrirMaterial);
+        if (!id) return;
+
+        navigate(location.pathname, { replace: true, state: null });
+
+        encontrarAsesoriaEnCurso(id)
+            .then((asesoria) => {
+                if (asesoria) setMaterialDesdeAviso(asesoria);
+                else setToast({ open: true, message: "Esa asesoría ya no está en curso.", type: "info" });
+            })
+            .catch(() => setToast({ open: true, message: "No se pudo abrir el material.", type: "error" }));
+    }, [location.state, location.pathname, navigate]);
+
     // Al abrir o cerrar el chat, esa asesoría ya no tiene mensajes sin leer
     const handleChatLeido = (asesoriaId) =>
         setAsesorias((prev) => prev.map((a) => (a.id === asesoriaId ? { ...a, mensajes_sin_leer: 0 } : a)));
@@ -61,15 +93,10 @@ export default function AsesoriasEstudiante() {
 
     return (
         <div className="min-h-[calc(100dvh-4.5rem)] w-full px-4 py-6 md:px-17 md:py-10 flex flex-col items-start justify-start gap-6 md:gap-11 bg-transparent">
-            <div>
-                <p className="text-2xl font-bold">Asesorias En Curso</p>
-                {!loading && !error && (
-                    <p className="mt-1 text-sm text-gray-600">
-                        <span className="font-bold">{total}</span>{" "}
-                        {total === 1 ? "asesoría en curso" : "asesorías en curso"}
-                    </p>
-                )}
-            </div>
+            <TituloVista
+                titulo="Asesorías en curso"
+                subtitulo={!loading && !error ? `${total} ${total === 1 ? "asesoría en curso" : "asesorías en curso"}` : null}
+            />
 
             <div className="w-full pb-5">
                 {loading ? (
@@ -86,7 +113,12 @@ export default function AsesoriasEstudiante() {
                     </div>
                 ) : (
                     <>
-                        <ListaAsesoriasEstudiante asesorias={asesorias} onChatLeido={handleChatLeido} />
+                        <ListaAsesoriasEstudiante
+                            asesorias={asesorias}
+                            onChatLeido={handleChatLeido}
+                            materialExterno={materialDesdeAviso}
+                            onCerrarMaterialExterno={() => setMaterialDesdeAviso(null)}
+                        />
 
                         {/* Paginación: solo aparece si hay más de una página */}
                         {meta && meta.last_page > 1 && (

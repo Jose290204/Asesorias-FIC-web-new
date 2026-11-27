@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import * as authService from '../Services/authService'; // ajusta la ruta según tu proyecto
+import { desactivarPush } from '../Services/pushService';
 
 const AuthContext = createContext();
 
@@ -64,6 +65,8 @@ export function AuthProvider({ children }) {
 
     const logout = async () => {
         try {
+            // Antes de cerrar sesión (el backend necesita al usuario): este dispositivo deja de recibir sus avisos
+            await desactivarPush().catch(() => {});
             await authService.logout();
         } catch (error) {
             console.error('Error al cerrar sesión', error);

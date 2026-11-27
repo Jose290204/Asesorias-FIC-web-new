@@ -5,9 +5,12 @@ import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
 import { Avatar, Chip } from '@mui/material';
 import { useEffect, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 import Estadistica from '../components/perfil/Estadistica';
 import FilaDato from '../components/perfil/FilaDato';
+import TituloVista from '../../../../components/ui/TituloVista';
 import { traerPerfilEstudiante } from '../../../../Services/estudiantesService';
+import { conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 
 export default function PerfilEstudiante() {
     const [perfil, setPerfil] = useState(null);
@@ -15,7 +18,7 @@ export default function PerfilEstudiante() {
     const [error, setError] = useState(false);
 
     useEffect(() => {
-        traerPerfilEstudiante()
+        conTiempoMinimo(traerPerfilEstudiante())
             .then(setPerfil)
             .catch((err) => {
                 console.error('Error al cargar el perfil', err);
@@ -23,6 +26,11 @@ export default function PerfilEstudiante() {
             })
             .finally(() => setLoading(false));
     }, []);
+
+    // Los contadores se actualizan solos (en silencio: si falla, se queda con lo que ya tenía)
+    useRefrescoPorAvisos(() => {
+        traerPerfilEstudiante().then(setPerfil).catch(() => {});
+    });
 
     if (loading) {
         return (
@@ -49,7 +57,7 @@ export default function PerfilEstudiante() {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <p className="text-2xl font-bold">Perfil</p>
+            <TituloVista titulo="Perfil" />
 
             <div className="w-full flex flex-col items-center gap-5">
 

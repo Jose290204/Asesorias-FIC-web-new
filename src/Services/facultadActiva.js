@@ -13,10 +13,10 @@ export function leerFacultadActiva() {
   }
 }
 
-// Solo se guarda lo necesario para mostrar la barra: id, nombre y siglas
-export function guardarFacultadActiva({ id, nombre, siglas }) {
+// Solo se guarda lo necesario para mostrar las barras: id, nombre, siglas y logo (URL)
+export function guardarFacultadActiva({ id, nombre, siglas, logo }) {
   try {
-    sessionStorage.setItem(CLAVE, JSON.stringify({ id, nombre, siglas }));
+    sessionStorage.setItem(CLAVE, JSON.stringify({ id, nombre, siglas, logo: logo ?? null }));
   } catch {
     /* sin storage disponible: la facultad activa solo vive en memoria */
   }

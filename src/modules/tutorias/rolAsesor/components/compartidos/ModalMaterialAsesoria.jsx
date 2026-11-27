@@ -1,7 +1,12 @@
-import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
+import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import DownloadIcon from '@mui/icons-material/Download';
+import FolderOpenOutlinedIcon from '@mui/icons-material/FolderOpenOutlined';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
+import PhotoLibraryOutlinedIcon from '@mui/icons-material/PhotoLibraryOutlined';
+import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import {
     Box,
     Button,
@@ -11,10 +16,6 @@ import {
     DialogContent,
     DialogTitle,
     IconButton,
-    List,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
     Stack,
     Tooltip,
     Typography
@@ -33,9 +34,70 @@ import {
 } from '../../../../../Services/materialAsesorService';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-const getFileIcon = (tipo) => {
-    if (tipo?.includes('pdf')) return <PictureAsPdfIcon color="error" />;
-    return <InsertDriveFileIcon color="primary" />;
+// En celular se piden por separado: un selector que mezcla imágenes y documentos abre solo la galería de fotos en Android,
+// así que los documentos (sin imágenes en la lista) abren el explorador de archivos y las fotos abren la galería.
+// "application/*" hace que Android abra el explorador de archivos con todos los documentos visibles (sin fotos);
+// los tipos permitidos se validan por extensión al elegir (validarArchivos)
+const ACCEPT_DOCUMENTOS = 'application/*';
+const ACCEPT_FOTOS = 'image/jpeg,image/png';
+
+// Ícono del archivo dentro de un cuadrito: rojo para PDF, azul para los demás
+const iconoArchivo = (tipo) => {
+    const esPdf = tipo?.includes('pdf');
+    return (
+        <Box
+            sx={{
+                width: 40,
+                height: 40,
+                flexShrink: 0,
+                borderRadius: '10px',
+                backgroundColor: esPdf ? '#FDECEC' : '#E6ECF8',
+                color: esPdf ? '#C62828' : '#08338F',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}
+        >
+            {esPdf ? <PictureAsPdfOutlinedIcon /> : <InsertDriveFileOutlinedIcon />}
+        </Box>
+    );
+};
+
+// Estilos de los botones de la zona de subida en celular
+const BOTON_AZUL = {
+    flex: 1,
+    textTransform: 'none',
+    fontWeight: 700,
+    borderRadius: '8px',
+    background: 'linear-gradient(135deg, #1E4DB7 0%, #08338F 55%, #052466 100%)',
+    boxShadow: '0 4px 12px rgba(8, 51, 143, 0.35)',
+    '&:hover': { background: 'linear-gradient(135deg, #08338F 0%, #052466 100%)' }
+};
+
+// Círculo con la nube de subida
+const ICONO_SUBIDA = (
+    <Box
+        sx={{
+            width: 52,
+            height: 52,
+            borderRadius: '50%',
+            backgroundColor: '#E6ECF8',
+            color: '#08338F',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+        }}
+    >
+        <CloudUploadOutlinedIcon sx={{ fontSize: 28 }} />
+    </Box>
+);
+
+// Zona punteada donde se sueltan o eligen los archivos
+const ZONA_SUBIDA = {
+    border: '2px dashed #B8C6E6',
+    borderRadius: '12px',
+    backgroundColor: '#F7F9FD',
+    mb: 2
 };
 
 // 276969 -> "270.5 KB"
@@ -161,101 +223,200 @@ export default function ModalMaterialAsesoria({ open, onClose, data, soloLectura
                 sx={{
                     '& .MuiPaper-root': esCelular ? { borderRadius: 0 } : {
                         width: '550px',
-                        maxWidth: '550px',
-                        height: '520px',
-                        borderRadius: '12px',
+                        maxWidth: '90vw',
+                        minHeight: '420px',
+                        maxHeight: '90dvh',
+                        borderRadius: '16px',
                         display: 'flex',
                         flexDirection: 'column',
-                        p: 1
+                        p: 1.5
                     }
                 }}
             >
-                <DialogTitle sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-                    Material: {data?.materia || 'Asesoría'}
-                    {data?.estudiante && (
-                        <Typography component="span" variant="body2" color="text.secondary" sx={{ display: 'block', fontWeight: 'normal' }}>
-                            Alumno: {data.estudiante}
+                <DialogTitle sx={{ m: 0, p: 2, pr: 7, display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <Box
+                        sx={{
+                            width: 44,
+                            height: 44,
+                            flexShrink: 0,
+                            borderRadius: '12px',
+                            background: 'linear-gradient(135deg, #1E4DB7 0%, #08338F 100%)',
+                            color: '#FFFFFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <FolderOpenOutlinedIcon />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 'bold', fontSize: '1.2rem', lineHeight: 1.2 }}>
+                            Material
                         </Typography>
-                    )}
+                        <Typography sx={{ fontSize: '13px', color: '#6A6A6A', mt: '2px', overflowWrap: 'anywhere' }}>
+                            {data?.materia || 'Asesoría'}
+                            {data?.estudiante && ` · Alumno: ${data.estudiante}`}
+                        </Typography>
+                    </Box>
+                    <IconButton
+                        aria-label="close"
+                        onClick={onClose}
+                        sx={{ position: 'absolute', right: 12, top: 12, color: (theme) => theme.palette.grey[500] }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
                 </DialogTitle>
 
-                <DialogContent dividers sx={{ overflowY: 'auto' }}>
+                <DialogContent dividers sx={{ overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
                     {!soloLectura && (
-                        <Box className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 hover:bg-gray-100 transition-colors" sx={{ mb: 2 }}>
-                            <input
-                                type="file"
-                                id="file-material-input"
-                                onChange={handleSubir}
-                                className="hidden"
-                                multiple
-                                disabled={subiendo}
-                                accept={MATERIAL_EXTENSIONES.map((e) => `.${e}`).join(',')}
-                            />
-                            <label
-                                htmlFor="file-material-input"
-                                className="cursor-pointer flex flex-col items-center gap-2 w-full text-center"
-                            >
+                        esCelular ? (
+                            <Box className="flex flex-col items-center gap-3 p-5" sx={ZONA_SUBIDA}>
                                 {subiendo ? (
-                                    <CircularProgress size={32} />
+                                    <>
+                                        <CircularProgress size={32} />
+                                        <Typography variant="body2" color="textSecondary">Subiendo...</Typography>
+                                    </>
                                 ) : (
-                                    <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                    </svg>
+                                    <>
+                                        {ICONO_SUBIDA}
+                                        <Typography variant="body2" color="textSecondary" align="center">
+                                            Elige qué quieres subir
+                                        </Typography>
+                                        <Stack direction="row" spacing={1.5} sx={{ width: '100%' }}>
+                                            <Button component="label" variant="contained" startIcon={<InsertDriveFileIcon />} sx={BOTON_AZUL}>
+                                                Documento
+                                                <input type="file" hidden multiple onChange={handleSubir} accept={ACCEPT_DOCUMENTOS} />
+                                            </Button>
+                                            <Button
+                                                component="label"
+                                                variant="outlined"
+                                                startIcon={<PhotoLibraryOutlinedIcon />}
+                                                sx={{ flex: 1, textTransform: 'none', fontWeight: 700, borderRadius: '8px', color: '#08338F', borderColor: '#08338F' }}
+                                            >
+                                                Foto
+                                                <input type="file" hidden multiple onChange={handleSubir} accept={ACCEPT_FOTOS} />
+                                            </Button>
+                                        </Stack>
+                                    </>
                                 )}
-                                <Typography variant="body2" color="textSecondary">
-                                    {subiendo ? 'Subiendo...' : 'Haz clic para seleccionar o cargar un documento'}
-                                </Typography>
-                                <Typography variant="caption" color="textSecondary">
+                                <Typography variant="caption" color="textSecondary" align="center">
                                     Hasta {MATERIAL_MAX_ARCHIVOS} archivos de {MATERIAL_MAX_MB} MB (PDF, Word, PowerPoint, Excel, JPG, PNG, ZIP)
                                 </Typography>
-                            </label>
-                        </Box>
+                            </Box>
+                        ) : (
+                            <Box
+                                className="flex flex-col items-center justify-center p-6 transition-colors"
+                                sx={{ ...ZONA_SUBIDA, '&:hover': { backgroundColor: '#EEF3FB', borderColor: '#08338F' } }}
+                            >
+                                <input
+                                    type="file"
+                                    id="file-material-input"
+                                    onChange={handleSubir}
+                                    className="hidden"
+                                    multiple
+                                    disabled={subiendo}
+                                    accept={MATERIAL_EXTENSIONES.map((e) => `.${e}`).join(',')}
+                                />
+                                <label
+                                    htmlFor="file-material-input"
+                                    className="cursor-pointer flex flex-col items-center gap-2 w-full text-center"
+                                >
+                                    {subiendo ? <CircularProgress size={32} /> : ICONO_SUBIDA}
+                                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#08338F' }}>
+                                        {subiendo ? 'Subiendo...' : 'Haz clic para seleccionar o cargar un documento'}
+                                    </Typography>
+                                    <Typography variant="caption" color="textSecondary">
+                                        Hasta {MATERIAL_MAX_ARCHIVOS} archivos de {MATERIAL_MAX_MB} MB (PDF, Word, PowerPoint, Excel, JPG, PNG, ZIP)
+                                    </Typography>
+                                </label>
+                            </Box>
+                        )
                     )}
 
                     {cargando ? (
                         <Box className="flex justify-center py-6"><CircularProgress size={28} /></Box>
                     ) : lista.length === 0 ? (
-                        <Typography color="text.secondary" align="center" mt={2} mb={2}>
-                            No hay archivos disponibles.
-                        </Typography>
+                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', textAlign: 'center', py: 3 }}>
+                            <Box
+                                sx={{
+                                    width: 64,
+                                    height: 64,
+                                    borderRadius: '50%',
+                                    backgroundColor: '#F1F4FA',
+                                    color: '#9AA7C4',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <FolderOpenOutlinedIcon sx={{ fontSize: 34 }} />
+                            </Box>
+                            <Typography sx={{ fontWeight: 700, color: '#333333' }}>
+                                Aún no hay material
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                No hay archivos disponibles.
+                            </Typography>
+                        </Box>
                     ) : (
-                        <List disablePadding sx={{ mb: 2 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                             {lista.map((archivo) => (
-                                <ListItem
+                                <Box
                                     key={archivo.id}
-                                    sx={{ border: '1px solid #e0e0e0', borderRadius: '8px', mb: 1, py: 0.5 }}
-                                    secondaryAction={
-                                        <Stack direction="row" spacing={0.5}>
-                                            <Tooltip title="Descargar">
-                                                <IconButton color="primary" size="small" onClick={() => handleDescargar(archivo)}>
-                                                    <DownloadIcon />
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '14px',
+                                        p: '12px 14px',
+                                        borderRadius: '12px',
+                                        backgroundColor: '#F7F9FD',
+                                        border: '1px solid #EEF1F7'
+                                    }}
+                                >
+                                    {iconoArchivo(archivo.tipo)}
+
+                                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                                        <Typography title={archivo.nombre} noWrap sx={{ fontWeight: 600, fontSize: '15px', color: '#111827' }}>
+                                            {archivo.nombre}
+                                        </Typography>
+                                        <Typography sx={{ fontSize: '12px', color: '#6B7280' }}>
+                                            {[formatearTamano(archivo.tamano), archivo.subido_por].filter(Boolean).join(' · ')}
+                                        </Typography>
+                                    </Box>
+
+                                    <Stack direction="row" spacing={0.75} sx={{ flexShrink: 0 }}>
+                                        <Tooltip title="Descargar">
+                                            <IconButton
+                                                size="small"
+                                                aria-label={`Descargar ${archivo.nombre}`}
+                                                onClick={() => handleDescargar(archivo)}
+                                                sx={{ color: '#08338F', backgroundColor: '#E6ECF8', '&:hover': { backgroundColor: '#D5DFF3' } }}
+                                            >
+                                                <DownloadIcon fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+
+                                        {!soloLectura && (
+                                            <Tooltip title="Eliminar archivo">
+                                                <IconButton
+                                                    size="small"
+                                                    aria-label={`Eliminar ${archivo.nombre}`}
+                                                    onClick={() => setArchivoAEliminar(archivo)}
+                                                    sx={{ color: '#C62828', backgroundColor: '#FDECEC', '&:hover': { backgroundColor: '#F9D6D6' } }}
+                                                >
+                                                    <DeleteOutlineOutlinedIcon fontSize="small" />
                                                 </IconButton>
                                             </Tooltip>
-
-                                            {!soloLectura && (
-                                                <Tooltip title="Eliminar archivo">
-                                                    <IconButton color="error" size="small" onClick={() => setArchivoAEliminar(archivo)}>
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            )}
-                                        </Stack>
-                                    }
-                                >
-                                    <ListItemIcon>{getFileIcon(archivo.tipo)}</ListItemIcon>
-                                    <ListItemText
-                                        primary={archivo.nombre}
-                                        secondary={[formatearTamano(archivo.tamano), archivo.subido_por].filter(Boolean).join(' · ')}
-                                        sx={{ pr: 10 }}
-                                    />
-                                </ListItem>
+                                        )}
+                                    </Stack>
+                                </Box>
                             ))}
-                        </List>
+                        </Box>
                     )}
                 </DialogContent>
 
-                <DialogActions sx={{ p: 1.5, gap: 1 }}>
-                    <Button variant="outlined" color="secondary" onClick={onClose}>
+                <DialogActions sx={{ p: 2, justifyContent: 'flex-end' }}>
+                    <Button variant="contained" onClick={onClose} sx={{ backgroundColor: '#08338F', '&:hover': { backgroundColor: '#062568' } }}>
                         Cerrar
                     </Button>
                 </DialogActions>
@@ -265,19 +426,49 @@ export default function ModalMaterialAsesoria({ open, onClose, data, soloLectura
             <Dialog
                 open={Boolean(archivoAEliminar)}
                 onClose={() => setArchivoAEliminar(null)}
-                sx={{ '& .MuiPaper-root': { width: '420px', borderRadius: '12px', p: 1 } }}
+                sx={{ '& .MuiPaper-root': { width: '420px', maxWidth: '90vw', borderRadius: '16px', p: 1.5 } }}
             >
-                <DialogTitle sx={{ fontWeight: 'bold' }}>Eliminar archivo</DialogTitle>
-                <DialogContent>
-                    <Typography variant="body1">
+                <DialogTitle sx={{ m: 0, p: 2, display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <Box
+                        sx={{
+                            width: 44,
+                            height: 44,
+                            flexShrink: 0,
+                            borderRadius: '12px',
+                            background: 'linear-gradient(135deg, #E04848 0%, #C42525 100%)',
+                            color: '#FFFFFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <DeleteOutlineOutlinedIcon />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 'bold', fontSize: '1.2rem', lineHeight: 1.2 }}>
+                            Eliminar archivo
+                        </Typography>
+                        <Typography sx={{ fontSize: '13px', color: '#6A6A6A', mt: '2px' }}>
+                            Esta acción no se puede deshacer
+                        </Typography>
+                    </Box>
+                </DialogTitle>
+                <DialogContent dividers>
+                    <Typography variant="body1" sx={{ overflowWrap: 'anywhere' }}>
                         ¿Estás seguro de que deseas eliminar el archivo <strong>{archivoAEliminar?.nombre}</strong>?
                     </Typography>
                 </DialogContent>
                 <DialogActions sx={{ p: 2, gap: 1 }}>
-                    <Button variant="outlined" color="inherit" onClick={() => setArchivoAEliminar(null)}>
+                    <Button variant="outlined" color="inherit" onClick={() => setArchivoAEliminar(null)} sx={{ borderRadius: '8px', textTransform: 'none' }}>
                         Cancelar
                     </Button>
-                    <Button variant="contained" color="error" onClick={handleConfirmarEliminacion} disabled={eliminando}>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        onClick={handleConfirmarEliminacion}
+                        disabled={eliminando}
+                        sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 700 }}
+                    >
                         Eliminar
                     </Button>
                 </DialogActions>

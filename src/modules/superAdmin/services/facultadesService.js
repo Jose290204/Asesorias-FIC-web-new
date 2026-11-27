@@ -3,6 +3,7 @@
 //   crear         -> POST  /superadmin/facultades                (multipart/form-data)
 //   editar        -> POST  /superadmin/facultades/{id} con _method=PUT (multipart, por el archivo)
 //   cambiarEstado -> PATCH /superadmin/facultades/{id}/estado    { activa }
+//   eliminar      -> DELETE /superadmin/facultades/{id}          (solo si está vacía)
 // El backend devuelve { data: { id, nombre, siglas, logo (URL o null), activa,
 // administradores, asesores, estudiantes, asesorias } }: ya coincide con lo que usan las vistas.
 // Los errores de Axios se dejan pasar: quien llama los muestra con mensajesDeError().
@@ -43,4 +44,9 @@ export async function editarFacultad(id, datos) {
 export async function cambiarEstadoFacultad(id, activa) {
   const { data } = await api.patch(`/superadmin/facultades/${id}/estado`, { activa });
   return data.data;
+}
+
+// Solo si la facultad está vacía; si no, el backend responde 409 con el motivo
+export async function eliminarFacultad(id) {
+  await api.delete(`/superadmin/facultades/${id}`);
 }

@@ -1,11 +1,7 @@
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Typography
-} from '@mui/material';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import { Typography } from '@mui/material';
+
+import ModalConfirmacion from '../../compartidos/ModalConfirmacion';
 
 export default function ModalConfirmarAsesoria({ open, onClose, onConfirm, showToast }) {
     const handleConfirm = () => {
@@ -15,31 +11,16 @@ export default function ModalConfirmarAsesoria({ open, onClose, onConfirm, showT
     };
 
     return (
-        <Dialog
+        <ModalConfirmacion
             open={open}
             onClose={onClose}
-            sx={{
-                '& .MuiPaper-root': {
-                    width: '450px',
-                    borderRadius: '12px',
-                    p: 1
-                }
-            }}
+            onConfirm={handleConfirm}
+            icono={<CheckCircleOutlinedIcon />}
+            titulo="Aprobar asesoría"
+            tono="verde"
+            textoConfirmar="Aprobar"
         >
-            <DialogTitle sx={{ fontWeight: 'bold' }}>Confirmación</DialogTitle>
-            <DialogContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 3 }}>
-                <Typography variant="body1" align="center">
-                    ¿Estás seguro de que deseas aprobar esta asesoría?
-                </Typography>
-            </DialogContent>
-            <DialogActions sx={{ p: 2, justifyContent: 'flex-end', gap: 1 }}>
-                <Button variant="outlined" color="inherit" onClick={onClose}>
-                    Cancelar
-                </Button>
-                <Button variant="contained" color="success" onClick={handleConfirm}>
-                    Aceptar
-                </Button>
-            </DialogActions>
-        </Dialog>
+            <Typography variant="body1">¿Estás seguro de que deseas aprobar esta asesoría?</Typography>
+        </ModalConfirmacion>
     );
 }

@@ -4,10 +4,25 @@ import {
 } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useEffect, useRef, useState } from 'react';
+import useRefrescoPorAvisos from '../../../hooks/useRefrescoPorAvisos';
 import ChipAccion from '../components/ChipAccion';
+import TituloVista from '../../../components/ui/TituloVista';
 import TarjetaBitacora from '../components/TarjetaBitacora';
 import { GRUPOS_ACCIONES, listarBitacora } from '../services/bitacoraService';
 import { listarFacultades } from '../services/facultadesService';
+
+// Encabezado de la tabla: igual que las demás tablas del administrador
+const ESTILO_ENCABEZADO = {
+  backgroundColor: '#244B91',
+  color: '#FFFFFF',
+  fontSize: '12px',
+  fontWeight: 700,
+  letterSpacing: '0.05em',
+  textTransform: 'uppercase',
+  borderBottom: 0,
+  py: 1.75,
+  whiteSpace: 'nowrap',
+};
 
 const FILTROS_VACIOS = { facultadId: '', accion: '', buscar: '', desde: '', hasta: '' };
 
@@ -52,6 +67,8 @@ export default function Bitacora() {
 
   // Contador de peticiones: si llega una respuesta vieja después de una nueva, se ignora
   const pedido = useRef(0);
+  // true cuando la recarga la pidió el refresco automático: no muestra el spinner ni el error
+  const enSilencio = useRef(false);
 
   // Las facultades solo se cargan una vez (para el filtro y las siglas)
   useEffect(() => {
@@ -70,9 +87,11 @@ export default function Bitacora() {
   // Cada cambio de filtros, página o tamaño de página vuelve a pedir al servidor
   useEffect(() => {
     const id = ++pedido.current;
+    const silencioso = enSilencio.current;
+    enSilencio.current = false;
 
     (async () => {
-      setCargando(true);
+      if (!silencioso) setCargando(true);
       try {
         const r = await listarBitacora({ ...filtros, page: page + 1, porPagina: rowsPerPage });
         if (id !== pedido.current) return;
@@ -80,12 +99,18 @@ export default function Bitacora() {
         setTotal(r.total);
         setError(false);
       } catch {
-        if (id === pedido.current) setError(true);
+        if (id === pedido.current && !silencioso) setError(true);
       } finally {
         if (id === pedido.current) setCargando(false);
       }
     })();
   }, [filtros, page, rowsPerPage, intento]);
+
+  // La lista se actualiza sola (en silencio) cada cierto tiempo y al volver a la app
+  useRefrescoPorAvisos(() => {
+    enSilencio.current = true;
+    setIntento((n) => n + 1);
+  });
 
   const cambiarFiltro = (campo) => (e) => {
     setFiltros((f) => ({ ...f, [campo]: e.target.value }));
@@ -106,14 +131,13 @@ export default function Bitacora() {
 
   return (
     <div className="mx-auto max-w-6xl p-4 sm:p-6">
-      <h1 className="mb-1 text-2xl font-bold text-[#08338F]">Bitácora</h1>
-      <p className="mb-5 text-sm text-gray-600">
-        Registro de las acciones importantes de todas las facultades. Solo lectura.
-      </p>
+      <div className="mb-5">
+        <TituloVista titulo="Bitácora" subtitulo="Registro de las acciones importantes de todas las facultades. Solo lectura." />
+      </div>
 
       {/* Filtros: en celular uno debajo del otro; en escritorio en una cuadrícula */}
       <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(5,minmax(0,1fr))]">
-        <TextField {...campoFiltro} label="Buscar" placeholder="Usuario, registro, IP…" value={textoBuscar} onChange={(e) => setTextoBuscar(e.target.value)} />
+        <TextField {...campoFiltro} label="Buscar" placeholder="Usuario, registro…" value={textoBuscar} onChange={(e) => setTextoBuscar(e.target.value)} />
         <TextField {...campoFiltro} select label="Facultad" value={filtros.facultadId} onChange={cambiarFiltro('facultadId')} slotProps={{ select: { MenuProps: PROPS_MENU } }}>
           <MenuItem value="">Todas</MenuItem>
           {facultades.map((f) => (
@@ -129,8 +153,11 @@ export default function Bitacora() {
             )),
           ])}
         </TextField>
-        <TextField {...campoFiltro} type="date" label="Desde" value={filtros.desde} onChange={cambiarFiltro('desde')} slotProps={{ inputLabel: { shrink: true } }} />
-        <TextField {...campoFiltro} type="date" label="Hasta" value={filtros.hasta} onChange={cambiarFiltro('hasta')} slotProps={{ inputLabel: { shrink: true } }} />
+        {/* Desde y Hasta: en celular van en la misma fila, mitad y mitad; desde sm se acomodan como los demás filtros */}
+        <div className="grid grid-cols-2 gap-3 sm:contents">
+          <TextField {...campoFiltro} type="date" label="Desde" value={filtros.desde} onChange={cambiarFiltro('desde')} slotProps={{ inputLabel: { shrink: true } }} />
+          <TextField {...campoFiltro} type="date" label="Hasta" value={filtros.hasta} onChange={cambiarFiltro('hasta')} slotProps={{ inputLabel: { shrink: true } }} />
+        </div>
       </div>
 
       {hayFiltros && (
@@ -165,25 +192,38 @@ export default function Bitacora() {
 
         {/* Escritorio: tabla */}
         {!error && !esMovil && registros.length > 0 && (
-          <TableContainer component={Paper} sx={{ borderRadius: '5px' }}>
-            <Table size="small">
+          <TableContainer
+            component={Paper}
+            variant="outlined"
+            sx={{ borderRadius: '12px', borderColor: '#E5E7EB', overflow: 'hidden', boxShadow: '0px 2px 8px rgba(16, 24, 40, 0.06)' }}
+          >
+            <Table>
               <TableHead>
-                <TableRow sx={{ bgcolor: '#08338F' }}>
-                  {['Fecha', 'Usuario', 'Acción', 'Registro', 'Detalle', 'Facultad', 'IP'].map((h) => (
-                    <TableCell key={h} sx={{ color: '#fff', fontWeight: 700 }}>{h}</TableCell>
+                <TableRow sx={{ '& th': ESTILO_ENCABEZADO, '& th:first-of-type': { pl: 3 }, '& th:last-child': { pr: 3 } }}>
+                  {['Fecha', 'Usuario', 'Acción', 'Registro', 'Detalle', 'Facultad'].map((h) => (
+                    <TableCell key={h}>{h}</TableCell>
                   ))}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {registros.map((r) => (
-                  <TableRow key={r.id} hover>
+                  <TableRow
+                    key={r.id}
+                    hover
+                    sx={{
+                      '& td': { fontSize: '14.5px', borderBottom: '1px solid #EEF1F6', py: 1.5 },
+                      '& td:first-of-type': { pl: 3 },
+                      '& td:last-child': { pr: 3 },
+                      '&:hover': { backgroundColor: '#EAF0FB !important' },
+                      '&:last-child td': { borderBottom: 0 },
+                    }}
+                  >
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{mostrarFecha(r.fecha)}</TableCell>
                     <TableCell sx={{ maxWidth: 180, overflowWrap: 'anywhere' }}>{r.usuario}</TableCell>
                     <TableCell><ChipAccion accion={r.accion} /></TableCell>
                     <TableCell sx={{ maxWidth: 220, overflowWrap: 'anywhere' }}>{r.entidad}</TableCell>
                     <TableCell sx={{ color: '#555', maxWidth: 320, overflowWrap: 'anywhere' }}>{r.detalle}</TableCell>
                     <TableCell>{siglas(r.facultadId)}</TableCell>
-                    <TableCell sx={{ color: '#555', whiteSpace: 'nowrap' }}>{r.ip || '—'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

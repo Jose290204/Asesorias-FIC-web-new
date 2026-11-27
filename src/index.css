@@ -1,6 +1,9 @@
 /* 1. Importamos Inder (Regular) y Roboto (Regular 400, SemiBold 600, Bold 700) */
 @import url('https://fonts.googleapis.com/css2?family=Inder&family=Roboto:wght@400;600;700&display=swap');
 
+/* Tipografías de la página Conócenos: Montserrat para títulos y Source Sans 3 para el texto */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap');
+
 @import "tailwindcss";
 
 
@@ -8,10 +11,24 @@
 @theme {
   --font-inter: 'Inter', sans-serif;
   --font-inder: 'Inder', sans-serif;
+  --font-titulos: 'Montserrat', sans-serif;
+  --font-texto: 'Source Sans 3', sans-serif;
 }
 
 /* 3. Establecemos Roboto como la fuente base para toda la aplicación */
 @layer base {
+  /* Sin rebote al llegar al tope o al final con el touchpad (en la app instalada dejaba un hueco blanco arriba) */
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  /* Edge dibuja su propio ojo en los campos de contraseña: lo ocultamos porque ya tenemos el nuestro */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
+
   body {
     font-family: var(--font-inter);
     margin: 0;

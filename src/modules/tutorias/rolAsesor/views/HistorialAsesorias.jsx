@@ -2,11 +2,14 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Pagination from '@mui/material/Pagination';
 import { useCallback, useEffect, useState } from 'react';
+import useRefrescoPorAvisos from '../../../../hooks/useRefrescoPorAvisos';
 
 import InputBuscar from '../../../../components/ui/InputBuscar';
 import ToastNotification from '../../../../components/ui/ToastNotification';
+import TituloVista from '../../../../components/ui/TituloVista';
 import { traerAsesorias } from '../../../../Services/asesoriasAsesorService';
 import { mensajesDeError } from '../../../../Services/errores';
+import { conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 import TablaHistorialAsesorias from '../components/historial/TablaHistorialAsesorias';
 
 export default function HistorialAsesorias() {
@@ -44,16 +47,16 @@ export default function HistorialAsesorias() {
     }, [busqueda]);
 
     // El historial son las asesorías ya cerradas: completadas y canceladas
-    const cargarHistorial = useCallback(async () => {
+    const cargarHistorial = useCallback(async ({ silencioso = false } = {}) => {
         try {
-            setLoading(true);
+            if (!silencioso) setLoading(true);
             setError(false);
-            const { asesorias, meta: metaNueva } = await traerAsesorias({ estatus: 'historial', buscar, page: pagina });
+            const { asesorias, meta: metaNueva } = await conTiempoMinimo(traerAsesorias({ estatus: 'historial', buscar, page: pagina }));
             setHistorial(asesorias);
             setMeta(metaNueva);
         } catch (err) {
             console.error('Error al cargar el historial', err);
-            setError(true);
+            if (!silencioso) setError(true);
             showToast(mensajesDeError(err)[0], 'error');
         } finally {
             setLoading(false);
@@ -64,18 +67,16 @@ export default function HistorialAsesorias() {
         cargarHistorial();
     }, [cargarHistorial]);
 
+    useRefrescoPorAvisos(() => cargarHistorial({ silencioso: true }));
+
     const total = meta?.total ?? historial.length;
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <div>
-                <p className="text-2xl font-bold">Historial de asesorias</p>
-                {!loading && !error && (
-                    <p className="mt-1 text-sm text-gray-600">
-                        {total} {total === 1 ? 'resultado' : 'resultados'}
-                    </p>
-                )}
-            </div>
+            <TituloVista
+                titulo="Historial de asesorías"
+                subtitulo={!loading && !error ? `${total} ${total === 1 ? 'resultado' : 'resultados'}` : null}
+            />
 
             <div className="w-full">
                 <InputBuscar

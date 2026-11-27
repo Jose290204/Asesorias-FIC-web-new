@@ -2,12 +2,15 @@ import AddOutlinedIcon from '@mui/icons-material/AddOutlined';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import Fab from '@mui/material/Fab';
+import TituloVista from "../../../../components/ui/TituloVista";
 import Pagination from '@mui/material/Pagination';
 import { useCallback, useEffect, useRef, useState } from "react";
+import useRefrescoPorAvisos from "../../../../hooks/useRefrescoPorAvisos";
 import BotonFiltro from "../../../../components/ui/BotonFlitro";
 import InputBuscar from "../../../../components/ui/InputBuscar";
 import ToastNotification from "../../../../components/ui/ToastNotification";
 import { traerAsesores } from "../../../../Services/asesoresEstudianteService";
+import { conTiempoMinimo } from '../../../../utils/tiempoMinimo';
 import { traerOpcionesFiltros } from "../../../../Services/opcionesFiltrosService";
 import { crearSolicitud } from "../../../../Services/solicitudesEstudianteService";
 import ModalCrearSolicitud from "../components/solicitar/modales/ModalCrearSolicitud";
@@ -19,6 +22,23 @@ const initialFiltros = {
     materia: "",
     horario: "",
     modalidad: ""
+};
+
+// Estilo del botón "Crear solicitud" (el de escritorio y el flotante del celular)
+const ESTILO_BOTON_CREAR = {
+    textTransform: 'none',
+    fontWeight: 700,
+    letterSpacing: '0.3px',
+    color: '#ffffff',
+    background: 'linear-gradient(135deg, #1E4DB7 0%, #08338F 55%, #052466 100%)',
+    boxShadow: '0 4px 12px rgba(8, 51, 143, 0.45)',
+    transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+    '&:hover': {
+        background: 'linear-gradient(135deg, #08338F 0%, #052466 100%)',
+        boxShadow: '0 6px 16px rgba(5, 36, 102, 0.55)',
+        transform: 'translateY(-1px)'
+    },
+    '&:active': { transform: 'translateY(0)', boxShadow: '0 2px 6px rgba(5, 36, 102, 0.5)' }
 };
 
 export default function SolicitarAsesoria() {
@@ -57,24 +77,26 @@ export default function SolicitarAsesoria() {
     const ultimaPeticion = useRef(0);
 
     // Carga la lista de asesores aplicando búsqueda, filtros y página
-    const cargarAsesores = useCallback(async () => {
+    // silencioso = recarga sin quitar la lista (la usa el refresco automático)
+    const cargarAsesores = useCallback(async ({ silencioso = false } = {}) => {
         const numero = ++ultimaPeticion.current;
         try {
-            setLoading(true);
+            if (!silencioso) setLoading(true);
             setError(false);
-            const resultado = await traerAsesores({
+            const resultado = await conTiempoMinimo(traerAsesores({
                 buscar,
                 materiaId: filtros.materia,
                 horarioId: filtros.horario,
                 modalidad: filtros.modalidad,
                 page: pagina
-            });
+            }), silencioso ? 0 : undefined);
             if (numero !== ultimaPeticion.current) return; // ya salió una petición más nueva
             setAsesores(resultado.asesores);
             setMeta(resultado.meta);
         } catch (err) {
             if (numero !== ultimaPeticion.current) return;
             console.error("Error al cargar asesores", err);
+            if (silencioso) return;
             setError(true);
             showToast("No se pudieron cargar los asesores", "error");
         } finally {
@@ -86,6 +108,9 @@ export default function SolicitarAsesoria() {
     useEffect(() => {
         cargarAsesores();
     }, [cargarAsesores]);
+
+    // La lista de asesores (y su cupo) se actualiza sola
+    useRefrescoPorAvisos(() => cargarAsesores({ silencioso: true }));
 
     // Opciones de los selects del modal: se piden una sola vez al entrar
     useEffect(() => {
@@ -174,12 +199,12 @@ export default function SolicitarAsesoria() {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    // Cuántos se muestran en esta página (meta.from y meta.to son null cuando no hay resultados)
-    const mostrando = meta?.total > 0 ? meta.to - meta.from + 1 : 0;
-
    return (
     <div className="w-full px-4 py-6 md:px-17 md:py-10 flex flex-col items-start justify-start gap-6 md:gap-11">
-        <p className="text-2xl font-bold">Solicitar Asesoria</p>
+        <TituloVista
+            titulo="Solicitar asesoría"
+            subtitulo={!loading && !error && meta ? `${meta.total} ${meta.total === 1 ? 'asesor' : 'asesores'}${buscar || Object.values(filtros).some(Boolean) ? ' encontrados' : ' disponibles'}` : null}
+        />
 
         <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
             {/* FILTRO BOTÓN */}
@@ -196,7 +221,7 @@ export default function SolicitarAsesoria() {
             {/* Botón normal: solo tablet y escritorio */}
             <Button
                 variant="contained"
-                sx={{ borderRadius: '5px', textTransform: 'none', backgroundColor: '#2E7D32', display: { xs: 'none', sm: 'inline-flex' } }}
+                sx={{ ...ESTILO_BOTON_CREAR, borderRadius: '8px', display: { xs: 'none', sm: 'inline-flex' } }}
                 size="medium"
                 startIcon={<AddOutlinedIcon />}
                 onClick={handleOpenCrear}
@@ -205,21 +230,19 @@ export default function SolicitarAsesoria() {
             </Button>
         </div>
 
-        {/* Contador de resultados */}
-        {!loading && !error && meta && (
-            <p className="-mt-3 md:-mt-6 text-sm text-gray-600">
-                Mostrando <span className="font-bold">{mostrando}</span> de{" "}
-                <span className="font-bold">{meta.total}</span> asesores
-            </p>
-        )}
-
         {/* Botón flotante: solo celular */}
         <Fab
             variant="extended"
-            color="success"
             aria-label="Crear solicitud"
             onClick={handleOpenCrear}
-            sx={{ position: 'fixed', right: 16, bottom: 16, zIndex: 10, textTransform: 'none', display: { xs: 'inline-flex', sm: 'none' } }}
+            sx={{
+                ...ESTILO_BOTON_CREAR,
+                position: 'fixed',
+                right: 16,
+                bottom: 16,
+                zIndex: 10,
+                display: { xs: 'inline-flex', sm: 'none' }
+            }}
         >
             <AddOutlinedIcon sx={{ mr: 1 }} />
             Crear solicitud
@@ -235,7 +258,7 @@ export default function SolicitarAsesoria() {
             ) : error ? (
                 <div className="col-span-full py-10 text-center">
                     <p className="text-gray-500 mb-1">No se pudieron cargar los asesores.</p>
-                    <button onClick={cargarAsesores} className="text-blue-700 font-semibold underline cursor-pointer">
+                    <button onClick={() => cargarAsesores()} className="text-blue-700 font-semibold underline cursor-pointer">
                         Reintentar
                     </button>
                 </div>

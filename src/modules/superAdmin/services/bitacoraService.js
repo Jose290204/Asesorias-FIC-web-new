@@ -16,6 +16,7 @@ export const ACCIONES = {
   'facultad.editada': { etiqueta: 'Facultad editada', tono: 'azul', grupo: 'Facultades' },
   'facultad.activada': { etiqueta: 'Facultad activada', tono: 'verde', grupo: 'Facultades' },
   'facultad.desactivada': { etiqueta: 'Facultad desactivada', tono: 'naranja', grupo: 'Facultades' },
+  'facultad.eliminada': { etiqueta: 'Facultad eliminada', tono: 'rojo', grupo: 'Facultades' },
 
   'administrador.creado': { etiqueta: 'Administrador creado', tono: 'verde', grupo: 'Administradores' },
   'administrador.editado': { etiqueta: 'Administrador editado', tono: 'azul', grupo: 'Administradores' },
@@ -27,6 +28,14 @@ export const ACCIONES = {
   'estudiante.creado': { etiqueta: 'Estudiante creado', tono: 'verde', grupo: 'Estudiantes' },
   'estudiante.editado': { etiqueta: 'Estudiante editado', tono: 'azul', grupo: 'Estudiantes' },
   'estudiante.baja': { etiqueta: 'Estudiante dado de baja', tono: 'rojo', grupo: 'Estudiantes' },
+
+  'asesor.creado': { etiqueta: 'Asesor creado', tono: 'verde', grupo: 'Asesores' },
+  'asesor.editado': { etiqueta: 'Asesor editado', tono: 'azul', grupo: 'Asesores' },
+  'asesor.baja': { etiqueta: 'Asesor dado de baja', tono: 'rojo', grupo: 'Asesores' },
+  'asesor_par.asignado': { etiqueta: 'Asesor par asignado', tono: 'verde', grupo: 'Asesores' },
+  'asesor_par.quitado': { etiqueta: 'Asesor par quitado', tono: 'naranja', grupo: 'Asesores' },
+
+  'conexion.cerrada': { etiqueta: 'Sesión cerrada por el admin', tono: 'naranja', grupo: 'Conexiones' },
 
   'solicitud.creada': { etiqueta: 'Solicitud creada', tono: 'verde', grupo: 'Solicitudes' },
   'solicitud.editada': { etiqueta: 'Solicitud editada', tono: 'azul', grupo: 'Solicitudes' },
@@ -44,6 +53,8 @@ export const ACCIONES = {
   'sesion.eliminada': { etiqueta: 'Sesión eliminada', tono: 'rojo', grupo: 'Trabajo del asesor' },
   'material.subido': { etiqueta: 'Material subido', tono: 'verde', grupo: 'Trabajo del asesor' },
   'material.eliminado': { etiqueta: 'Material eliminado', tono: 'rojo', grupo: 'Trabajo del asesor' },
+  'evidencia.subida': { etiqueta: 'Evidencia subida', tono: 'verde', grupo: 'Trabajo del asesor' },
+  'evidencia.eliminada': { etiqueta: 'Evidencia eliminada', tono: 'rojo', grupo: 'Trabajo del asesor' },
   'disponibilidad.actualizada': { etiqueta: 'Disponibilidad actualizada', tono: 'azul', grupo: 'Trabajo del asesor' },
 };
 

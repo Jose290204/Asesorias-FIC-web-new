@@ -4,9 +4,11 @@ import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useCallback, useEffect, useState } from 'react';
 import InputBuscar from '../../../../components/ui/InputBuscar';
+import TituloVista from '../../../../components/ui/TituloVista';
 import ToastNotification from '../../../../components/ui/ToastNotification';
 import TablaUsuariosEnLinea from '../components/usuariosEnLinea/TablaUsuariosEnLinea';
 import { estaEnLinea } from '../components/usuariosEnLinea/tiempo';
+import { ESTILO_BOTON_SECUNDARIO } from '../components/compartidos/estilosAdmin';
 import { sesionesService } from '../services/sesionesService';
 
 // Cada cuánto se vuelve a consultar la lista sin que el administrador haga nada
@@ -67,14 +69,10 @@ export default function UsuariosEnLinea() {
 
     return (
         <div className="min-h-[calc(100dvh-3.5rem)] w-full bg-transparent px-4 py-8 md:px-17 md:py-10 flex flex-col items-start gap-6 md:gap-8">
-            <div className="flex flex-col gap-1">
-                <p className="text-2xl font-bold">Usuarios en línea</p>
-                {!cargando && (
-                    <p className="text-sm text-gray-600">
-                        {totalEnLinea} en línea · {sesiones.length} sesiones activas
-                    </p>
-                )}
-            </div>
+            <TituloVista
+                titulo="Usuarios en línea"
+                subtitulo={!cargando ? `${totalEnLinea} en línea · ${sesiones.length} sesiones activas` : null}
+            />
 
             {/* Barra de herramientas: en celular el buscador va arriba y "Actualizar" debajo */}
             <div className="w-full flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -92,12 +90,13 @@ export default function UsuariosEnLinea() {
                     disabled={actualizando}
                     onClick={() => fetchSesiones()}
                     sx={{
-                        borderRadius: '5px',
-                        textTransform: 'none',
-                        color: '#244B91',
-                        borderColor: '#244B91',
+                        ...ESTILO_BOTON_SECUNDARIO,
+                        minHeight: 40,
+                        color: '#08338F',
+                        borderColor: '#08338F',
+                        backgroundColor: '#FFFFFF',
                         flexShrink: 0,
-                        '&:hover': { borderColor: '#1B3A73', backgroundColor: 'rgba(36, 75, 145, 0.06)' }
+                        '&:hover': { borderColor: '#062568', backgroundColor: 'rgba(8, 51, 143, 0.06)' }
                     }}
                 >
                     Actualizar
