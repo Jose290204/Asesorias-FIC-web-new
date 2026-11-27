@@ -21,6 +21,7 @@ import { claveHorario, diaDeFecha, fechaCoincideConDia, opcionesDeHorario } from
 import { PAPER_MODAL, PAPER_MODAL_CELULAR } from '../../compartidos/estilosModales';
 import SeccionInfo from '../../../../rolEstudiante/components/compartidos/SeccionInfo';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { useDiasInhabiles } from '../../../../compartidos/diasInhabiles';
 
 const ICONO = { fontSize: 20 };
 
@@ -100,6 +101,8 @@ function ContenidoInfoAsesoria({ onClose, data, onSave, showToast }) {
     const [formData, setFormData] = useState(inicial);
     const [calendarioOpen, setCalendarioOpen] = useState(false);
     const [guardando, setGuardando] = useState(false);
+    // Vacaciones y suspensiones de la facultad: esos días no se pueden elegir
+    const { esInhabil } = useDiasInhabiles();
 
     // Opciones: solo lo que el asesor imparte, más el valor actual de la asesoría (aunque ya no lo ofrezca)
     const opcionesHorario = opcionesDeHorario(disponibilidad);
@@ -261,7 +264,7 @@ function ContenidoInfoAsesoria({ onClose, data, onSave, showToast }) {
                                 onChange={handleCambiarFecha}
                                 format="DD/MM/YYYY"
                                 disablePast
-                                shouldDisableDate={(fecha) => !fechaCoincideConDia(fecha, diaElegido)}
+                                shouldDisableDate={(fecha) => !fechaCoincideConDia(fecha, diaElegido) || esInhabil(fecha)}
                                 open={calendarioOpen}
                                 onOpen={abrirCalendario}
                                 onClose={() => setCalendarioOpen(false)}

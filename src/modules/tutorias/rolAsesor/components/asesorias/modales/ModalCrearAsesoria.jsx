@@ -35,6 +35,7 @@ import CampoSelect from '../../compartidos/CampoSelect';
 import { fechaCoincideConDia, opcionesDeHorario } from '../../../utils/horarios';
 import { PAPER_MODAL, PAPER_MODAL_CELULAR } from '../../compartidos/estilosModales';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { useDiasInhabiles } from '../../../../compartidos/diasInhabiles';
 
 const ICONO = { fontSize: 20 };
 
@@ -102,6 +103,8 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
     const [cargandoEstudiantes, setCargandoEstudiantes] = useState(false);
     const [calendarioOpen, setCalendarioOpen] = useState(false);
     const [guardando, setGuardando] = useState(false);
+    // Vacaciones y suspensiones de la facultad: esos días no se pueden elegir
+    const { esInhabil } = useDiasInhabiles();
 
     // Busca alumnos en la API mientras se escribe (con una pausa de 300 ms para no pedir en cada letra)
     useEffect(() => {
@@ -359,7 +362,7 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                             onChange={(nueva) => setFormData((prev) => ({ ...prev, fecha: nueva }))}
                             format="DD/MM/YYYY"
                             disablePast
-                            shouldDisableDate={(fecha) => !fechaCoincideConDia(fecha, opcionElegida?.dia)}
+                            shouldDisableDate={(fecha) => !fechaCoincideConDia(fecha, opcionElegida?.dia) || esInhabil(fecha)}
                             disabled={!alumnoElegido || !opcionElegida}
                             open={calendarioOpen && alumnoElegido}
                             onOpen={abrirCalendario}

@@ -8,6 +8,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import 'dayjs/locale/es';
 import { useEffect, useState } from 'react';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { useDiasInhabiles } from '../../../../compartidos/diasInhabiles';
 
 // --- HELPERS ---
 const claveNombre = (texto) => String(texto ?? '').trim().toLowerCase();
@@ -66,6 +67,8 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
     const [formData, setFormData] = useState({ ...FORMULARIO_CREAR_INICIAL, asesor: asesorFijo });
     const [calendarioOpen, setCalendarioOpen] = useState(false);
     const [guardando, setGuardando] = useState(false);
+    // Vacaciones y suspensiones de la facultad: esos días no se pueden elegir
+    const { esInhabil } = useDiasInhabiles();
 
     // Se reinicia solo al abrir o si cambia de asesor. Se compara por id y no por objeto: el refresco
     // automático de la lista trae objetos nuevos del mismo asesor, y eso borraba lo que el estudiante ya había llenado.
@@ -320,7 +323,7 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
                                 format="DD/MM/YYYY"
                                 disabled={sinHorario}
                                 disablePast
-                                shouldDisableDate={soloEseDia}
+                                shouldDisableDate={(fecha) => soloEseDia(fecha) || esInhabil(fecha)}
                                 open={calendarioOpen && !sinHorario}
                                 onOpen={() => { if (!sinHorario) abrirCalendario(); }}
                                 onClose={() => setCalendarioOpen(false)}

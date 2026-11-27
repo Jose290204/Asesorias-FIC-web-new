@@ -51,6 +51,7 @@ const ESTILO_TIPO = {
   'asesoria.completada': { Icono: TaskAltIcon, ...VERDE },
   'asesoria.cancelada': { Icono: EventBusyIcon, ...ROJO },
   'sesion.registrada': { Icono: EventNoteIcon, ...AZUL },
+  'sesion.recordatorio': { Icono: EventNoteIcon, ...NARANJA },
   'material.subido': { Icono: AttachFileIcon, ...AZUL },
   'chat.mensaje': { Icono: ChatBubbleOutlinedIcon, ...AZUL },
 };
@@ -207,6 +208,9 @@ function Campana({ color }) {
       if (e.data?.tipo === 'push-abrir') abrirDesdePush(e.data.datos);
     };
     navigator.serviceWorker?.addEventListener('message', alMensaje);
+    // Una página que se cargó sin pasar por el service worker (recarga forzada con Ctrl+Shift+R) no recibe
+    // sus mensajes hasta que se activa la cola: sin esto el toque de un aviso push no navega.
+    navigator.serviceWorker?.startMessages?.();
     return () => navigator.serviceWorker?.removeEventListener('message', alMensaje);
   }, [abrirDesdePush]);
 

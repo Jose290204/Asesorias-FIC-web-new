@@ -34,6 +34,7 @@ import BloqueFormulario from '../../compartidos/BloqueFormulario';
 import EncabezadoModal from '../../compartidos/EncabezadoModal';
 import { ESTILO_BOTON_AZUL, ESTILO_BOTON_SECUNDARIO, ICONO } from '../../compartidos/estilosAdmin';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { useDiasInhabiles } from '../../../../compartidos/diasInhabiles';
 
 // El administrador da de alta una asesoría a nombre de un asesor. Primero se elige el asesor (de ahí salen
 // las materias, horarios y modalidades que se ofrecen), luego el alumno y después el resto de los campos.
@@ -72,6 +73,8 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
     const [cargandoEstudiantes, setCargandoEstudiantes] = useState(false);
     const [calendarioOpen, setCalendarioOpen] = useState(false);
     const [guardando, setGuardando] = useState(false);
+    // Vacaciones y suspensiones de la facultad: esos días no se pueden elegir
+    const { esInhabil } = useDiasInhabiles();
 
     // Busca asesores en la API mientras se escribe (la lista ya trae la disponibilidad de cada uno)
     useEffect(() => {
@@ -415,7 +418,7 @@ function ContenidoCrearAsesoria({ onClose, onSave }) {
                             onChange={(nueva) => setFormData((prev) => ({ ...prev, fecha: nueva }))}
                             format="DD/MM/YYYY"
                             disablePast
-                            shouldDisableDate={(fecha) => !fechaCoincideConDia(fecha, opcionElegida?.dia)}
+                            shouldDisableDate={(fecha) => !fechaCoincideConDia(fecha, opcionElegida?.dia) || esInhabil(fecha)}
                             disabled={!alumnoElegido || !opcionElegida}
                             open={calendarioOpen && alumnoElegido}
                             onOpen={abrirCalendario}

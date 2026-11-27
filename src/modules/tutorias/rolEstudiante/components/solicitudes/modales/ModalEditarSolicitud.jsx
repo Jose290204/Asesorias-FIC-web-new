@@ -22,6 +22,7 @@ import { useEffect, useState } from 'react';
 import { traerAsesores } from '../../../../../../Services/asesoresEstudianteService';
 import { claveHorario, diaDeFecha, fechaCoincideConDia, opcionesDeHorario } from '../../../utils/horarios';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { useDiasInhabiles } from '../../../../compartidos/diasInhabiles';
 
 // Lista desplegable de los select: altura máxima con scroll interno
 const MENU_CON_SCROLL = {
@@ -73,6 +74,8 @@ function ContenidoEditar({ onClose, solicitud, onSave, showToast }) {
     const [formData, setFormData] = useState(inicial);
     const [calendarioOpen, setCalendarioOpen] = useState(false);
     const [guardando, setGuardando] = useState(false);
+    // Vacaciones y suspensiones de la facultad: esos días no se pueden elegir
+    const { esInhabil } = useDiasInhabiles();
 
     // No hay un endpoint para un solo asesor: se busca por nombre y se toma el que tenga el mismo id.
     // Así el horario solo ofrece lo que ese asesor realmente imparte.
@@ -256,7 +259,7 @@ function ContenidoEditar({ onClose, solicitud, onSave, showToast }) {
                             onChange={handleCambiarFecha}
                             format="DD/MM/YYYY"
                             disablePast
-                            shouldDisableDate={(fecha) => !fechaCoincideConDia(fecha, opcionElegida?.dia)}
+                            shouldDisableDate={(fecha) => !fechaCoincideConDia(fecha, opcionElegida?.dia) || esInhabil(fecha)}
                             open={calendarioOpen}
                             onOpen={abrirCalendario}
                             onClose={() => setCalendarioOpen(false)}

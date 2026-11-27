@@ -37,6 +37,7 @@ import BitacoraAdmin from './modules/tutorias/rolAdministrador/views/Bitacora';
 
 // Vistas de asesor
 import AsesoriasEnCurso from './modules/tutorias/rolAsesor/views/AsesoriasEnCurso';
+import CalendarioSesiones from './modules/tutorias/compartidos/CalendarioSesiones';
 import ChatsAsesor from './modules/tutorias/rolAsesor/views/ChatsAsesor';
 import DisponibilidadAsesor from './modules/tutorias/rolAsesor/views/DisponibilidadAsesor';
 import HistorialAsesorias from './modules/tutorias/rolAsesor/views/HistorialAsesorias';
@@ -151,6 +152,7 @@ export default function App() {
           <Route path="solicitudes-pendientes" element={<SolicitudesPendientes />} />
           <Route path="disponibilidad" element={<DisponibilidadAsesor />} />
           <Route path="asesorias-en-curso" element={<AsesoriasEnCurso />} />
+          <Route path="calendario" element={<CalendarioSesiones como="asesor" />} />
           <Route path="chats" element={<ChatsAsesor />} />
           <Route path="historial-de-asesorias" element={<HistorialAsesorias />} />
           <Route path="perfil-asesor" element={<PerfilAsesor />} />
@@ -168,6 +170,7 @@ export default function App() {
           <Route index element={<Navigate to="/estudiante/solicitar-asesorias" replace />} />
           <Route path="solicitar-asesorias" element={<SolicitarAsesoria />} />
           <Route path="asesorias-estudiante" element={<AsesoriasEstudiante />} />
+          <Route path="calendario" element={<CalendarioSesiones como="estudiante" />} />
           <Route path="chats" element={<ChatsEstudiante />} />
           <Route path="solicitudes-en-revision" element={<SolicitudesEnRevision />} />
           <Route path="historial-de-asesorias" element={<HistorialAsesoriasEstudiante />} />

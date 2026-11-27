@@ -11,6 +11,7 @@ import { ROL } from '../constants/roles';
 // - "rutas" por rol si lo pueden recibir los dos (las de asesorías y el chat). En ese caso el backend
 //   manda "como" ('estudiante' o 'asesor'): el rol con el que la recibe esa persona.
 const RUTAS_EN_CURSO = { estudiante: '/estudiante/asesorias-estudiante', asesor: '/asesor/asesorias-en-curso' };
+const RUTAS_CALENDARIO = { estudiante: '/estudiante/calendario', asesor: '/asesor/calendario' };
 const RUTAS_HISTORIAL = { estudiante: '/estudiante/historial-de-asesorias', asesor: '/asesor/historial-de-asesorias' };
 
 export const TIPOS = {
@@ -26,6 +27,8 @@ export const TIPOS = {
   'asesoria.completada': { rutas: RUTAS_HISTORIAL },
   'asesoria.cancelada': { rutas: RUTAS_HISTORIAL },
   'sesion.registrada': { rutas: RUTAS_EN_CURSO },
+  // Recordatorio del día de la sesión: lleva al calendario
+  'sesion.recordatorio': { rutas: RUTAS_CALENDARIO },
   // Lleva a Asesorías en curso y abre el material de esa asesoría (ver "abreMaterial")
   'material.subido': { rutas: RUTAS_EN_CURSO, abreMaterial: true },
   // Los dos roles tienen su vista de Chats: ahí se abre la conversación del aviso (ver "abreChat")
