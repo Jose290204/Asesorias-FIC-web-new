@@ -20,6 +20,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { EVENTO_AVISOS } from '../../../hooks/useRefrescoPorAvisos';
 import { tiempoRelativo } from '../../../Services/formatoFechas';
+import { sincronizarPush } from '../../../Services/pushService';
+import AvisosPush from './AvisosPush';
 import {
   borrarNotificacion,
   borrarTodasNotificaciones,
@@ -83,6 +85,11 @@ function Campana({ color }) {
 
   const abierto = Boolean(anchorEl);
 
+  // Si este dispositivo ya tiene avisos push activos, se asocian al usuario que entró
+  useEffect(() => {
+    sincronizarPush().catch(() => {});
+  }, []);
+
   // Huella de lo último que se vio en el servidor: solo si cambia se trae la lista completa
   const huellaRef = useRef('');
 
@@ -139,11 +146,24 @@ function Campana({ color }) {
   // Al abrir se trae lo más reciente en ese momento
   const handleAbrir = (e) => {
     setAnchorEl(e.currentTarget);
-    traerNotificaciones(1).then(aplicarPrimera).catch(() => {});
+    traerNotificaciones(1)
+      .then((r) => {
+        // La lista se muestra con lo nuevo resaltado...
+        aplicarPrimera(r);
+        // ...pero abrir la campana ya cuenta como verlo todo: el contador se apaga y el servidor lo marca
+        // como leído. Si esa llamada falla, la siguiente consulta del resumen lo corrige.
+        if (r.noLeidas > 0) {
+          setNoLeidas(0);
+          marcarTodasLeidas().catch(() => {});
+        }
+      })
+      .catch(() => {});
   };
   const handleCerrar = () => {
     setAnchorEl(null);
     setConfirmandoBorrado(false);
+    // Lo que se vio resaltado como nuevo ya queda como leído
+    setItems((prev) => prev.map((x) => (x.leida ? x : { ...x, leida: true })));
   };
 
   const abrirNotificacion = (n) => {
@@ -163,6 +183,49 @@ function Campana({ color }) {
     if (destino.rol !== rol && roles.includes(destino.rol)) cambiarRol(destino.rol);
     navigate(destino.ruta, { state: destino.estado });
   };
+
+  // Al tocar un aviso push se llega aquí con los datos del aviso: la app ya abierta los recibe del
+  // service worker, y si estaba cerrada llegan en la dirección (?aviso=...). Se navega igual que desde la campana.
+  const abrirDesdePush = useCallback(
+    (datos) => {
+      const destino = destinoDe({
+        tipo: datos?.tipo,
+        solicitudId: datos?.solicitud_id,
+        asesoriaId: datos?.asesoria_id,
+        como: datos?.como,
+      });
+      if (!destino) return;
+      if (destino.rol !== rol && roles.includes(destino.rol)) cambiarRol(destino.rol);
+      navigate(destino.ruta, { state: destino.estado });
+    },
+    [rol, roles, cambiarRol, navigate]
+  );
+
+  // App ya abierta: el service worker manda el aviso por mensaje
+  useEffect(() => {
+    const alMensaje = (e) => {
+      if (e.data?.tipo === 'push-abrir') abrirDesdePush(e.data.datos);
+    };
+    navigator.serviceWorker?.addEventListener('message', alMensaje);
+    return () => navigator.serviceWorker?.removeEventListener('message', alMensaje);
+  }, [abrirDesdePush]);
+
+  // App cerrada: main.jsx guardo el aviso (?aviso=) en sessionStorage antes de que el router redirigiera
+  useEffect(() => {
+    let crudo = null;
+    try {
+      crudo = sessionStorage.getItem('aviso_pendiente');
+      sessionStorage.removeItem('aviso_pendiente');
+    } catch {
+      /* sin almacenamiento */
+    }
+    if (!crudo) return;
+    try {
+      abrirDesdePush(JSON.parse(crudo));
+    } catch {
+      /* aviso mal formado: se ignora */
+    }
+  }, [abrirDesdePush]);
 
   const marcarTodas = async () => {
     try {
@@ -279,6 +342,8 @@ function Campana({ color }) {
             )}
           </div>
         </div>
+
+        <AvisosPush />
 
         {confirmandoBorrado && (
           <div className="flex items-center justify-between gap-2 border-b border-red-100 bg-[#FFF4F4] px-4 py-2">

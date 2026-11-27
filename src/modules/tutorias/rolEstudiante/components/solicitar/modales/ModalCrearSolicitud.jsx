@@ -67,11 +67,15 @@ export default function ModalCrearSolicitud({ open, onClose, onSave, showToast, 
     const [calendarioOpen, setCalendarioOpen] = useState(false);
     const [guardando, setGuardando] = useState(false);
 
+    // Se reinicia solo al abrir o si cambia de asesor. Se compara por id y no por objeto: el refresco
+    // automático de la lista trae objetos nuevos del mismo asesor, y eso borraba lo que el estudiante ya había llenado.
+    const idAsesorFijo = asesorFijo?.id;
     useEffect(() => {
         if (!open) return;
         setFormData({ ...FORMULARIO_CREAR_INICIAL, asesor: asesorFijo });
         setCalendarioOpen(false);
-    }, [open, asesorFijo]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, idAsesorFijo]);
 
     const asesoresList = sinDuplicados(asesores, (item) => item.email || claveNombre(item.asesor));
 

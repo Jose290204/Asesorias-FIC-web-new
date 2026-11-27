@@ -78,6 +78,10 @@ export default function ModalDisponibilidadAsesor({ open, onClose, asesor, onGua
     const [intentoGuardar, setIntentoGuardar] = useState(false);
     const [guardando, setGuardando] = useState(false);
 
+    // Se reinicia solo al abrir o al cambiar de asesor (por id): el refresco automático de la lista trae
+    // objetos nuevos del mismo asesor y borraba lo que el admin ya estaba editando.
+    const idAsesor = asesor?.id;
+
     // Al abrir: parte de lo que el asesor ya tiene guardado y se piden las materias de la facultad
     useEffect(() => {
         if (!open || !asesor) return undefined;
@@ -115,7 +119,8 @@ export default function ModalDisponibilidadAsesor({ open, onClose, asesor, onGua
         return () => {
             cancelado = true;
         };
-    }, [open, asesor]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, idAsesor]);
 
     // ¿Hay cambios? Se comparan ids y valores (sin importar el orden)
     const firmaMaterias = (lista) => lista.map((m) => m.id).sort((a, b) => a - b).join(',');
