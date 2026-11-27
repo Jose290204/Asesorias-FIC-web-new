@@ -13,6 +13,7 @@ import {
 } from '../../../../Services/asesoriasAsesorService';
 import { mensajesDeError } from '../../../../Services/errores';
 import { conTiempoMinimo } from '../../../../utils/tiempoMinimo';
+import HorarioSemanal from '../components/disponibilidad/HorarioSemanal';
 import ModalMaterias from '../components/disponibilidad/ModalMaterias';
 import TarjetaSeccion from '../components/disponibilidad/TarjetaSeccion';
 
@@ -202,6 +203,16 @@ export default function DisponibilidadAsesor() {
                     </>
                 ) : null}
             />
+
+            {/* Mi horario: modal con los horarios libres y ocupados (solo para ver) */}
+            {!loading && !error && (
+                <HorarioSemanal
+                    horarios={guardado.horarios}
+                    slots={slots}
+                    dias={dias.map((d) => ({ valor: d.valor, etiqueta: d.etiqueta }))}
+                    showToast={showToast}
+                />
+            )}
 
             <div className="w-full flex flex-1 flex-col items-center gap-5">
                 {loading ? (
