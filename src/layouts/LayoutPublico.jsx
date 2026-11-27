@@ -117,10 +117,11 @@ export default function LayoutPublico({ children, mostrarFooter = true }) {
               </div>
 
               {/* Copyright */}
-              <div className="flex justify-center lg:justify-start items-center pt-2 lg:pt-0">
-                <a href="https://fic.uas.edu.mx/" target="_blank" rel="noreferrer" className="hover:underline text-[10px] sm:text-[12px]">
+              <div className="flex flex-col justify-center lg:justify-start items-center pt-2 lg:pt-0 text-[10px] sm:text-[12px]">
+                <a href="https://fic.uas.edu.mx/" target="_blank" rel="noreferrer" className="hover:underline">
                   © Facultad de Informática Culiacán - 2026
                 </a>
+                <span>Versión {__APP_VERSION__}</span>
               </div>
 
             </div>
