@@ -1,10 +1,15 @@
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { Avatar, Divider, ListItemIcon, Menu, MenuItem } from '@mui/material';
+import useCambioDePanel from '../../../hooks/useCambioDePanel';
 
 // Menú que se abre al tocar el botón del usuario en la cabecera (celular).
 // Arriba lleva una tarjeta con el avatar, el nombre y el correo; abajo, las acciones.
 export default function MenuUsuario({ anchorEl, onClose, nombre, correo, onVerPerfil, onLogout }) {
+  // Solo para quien tiene los dos paneles (estudiante que también es asesor)
+  const cambioPanel = useCambioDePanel();
+
   return (
     <Menu
       disableScrollLock
@@ -41,6 +46,18 @@ export default function MenuUsuario({ anchorEl, onClose, nombre, correo, onVerPe
           <ListItemIcon sx={{ color: '#244B91' }}><PersonOutlineIcon fontSize="small" /></ListItemIcon>
           Ver perfil
         </MenuItem>
+        {cambioPanel && (
+          <MenuItem
+            onClick={() => {
+              onClose();
+              cambioPanel.cambiar();
+            }}
+            sx={{ borderRadius: '8px', py: 1.25, fontSize: 14, fontWeight: 500 }}
+          >
+            <ListItemIcon sx={{ color: '#244B91' }}><SwapHorizIcon fontSize="small" /></ListItemIcon>
+            {cambioPanel.etiqueta}
+          </MenuItem>
+        )}
         <Divider sx={{ my: 0.5 }} />
         <MenuItem
           onClick={onLogout}
