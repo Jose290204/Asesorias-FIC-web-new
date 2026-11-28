@@ -1,0 +1,23 @@
+{
+    admin off
+    persist_config off
+    auto_https off
+    servers {
+        trusted_proxies static private_ranges 100.0.0.0/8
+    }
+}
+
+:{$PORT:3000} {
+    encode gzip
+
+    @backend path /api/* /sanctum/* /storage/*
+    handle @backend {
+        reverse_proxy {$API_UPSTREAM}
+    }
+
+    handle {
+        root * dist
+        try_files {path} /index.html
+        file_server
+    }
+}
